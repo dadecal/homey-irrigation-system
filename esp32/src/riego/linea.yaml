@@ -1,0 +1,171 @@
+# =========================================================
+# Línea de riego parametrizada
+#
+# Variables requeridas por el include:
+# - line: número funcional de línea (1..6)
+# - flow_pin: GPIO del caudalímetro
+# - relay_pin: GPIO del relé
+# =========================================================
+
+globals:
+  - id: l${line}_cycle_start_pulses
+    type: uint32_t
+    restore_value: no
+    initial_value: "0"
+
+  - id: l${line}_cycle_active
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
+sensor:
+  # Caudal instantáneo local. No se expone a Homey, pero alimenta
+  # el cálculo de litros y la detección de fugas.
+  - platform: pulse_counter
+    pin:
+      number: ${flow_pin}
+      mode:
+        input: true
+        pullup: true
+    name: "Flujo Línea ${line}"
+    id: l${line}_flow_lpm
+    internal: true
+    unit_of_measurement: "L/min"
+    update_interval: 10s
+    filters:
+      - multiply: !lambda 'return 1.0f / ${pulses_per_liter};'
+    total:
+      id: l${line}_total_pulses
+      internal: true
+
+  # Homey necesita este valor únicamente al iniciar y finalizar el ciclo.
+  - platform: template
+    name: "L${line} Litros ciclo actual"
+    id: l${line}_cycle_l_sensor
+    unit_of_measurement: "L"
+    accuracy_decimals: 2
+    update_interval: never
+
+  # Valor de respaldo para la proyección del histórico en Homey.
+  - platform: template
+    name: "L${line} Litros último ciclo"
+    id: l${line}_last_cycle_l_sensor
+    unit_of_measurement: "L"
+    accuracy_decimals: 2
+    update_interval: never
+
+switch:
+  - platform: gpio
+    pin: ${relay_pin}
+    name: "Relé Línea ${line}"
+    id: relay_l${line}
+    inverted: true
+    restore_mode: ALWAYS_OFF
+
+    on_turn_on:
+      then:
+        - logger.log:
+            level: INFO
+            format: "L${line}: on_turn_on disparado"
+        - lambda: |-
+            if (!id(l${line}_total_pulses).has_state()) {
+              id(l${line}_cycle_start_pulses) = 0;
+            } else {
+              id(l${line}_cycle_start_pulses) =
+                (uint32_t) id(l${line}_total_pulses).state;
+            }
+
+            id(l${line}_cycle_l_sensor).publish_state(0.0f);
+            id(l${line}_cycle_active) = true;
+        - delay: ${max_relay_on_minutes}min
+        - if:
+            condition:
+              switch.is_on: relay_l${line}
+            then:
+              - logger.log:
+                  level: ERROR
+                  tag: "irrigation.safety"
+                  format: "Line ${line} exceeded maximum relay-on time; forcing OFF"
+              - switch.turn_off: relay_l${line}
+
+    on_turn_off:
+      then:
+        - logger.log:
+            level: INFO
+            format: "L${line}: on_turn_off disparado"
+        - lambda: |-
+            // ALWAYS_OFF puede disparar on_turn_off durante el arranque.
+            if (!id(l${line}_cycle_active)) {
+              return;
+            }
+
+            if (!id(l${line}_total_pulses).has_state()) {
+              id(l${line}_cycle_l_sensor).publish_state(0.0f);
+              id(l${line}_last_cycle_l_sensor).publish_state(0.0f);
+              id(l${line}_cycle_active) = false;
+              return;
+            }
+
+            const uint32_t current =
+              (uint32_t) id(l${line}_total_pulses).state;
+            const uint32_t base = id(l${line}_cycle_start_pulses);
+
+            uint32_t delta;
+            if (current >= base) {
+              delta = current - base;
+            } else {
+              delta = (uint32_t)(0xFFFFFFFFu - base + 1u + current);
+            }
+
+            const float liters =
+              (float) delta / ${pulses_per_liter};
+
+            id(l${line}_cycle_l_sensor).publish_state(liters);
+            id(l${line}_last_cycle_l_sensor).publish_state(liters);
+            id(l${line}_cycle_active) = false;
+
+binary_sensor:
+  # Detecta el resultado hidráulico ausente sin afirmar si ha fallado
+  # el relé, la electroválvula, el sensor o el suministro de agua.
+  - platform: template
+    name: "Fallo actuación Línea ${line}"
+    id: actuation_failure_l${line}
+    entity_category: diagnostic
+    lambda: |-
+      if (!id(relay_l${line}).state) return false;
+      if (!id(l${line}_flow_lpm).has_state()) return false;
+      const float flow = id(l${line}_flow_lpm).state;
+      if (isnan(flow) || isinf(flow)) return false;
+      return flow <= ${min_expected_flow_lpm};
+    filters:
+      - delayed_on: 30s
+      - delayed_off: 5s
+    on_press:
+      then:
+        - logger.log:
+            level: WARN
+            tag: "irrigation.hardware"
+            format: "Line ${line} is active but no flow is detected"
+
+  - platform: template
+    name: "Fuga Línea ${line}"
+    id: leak_l${line}
+    lambda: |-
+      if (!id(l${line}_flow_lpm).has_state()) return false;
+      const float flow = id(l${line}_flow_lpm).state;
+      if (isnan(flow) || isinf(flow)) return false;
+      if (id(relay_l${line}).state) return false;
+
+      if (id(leak_l${line}).state) {
+        return flow > ${leak_clear_threshold_lpm};
+      }
+      return flow > ${leak_threshold_lpm};
+    filters:
+      - delayed_on: 30s
+      - delayed_off: 10s
+    on_press:
+      then:
+        - logger.log:
+            level: WARN
+            tag: "irrigation.hardware"
+            format: "Flow detected on line ${line} while relay is off"

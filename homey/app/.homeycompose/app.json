@@ -1,0 +1,47 @@
+{
+  "id": "com.dadecal.irrigation",
+  "version": "0.1.0",
+  "sdk": 3,
+  "compatibility": ">=10.0.0",
+  "name": {
+    "en": "Irrigation Scheduler",
+    "es": "Programador de Riego"
+  },
+  "description": {
+    "en": "Configuration interface for the Homey irrigation scheduler.",
+    "es": "Interfaz de configuracion del programador de riego en Homey."
+  },
+  "author": {
+    "name": "Dadecal"
+  },
+  "category": [
+    "tools"
+  ],
+  "brandColor": "#256D5A",
+  "images": {
+    "small": "/assets/app-small.png",
+    "large": "/assets/app-large.png"
+  },
+  "api": {
+    "getConfig": {
+      "method": "GET",
+      "path": "/config"
+    },
+    "putConfig": {
+      "method": "PUT",
+      "path": "/config"
+    },
+    "getStatus": {
+      "method": "GET",
+      "path": "/status"
+    },
+    "setRainDelay": {
+      "method": "POST",
+      "path": "/rain-delay"
+    },
+    "clearRainDelay": {
+      "method": "DELETE",
+      "path": "/rain-delay"
+    }
+  }
+}

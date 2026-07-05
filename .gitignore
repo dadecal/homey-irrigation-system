@@ -1,0 +1,24 @@
+# macOS
+.DS_Store
+
+# Editors and local environment
+.idea/
+.vscode/
+*.swp
+*.tmp
+.env
+.env.*
+
+# Node.js / Homey build output
+node_modules/
+.homeybuild/
+npm-debug.log*
+
+# ESPHome local state, builds and credentials
+.esphome/
+build/
+secrets.yaml
+
+# Logs and coverage
+*.log
+coverage/

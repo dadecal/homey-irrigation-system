@@ -1,0 +1,21 @@
+{
+  "title": {
+    "en": "The scheduler requests an irrigation program",
+    "es": "El programador solicita un programa de riego"
+  },
+  "hint": {
+    "en": "Pass the Request token to Irrigation.js using the HomeyScript card with an argument.",
+    "es": "Entrega la etiqueta Solicitud a Irrigation.js mediante la tarjeta HomeyScript con argumento."
+  },
+  "tokens": [
+    {
+      "name": "request",
+      "type": "string",
+      "title": {
+        "en": "Request",
+        "es": "Solicitud"
+      },
+      "example": "{\"version\":1,\"requestId\":\"...\",\"queue\":[{\"sector\":1,\"duration\":10}]}"
+    }
+  ]
+}

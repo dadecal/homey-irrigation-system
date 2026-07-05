@@ -1,0 +1,107 @@
+{
+  "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
+  "id": "com.dadecal.irrigation",
+  "version": "0.1.0",
+  "sdk": 3,
+  "compatibility": ">=10.0.0",
+  "name": {
+    "en": "Irrigation Scheduler",
+    "es": "Programador de Riego"
+  },
+  "description": {
+    "en": "Configuration interface for the Homey irrigation scheduler.",
+    "es": "Interfaz de configuracion del programador de riego en Homey."
+  },
+  "author": {
+    "name": "Dadecal"
+  },
+  "category": [
+    "tools"
+  ],
+  "brandColor": "#256D5A",
+  "images": {
+    "small": "/assets/app-small.png",
+    "large": "/assets/app-large.png"
+  },
+  "api": {
+    "getConfig": {
+      "method": "GET",
+      "path": "/config"
+    },
+    "putConfig": {
+      "method": "PUT",
+      "path": "/config"
+    },
+    "getStatus": {
+      "method": "GET",
+      "path": "/status"
+    },
+    "setRainDelay": {
+      "method": "POST",
+      "path": "/rain-delay"
+    },
+    "clearRainDelay": {
+      "method": "DELETE",
+      "path": "/rain-delay"
+    }
+  },
+  "flow": {
+    "triggers": [
+      {
+        "title": {
+          "en": "The scheduler requests an irrigation program",
+          "es": "El programador solicita un programa de riego"
+        },
+        "hint": {
+          "en": "Pass the Request token to Irrigation.js using the HomeyScript card with an argument.",
+          "es": "Entrega la etiqueta Solicitud a Irrigation.js mediante la tarjeta HomeyScript con argumento."
+        },
+        "tokens": [
+          {
+            "name": "request",
+            "type": "string",
+            "title": {
+              "en": "Request",
+              "es": "Solicitud"
+            },
+            "example": "{\"version\":1,\"requestId\":\"...\",\"queue\":[{\"sector\":1,\"duration\":10}]}"
+          }
+        ],
+        "id": "program_requested"
+      }
+    ],
+    "conditions": [
+      {
+        "title": {
+          "en": "End notifications are enabled",
+          "es": "Los avisos de fin de sector están activos"
+        },
+        "id": "notify_sector_end_enabled"
+      },
+      {
+        "title": {
+          "en": "Start notifications are enabled",
+          "es": "Los avisos de inicio de sector están activos"
+        },
+        "id": "notify_sector_start_enabled"
+      }
+    ]
+  },
+  "drivers": [
+    {
+      "name": {
+        "en": "Irrigation Scheduler",
+        "es": "Programador de Riego"
+      },
+      "class": "other",
+      "capabilities": [
+        "onoff"
+      ],
+      "images": {
+        "small": "/drivers/irrigation_scheduler/assets/icon-small.png",
+        "large": "/drivers/irrigation_scheduler/assets/icon-large.png"
+      },
+      "id": "irrigation_scheduler"
+    }
+  ]
+}

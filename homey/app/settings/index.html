@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Programador de Riego</title>
+    <link rel="stylesheet" href="./settings.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="title-block">
+          <h1>Programador de Riego</h1>
+          <p id="statusText" aria-live="polite">Cargando configuracion...</p>
+        </div>
+        <label class="switch" for="enabled">
+          <input id="enabled" type="checkbox">
+          <span class="switch-track" aria-hidden="true"></span>
+          <span class="switch-label">Programador activo</span>
+        </label>
+      </header>
+
+      <section class="panel schedule-panel">
+        <div class="schedule-column">
+          <label class="field-label">
+            <span>Hora de inicio</span>
+            <input id="startTime" type="time" value="07:30">
+          </label>
+          <div class="calculated-time">
+            <span>Hora de fin estimada</span>
+            <strong id="endTime">--:--</strong>
+          </div>
+        </div>
+
+        <label class="field-label">
+          <span>Intervalo de dias</span>
+          <input id="intervalDays" type="number" min="1" max="30" step="1">
+        </label>
+      </section>
+
+      <section class="panel">
+        <h2>Duracion por sector</h2>
+        <div id="sectorDurations" class="sector-grid">
+          <label class="field-label"><span>Sector 1</span><span class="number-field"><input type="number" min="0" max="30" step="1" data-sector="1" value="0"><span>min</span></span></label>
+          <label class="field-label"><span>Sector 2</span><span class="number-field"><input type="number" min="0" max="30" step="1" data-sector="2" value="0"><span>min</span></span></label>
+          <label class="field-label"><span>Sector 3</span><span class="number-field"><input type="number" min="0" max="30" step="1" data-sector="3" value="0"><span>min</span></span></label>
+          <label class="field-label"><span>Sector 4</span><span class="number-field"><input type="number" min="0" max="30" step="1" data-sector="4" value="0"><span>min</span></span></label>
+          <label class="field-label"><span>Sector 5</span><span class="number-field"><input type="number" min="0" max="30" step="1" data-sector="5" value="0"><span>min</span></span></label>
+          <label class="field-label"><span>Sector 6</span><span class="number-field"><input type="number" min="0" max="30" step="1" data-sector="6" value="0"><span>min</span></span></label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Notificaciones por sector</h2>
+        <div class="notification-options">
+          <label class="switch" for="notifySectorStart">
+            <input id="notifySectorStart" type="checkbox">
+            <span class="switch-track" aria-hidden="true"></span>
+            <span class="switch-label">Avisar al iniciar un sector</span>
+          </label>
+          <label class="switch" for="notifySectorEnd">
+            <input id="notifySectorEnd" type="checkbox">
+            <span class="switch-track" aria-hidden="true"></span>
+            <span class="switch-label">Avisar al finalizar un sector</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="panel rain-delay">
+        <div class="section-heading">
+          <h2>Rain Delay</h2>
+          <span id="rainDelayText">Sin aplazamiento</span>
+        </div>
+        <div class="button-row" aria-label="Duracion del Rain Delay">
+          <button type="button" data-rain-delay="24">24h</button>
+          <button type="button" data-rain-delay="48">48h</button>
+          <button type="button" data-rain-delay="72">72h</button>
+          <button type="button" id="clearRainDelay" class="secondary">Cancelar</button>
+        </div>
+      </section>
+
+      <p id="notice" class="notice" role="status" aria-live="polite"></p>
+
+      <footer class="footer">
+        <div>
+          <strong>Proximo riego</strong>
+          <span id="nextRun">Sin calcular</span>
+        </div>
+        <button id="saveButton" type="button" disabled>Guardar cambios</button>
+      </footer>
+    </main>
+
+    <script src="/homey.js" data-origin="settings"></script>
+    <script src="./settings-calculations.js"></script>
+    <script src="./settings.js"></script>
+  </body>
+</html>

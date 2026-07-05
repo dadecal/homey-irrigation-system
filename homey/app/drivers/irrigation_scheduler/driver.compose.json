@@ -1,0 +1,14 @@
+{
+  "name": {
+    "en": "Irrigation Scheduler",
+    "es": "Programador de Riego"
+  },
+  "class": "other",
+  "capabilities": [
+    "onoff"
+  ],
+  "images": {
+    "small": "/drivers/irrigation_scheduler/assets/icon-small.png",
+    "large": "/drivers/irrigation_scheduler/assets/icon-large.png"
+  }
+}

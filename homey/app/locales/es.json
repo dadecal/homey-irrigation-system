@@ -1,0 +1,7 @@
+{
+  "driver": {
+    "scheduler": {
+      "name": "Programador de Riego"
+    }
+  }
+}

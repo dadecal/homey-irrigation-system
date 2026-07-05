@@ -1,0 +1,16 @@
+{
+  "name": "homey-irrigation-scheduler",
+  "version": "0.1.0",
+  "private": true,
+  "main": "app.js",
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "test": "node --test",
+    "validate": "node -c app.js && node -c api.js && node -c drivers/irrigation_scheduler/driver.js && node -c drivers/irrigation_scheduler/device.js && node -c lib/calendar.js && node -c lib/constants.js && node -c lib/default-config.js && node -c lib/scheduler-config-validator.js && node -c lib/next-run-calculator.js && node -c lib/program-request.js && node -c lib/program-request-trigger.js && node -c lib/scheduler.js && node -c lib/scheduler-config-store.js && node -c settings/settings-calculations.js && node -c settings/settings.js"
+  },
+  "devDependencies": {
+    "homey": "^3.0.0"
+  }
+}

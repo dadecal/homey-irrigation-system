@@ -1,0 +1,52 @@
+## 2026-07-03
+
+### Documentación
+- Scheduler, programador, Rain Delay y aplicación Homey nativa pasan a estado finalizado.
+- Se documenta que el Flow del programador permanece habilitado tras superar la prueba física.
+- El próximo objetivo pasa a ser la estabilización con la configuración real del jardín.
+- Los programas múltiples se mantienen como evolución futura.
+
+## 2026-07-02
+
+### Scheduler
+- Prueba física completa del puente App -> Flow -> Irrigation.js -> ESPHome.
+- Verificados arranque, exclusividad de relé, parada automática, cola e histórico.
+- El Flow "Riego programador - solicitud" queda habilitado.
+- La configuración del programador queda desactivada hasta que el usuario la complete.
+- Se registra como limitación conocida que la parada puede demorarse hasta el siguiente tick periódico.
+
+### Interfaz
+- Se estabiliza el render inicial de los seis sectores.
+- Se añade toggle accesible, unidades, feedback de guardado y manejo de errores.
+- Rain Delay muestra su fecha de finalización y feedback de aplicación/cancelación.
+- Se corrigen solapamientos en móvil y se valida persistencia tras reinicio.
+
+## 2026-06-30
+
+### Irrigation Engine
+- Se añade soporte para solicitudes JSON versionadas recibidas como argumento de HomeyScript.
+- El motor valida la solicitud y conserva la propiedad exclusiva de Irrigation.Queue y los relés.
+- Las solicitudes del Scheduler se rechazan si ya existe un riego en curso.
+
+### Aplicación Homey
+- La configuración del programador se persiste en ManagerSettings.
+- Se añade el Flow Trigger program_requested con la etiqueta Solicitud.
+- Se instala la aplicación 0.1.0 en Homey Pro.
+- Se crea el Flow "Riego programador - solicitud" inicialmente deshabilitado.
+- Se implementa el Scheduler interno con evaluación cada 30 segundos.
+- Se añade cálculo por zona horaria, intervalos de días, Rain Delay e idempotencia por lastRunDate.
+- Se añaden pruebas de calendario, cambio horario, cola y orden persistencia-trigger.
+
+## 2026-06-29
+
+### Irrigation Engine
+- Nueva arquitectura basada en cola.
+- Se elimina la ejecución de HomeyScripts desde HomeyScripts.
+- El histórico pasa a ser event-driven.
+- Se añade HIS Trigger histórico.
+
+### Irrigation History
+- Se evita reprocesar eventos mediante HistoryLastProjectedId.
+
+### Estado
+- Motor considerado estable.
