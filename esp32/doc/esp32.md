@@ -79,9 +79,11 @@ Elementos alimentados:
 * ESP32
 * Módulo de relés
 * Sensores Hall
-* DHT22
+* DHT20
 
 Los sensores Hall trabajan a 5V.
+El DHT20 se alimenta desde 3.3V para mantener el bus I2C en niveles seguros
+para el ESP32. La masa es común con la fuente de 5V.
 
 ⸻
 
@@ -108,8 +110,8 @@ S1	Relé sector 1	GPIO16
 S2	Relé sector 2	GPIO17
 S3	Relé sector 3	GPIO18
 S4	Relé sector 4	GPIO19
-S5	Relé sector 5	GPIO21
-S6	Relé sector 6	GPIO23
+S5	Relé sector 5	GPIO23
+S6	Relé sector 6	GPIO13
 
 ⸻
 
@@ -128,7 +130,7 @@ S6	Sensor Hall	GPIO33
 Sensor ambiental
 
 Sensor	Función	GPIO
-DHT22	Temperatura y humedad ambiente	GPIO4
+DHT20	Temperatura y humedad ambiente	I2C: SDA GPIO21, SCL GPIO22
 
 ⸻
 
@@ -183,16 +185,26 @@ Toda modificación del modelo de sensor requerirá recalibración.
 
 8. Sensor ambiental
 
-El controlador incorpora un DHT22.
+El controlador incorpora un DHT20 de AZ-Delivery conectado por I2C.
 
 Publica:
 
 * Temperatura ambiente
 * Humedad relativa
 
-Actualmente estos datos únicamente tienen función informativa.
+La temperatura ambiente se usa además para estimar la temperatura del chip
+mediante `Temperatura Riego + temp_box_offset_c`. Esa estimación dispara la
+protección térmica local del ESP32. La humedad tiene función informativa.
 
-No participan todavía en la lógica de riego.
+Conexión:
+
+* VCC a 3.3V.
+* GND a masa común.
+* SDA a GPIO21.
+* SCL a GPIO22.
+
+En ESPHome se integra como `platform: aht10` con `variant: AHT20` y dirección
+I2C `0x38`.
 
 ⸻
 
@@ -217,6 +229,8 @@ ESPHome publica:
 * Estado de conexión
 * Watchdog
 * Estado del firmware
+* Versión del firmware
+* Contrato hardware publicado
 
 Homey únicamente refleja dicha información.
 
@@ -295,6 +309,8 @@ Estado
 * Conectividad
 * Watchdog
 * Fuga detectada
+* ESP Firmware Version
+* ESP Hardware Contract
 
 ⸻
 
@@ -363,6 +379,11 @@ Antes de modificar riego.yaml comprobar siempre:
 * que IrrigationHistory.js continúa encontrando los litros por ciclo.
 
 Si cambia cualquier identificador publicado por ESPHome deberán actualizarse simultáneamente los scripts Homey.
+
+El firmware publica `ESP Hardware Contract` en formato
+`irrigation-hw-api@<version>`. La app Homey y los HomeyScripts deben comprobar
+ese contrato por rango de compatibilidad. No se debe exigir que la versión del
+firmware coincida con la versión de la app o de los scripts.
 
 ⸻
 

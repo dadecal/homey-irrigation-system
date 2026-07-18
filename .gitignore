@@ -13,6 +13,7 @@
 node_modules/
 .homeybuild/
 npm-debug.log*
+dist/
 
 # ESPHome local state, builds and credentials
 .esphome/

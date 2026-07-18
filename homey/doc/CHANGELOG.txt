@@ -1,3 +1,31 @@
+## 2026-07-12
+
+### Recovery
+- Se migra la responsabilidad completa de `IrrigationRecovery.js` a
+  `RecoveryService` dentro de la app Homey nativa.
+- La app usa `homey:manager:api` para confirmar disponibilidad del dispositivo
+  ESPHome, localizar ESPHome Controller y reiniciarlo cuando proceda.
+- Se conserva el contrato `Irrigation.Recovery`, `Irrigation.RecoveryMessage`
+  e `Irrigation.RecoveryTrigger`.
+- El Flow "Riego - Supervisión hardware cada minuto" deja de ejecutar
+  `IrrigationRecovery.js` y mantiene sólo `IrrigationHealth.js`.
+- Se añaden endpoints internos `/recovery/status` y `/recovery/check`.
+- Se añaden pruebas unitarias de umbrales, cooldown, agotamiento y recuperación.
+
+## 2026-07-09
+
+### Scheduler
+- Se corrige el orden de ejecución para marcar `lastRunDate` solo después de
+  emitir correctamente la solicitud `program_requested`.
+- Se añade una prueba de regresión para evitar que un fallo del trigger consuma
+  el día programado sin riego.
+- Diagnóstico asociado: el 2026-07-08 quedó persistido como ejecutado sin
+  histórico de riego, compatible con fallo de emisión durante problemas de red.
+- Tras reproducirse el fallo también el 2026-07-09, `lastRunDate` pasa a
+  depender de confirmación del motor mediante Variables Logic. La app conserva
+  `pendingRequest` y sólo consume el día si observa `RUNNING`/histórico de
+  origen `SCHEDULER`.
+
 ## 2026-07-03
 
 ### Documentación

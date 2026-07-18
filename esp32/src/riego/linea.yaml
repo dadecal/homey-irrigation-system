@@ -132,6 +132,7 @@ binary_sensor:
     id: actuation_failure_l${line}
     entity_category: diagnostic
     lambda: |-
+      if (!${flow_fault_detection_enabled}) return false;
       if (!id(relay_l${line}).state) return false;
       if (!id(l${line}_flow_lpm).has_state()) return false;
       const float flow = id(l${line}_flow_lpm).state;

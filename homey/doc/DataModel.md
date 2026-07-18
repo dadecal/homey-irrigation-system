@@ -172,7 +172,7 @@ Tipo `number`. Timestamp UNIX en milisegundos utilizado como trigger técnico.
 Irrigation.Recovery
 
 Tipo `JSON Object` serializado como string. Estado persistente y fuente de
-verdad de `IrrigationRecovery.js`.
+verdad de `RecoveryService` en la app Homey nativa.
 
 Campos principales:
 
@@ -188,6 +188,10 @@ Campos principales:
 `Irrigation.RecoveryMessage` es un `string` legible y
 `Irrigation.RecoveryTrigger` un timestamp numérico. El estado debe persistirse
 antes de actualizar mensaje y trigger.
+
+Este contrato sustituye a la ejecución de `IrrigationRecovery.js` desde
+HomeyScript, pero mantiene nombres y estructura para conservar compatibilidad
+con los Flows de notificación existentes.
 
 ⸻
 
@@ -209,6 +213,48 @@ proyecta como condiciones de Flow; `Irrigation.js` no las interpreta.
 La hora estimada de fin mostrada por la app no forma parte del modelo
 persistente. Se deriva de `startTime` y `sectorDurations`, evitando duplicar
 estado calculable.
+
+⸻
+
+Contratos entre componentes
+
+Los contratos no sustituyen a las Variables Logic operativas; describen la
+compatibilidad entre builds desplegadas.
+
+Estructura conceptual:
+
+```json
+{
+  "component": "esp32-firmware",
+  "version": "1.0.0",
+  "provides": {
+    "hardwareApi": {
+      "name": "irrigation-hw-api",
+      "version": "1.0.0"
+    }
+  },
+  "requires": {}
+}
+```
+
+Los consumidores declaran rangos:
+
+```json
+{
+  "component": "homey-app",
+  "version": "0.1.0",
+  "requires": {
+    "hardwareApi": {
+      "name": "irrigation-hw-api",
+      "range": ">=1.0.0 <2.0.0"
+    }
+  }
+}
+```
+
+La igualdad de versiones entre componentes no es requisito. La compatibilidad
+se determina por nombre de contrato y rango de versión. La trazabilidad exacta
+de una release se determina por el manifest y hashes SHA256.
 
 ⸻
 
@@ -496,6 +542,7 @@ Ejemplo
   },
   "rainDelayUntil": 0,
   "lastRunDate": null,
+  "pendingRequest": null,
   "updatedTs": 1751196000000
 }
 
@@ -660,7 +707,41 @@ Se utiliza para calcular intervalos de días de forma idempotente.
 
 La aplicación Homey no debe actualizar este campo al guardar configuración.
 
-El Scheduler lo persiste antes de emitir el Flow Trigger para impedir solicitudes duplicadas tras un reinicio.
+El Scheduler sólo lo persiste tras confirmar que el motor ha iniciado o
+registrado un riego de origen SCHEDULER. La emisión del Flow Trigger por sí sola
+no basta para consumir el día programado.
+
+⸻
+
+Campo pendingRequest
+
+Tipo
+
+JSON Object o null.
+
+Descripción
+
+Solicitud automática emitida por la app y pendiente de confirmación por el
+motor.
+
+Estructura:
+
+```json
+{
+  "requestId": "uuid",
+  "runDate": "2026-07-09",
+  "requestedAt": 1783627200000,
+  "createdTs": 1783627200000
+}
+```
+
+El Scheduler la conserva hasta observar en Variables Logic que
+`Irrigation.State = RUNNING` con `Irrigation.Source = SCHEDULER` y
+`Irrigation.StartTimestamp` posterior a la solicitud, o hasta encontrar una
+entrada compatible en `Irrigation.History`.
+
+Si no hay confirmación durante la ventana de espera, la solicitud pendiente se
+descarta y el Scheduler puede reintentar mientras la fecha siga vencida.
 
 ⸻
 

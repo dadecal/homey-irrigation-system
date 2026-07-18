@@ -198,6 +198,8 @@ Verificar:
 * litros ciclo
 * reinicio al comenzar un nuevo riego
 * actualización correcta
+* detección "relé activo sin caudal" sólo cuando
+  `flow_fault_detection_enabled` esté en `true`
 
 ⸻
 
@@ -205,8 +207,23 @@ Temperaturas
 
 Comprobar:
 
-* temperatura ambiente
+* detección I2C del DHT20 en la dirección `0x38`
+* temperatura ambiente `Temperatura Riego`
+* humedad ambiente `Humedad Riego`
 * temperatura ESP32
+* que `Temp estimada chip ESP` usa `Temperatura Riego + temp_box_offset_c`
+  cuando el DHT20 tiene lectura válida
+* que `Temp estimada chip ESP` usa `ESP Internal Temp` como respaldo si el DHT20
+  no publica lectura válida
+* que `Sobrecalentamiento ESP` se activa por encima de 85°C estimados y se
+  libera al bajar por debajo de 80°C
+
+Relés tras migración I2C
+
+Comprobar específicamente:
+
+* Línea 5 activa únicamente el relé cableado en GPIO23.
+* Línea 6 activa únicamente el relé cableado en GPIO13.
 
 ⸻
 
@@ -216,6 +233,12 @@ Verificar:
 
 * pérdida de conexión
 * recuperación automática
+* trazas `API_CLIENT_CONNECTED` y `API_CLIENT_DISCONNECTED` con `client` y
+  `address` en el log durante el diagnóstico de clientes API
+* actualización del text sensor diagnóstico `ESP Último cliente API`
+* publicación de `ESP Firmware Version`
+* publicación de `ESP Hardware Contract` con formato
+  `irrigation-hw-api@<version>`
 
 ⸻
 
@@ -334,10 +357,11 @@ Simular además los dos fallos críticos del motor:
 
 ⸻
 
-4.2 IrrigationRecovery.js
+4.2 RecoveryService
 
-Validar con `status` que localiza exactamente una app ESPHome Controller y no
-modifica su estado.
+Validar con `/api/app/com.dadecal.irrigation/recovery/status` que localiza la
+app ESPHome Controller, informa `restartSupported = true` y no modifica su
+estado.
 
 Simular indisponibilidad del dispositivo `Riego` y comprobar:
 
@@ -349,6 +373,11 @@ Simular indisponibilidad del dispositivo `Riego` y comprobar:
 * al recuperar el dispositivo reinicia contadores y notifica `RECOVERED`;
 * nunca modifica relés, motor ni cola;
 * cada evento genera como máximo una notificación.
+
+El Flow `Riego - Supervisión hardware cada minuto` debe ejecutar únicamente
+`IrrigationHealth.js`. Recovery corre dentro de la app nativa con timer interno;
+el script antiguo `IrrigationRecovery.js` no debe quedar conectado al Flow para
+evitar duplicar intentos durante una incidencia.
 
 ⸻
 
@@ -493,3 +522,38 @@ Comprobaciones:
 * restauración final con enabled = false.
 
 Resultado: satisfactorio.
+
+⸻
+
+13. Validación de release
+
+Antes de publicar una release de sistema:
+
+* comprobar que `release/components.json` refleja las versiones reales de los
+  componentes modificados;
+* comprobar que sólo cambian de versión los componentes que realmente han
+  cambiado;
+* si se despliega app Homey, ejecutar
+  `node tools/release/build-homey-app.mjs`;
+* si se despliegan HomeyScripts, ejecutar
+  `node tools/release/build-homey-scripts.mjs`;
+* generar la huella local con
+  `node tools/release/check-homey-scripts.mjs expected`;
+* comprobar que `release/homey-scripts.json` contiene `remoteName` y
+  `homeyScriptId` reales para cada script que exista en Homey;
+* ejecutar `node tools/release/prepare-release.mjs --system-release <release>`;
+* verificar que `release-manifest.json` contiene el commit Git correcto;
+* verificar si el manifest está marcado como `dirty`; si lo está, decidir
+  explícitamente si se trata de una release provisional o si falta commitear;
+* si se despliega firmware ESP32, subir exactamente el `.ota.bin` registrado en
+  el manifest mediante `esphome upload ... --file`;
+* si se despliega app Homey, instalar la build ya generada con
+  `npx homey app install --skip-build`;
+* si se despliegan HomeyScripts, comprobar que los scripts subidos a Homey
+  corresponden al artefacto `homey-scripts-<version>.zip` y sus hashes;
+* cuando exista exportación remota de scripts, ejecutar
+  `node tools/release/check-homey-scripts.mjs verify --remote-file <file>` y
+  exigir estado `OK`;
+* subir a GitHub Releases los artefactos generados y `SHA256SUMS.txt`;
+* validar que las discrepancias se evalúan por contratos compatibles y no por
+  igualdad de versiones entre componentes.

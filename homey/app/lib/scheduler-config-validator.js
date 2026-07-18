@@ -15,6 +15,28 @@ function normalizeInteger(value) {
   return Math.round(number);
 }
 
+function normalizePendingRequest(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return null;
+  }
+
+  const requestId = typeof value.requestId === 'string' ? value.requestId.trim() : '';
+  const runDate = typeof value.runDate === 'string' ? value.runDate.trim() : '';
+  const requestedAt = normalizeInteger(value.requestedAt);
+  const createdTs = normalizeInteger(value.createdTs);
+
+  if (!requestId || !runDate || !requestedAt || !createdTs) {
+    return null;
+  }
+
+  return {
+    requestId,
+    runDate,
+    requestedAt: Math.max(requestedAt, 0),
+    createdTs: Math.max(createdTs, 0),
+  };
+}
+
 function validateSchedulerConfig(input, baseConfig) {
   const errors = [];
   const config = {
@@ -60,6 +82,7 @@ function validateSchedulerConfig(input, baseConfig) {
     config.lastRunDate = null;
   }
 
+  config.pendingRequest = normalizePendingRequest(config.pendingRequest);
   config.updatedTs = Math.max(normalizeInteger(config.updatedTs) || 0, 0);
 
   return {

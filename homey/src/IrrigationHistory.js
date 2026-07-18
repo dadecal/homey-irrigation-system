@@ -1,5 +1,9 @@
 'use strict';
 
+// Component: homey-scripts@1.3.0
+// Provides: irrigation-scripts-api@1.0.0
+// Requires: irrigation-hw-api >=1.0.0 <2.0.0
+//
 // =========================================================
 // Irrigation History
 // Registra el último riego y actualiza métricas para Insights

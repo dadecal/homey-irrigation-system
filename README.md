@@ -55,8 +55,80 @@ Las credenciales reales se guardan exclusivamente en `secrets.yaml`, que está
 excluido de Git. No deben incluirse tokens, contraseñas ni informes privados en
 commits o incidencias públicas.
 
-## Versionado
+## Versionado y releases
 
-El proyecto utiliza etiquetas semánticas (`v0.1.0`, `v0.2.0`, etc.). La rama
-`main` representa la versión estable y los cambios se desarrollan en ramas
-específicas antes de integrarse.
+El sistema separa tres conceptos:
+
+- versión de componente: cambia sólo cuando cambia ese módulo concreto;
+- contrato: interfaz funcional que un componente publica o requiere;
+- release de sistema: combinación validada de app Homey, firmware ESP32 y
+  HomeyScripts.
+
+No es obligatorio recompilar ni subir todos los módulos en cada release. Si una
+release sólo cambia la app Homey, el manifest puede referenciar el mismo
+firmware ESP32 y los mismos HomeyScripts anteriores con sus hashes originales.
+
+La fuente de versiones y contratos está en `release/components.json`. Para
+generar un manifest local:
+
+```bash
+node tools/release/prepare-release.mjs --system-release v1.0.0
+```
+
+Para generar el artefacto versionado de la app Homey:
+
+```bash
+node tools/release/build-homey-app.mjs
+```
+
+El script valida, ejecuta tests, genera `.homeybuild` con el CLI de Homey y
+crea `dist/artifacts/homey-app/homey-irrigation-app-<version>.zip`.
+
+Para generar el artefacto versionado de los HomeyScripts:
+
+```bash
+node tools/release/build-homey-scripts.mjs
+```
+
+El zip resultante contiene los scripts de `homey/src/` y un manifest interno
+con versión, contratos y SHA256 por fichero.
+
+El mapeo entre fichero local y script real de Homey está en
+`release/homey-scripts.json`. Cada entrada declara el nombre funcional local,
+el `remoteName` visible en Homey y el `homeyScriptId` real, para evitar
+desplegar o verificar un script equivocado por coincidencia de nombres.
+
+Para generar la huella esperada de los scripts locales:
+
+```bash
+node tools/release/check-homey-scripts.mjs expected
+```
+
+Para comparar contra una exportación remota de Homey:
+
+```bash
+node tools/release/check-homey-scripts.mjs verify --remote-file remote-homey-scripts.json
+```
+
+Si se quiere guardar exactamente el firmware compilado que se va a subir al
+ESP32:
+
+```bash
+node tools/release/prepare-release.mjs \
+  --system-release v1.0.0 \
+  --esp32-bin /private/tmp/esphome-riego-build/.pioenvs/riego/firmware.ota.bin \
+  --homey-app-artifact dist/artifacts/homey-app/homey-irrigation-app-0.1.0.zip \
+  --homey-scripts-artifact dist/artifacts/homey-scripts/homey-scripts-1.3.0.zip
+```
+
+El resultado se escribe en `dist/releases/<release>/`, excluido de Git para
+evitar commitear binarios por accidente. Esos artefactos son los que deben
+subirse a GitHub Releases.
+
+Para que la app instalada en Homey coincida con el artefacto, después de
+generar el zip debe instalarse la build ya generada:
+
+```bash
+cd homey/app
+npx homey app install --skip-build
+```

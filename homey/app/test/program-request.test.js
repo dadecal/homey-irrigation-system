@@ -16,6 +16,7 @@ test('creates a versioned scheduler request', () => {
 
   assert.equal(request.version, 1);
   assert.equal(request.requestedAt, 123456);
+  assert.equal(request.runDate, null);
   assert.equal(request.source, 'SCHEDULER');
   assert.match(request.requestId, /^[0-9a-f-]{36}$/);
   assert.deepEqual(request.queue, [
@@ -23,6 +24,14 @@ test('creates a versioned scheduler request', () => {
     { sector: 3, duration: 8 },
   ]);
   assert.deepEqual(JSON.parse(serializeProgramRequest(request)), request);
+});
+
+test('includes the scheduler run date when provided', () => {
+  const request = createProgramRequest([
+    { sector: 1, duration: 10 },
+  ], 123456, { runDate: '2026-07-09' });
+
+  assert.equal(request.runDate, '2026-07-09');
 });
 
 test('rejects duplicate sectors and invalid durations', () => {

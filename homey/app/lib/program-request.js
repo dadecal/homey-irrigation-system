@@ -2,7 +2,7 @@
 
 const { randomUUID } = require('node:crypto');
 
-function createProgramRequest(queue, now = Date.now()) {
+function createProgramRequest(queue, now = Date.now(), metadata = {}) {
   if (!Array.isArray(queue) || queue.length === 0 || queue.length > 6) {
     throw new Error('La solicitud debe contener entre 1 y 6 sectores');
   }
@@ -32,6 +32,7 @@ function createProgramRequest(queue, now = Date.now()) {
     version: 1,
     requestId: randomUUID(),
     requestedAt: now,
+    runDate: metadata.runDate || null,
     source: 'SCHEDULER',
     queue: normalizedQueue,
   };

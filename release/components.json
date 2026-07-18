@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "components": {
+    "homeyApp": {
+      "id": "homey-app",
+      "version": "0.1.0",
+      "sourcePaths": [
+        "homey/app"
+      ],
+      "artifactPattern": "homey-irrigation-app-{version}.zip",
+      "provides": {
+        "schedulerApi": {
+          "name": "irrigation-scheduler-api",
+          "version": "1.0.0"
+        }
+      },
+      "requires": {
+        "hardwareApi": {
+          "name": "irrigation-hw-api",
+          "range": ">=1.0.0 <2.0.0"
+        },
+        "scriptsApi": {
+          "name": "irrigation-scripts-api",
+          "range": ">=1.0.0 <2.0.0"
+        }
+      }
+    },
+    "esp32Firmware": {
+      "id": "esp32-firmware",
+      "version": "1.0.0",
+      "sourcePaths": [
+        "esp32/src/Riego_Homey.yaml",
+        "esp32/src/riego/linea.yaml",
+        "esp32/src/secrets.example.yaml",
+        "esp32/doc/esp32.md"
+      ],
+      "defaultBuildArtifact": "/private/tmp/esphome-riego-build/.pioenvs/riego/firmware.ota.bin",
+      "artifactPattern": "riego-esp32-{version}.ota.bin",
+      "provides": {
+        "hardwareApi": {
+          "name": "irrigation-hw-api",
+          "version": "1.0.0"
+        }
+      }
+    },
+    "homeyScripts": {
+      "id": "homey-scripts",
+      "version": "1.3.0",
+      "sourcePaths": [
+        "homey/src/Irrigation.js",
+        "homey/src/IrrigationStatus.js",
+        "homey/src/IrrigationHistory.js",
+        "homey/src/IrrigationHealth.js",
+        "homey/src/IrrigationRecovery.js"
+      ],
+      "artifactPattern": "homey-scripts-{version}.zip",
+      "provides": {
+        "scriptsApi": {
+          "name": "irrigation-scripts-api",
+          "version": "1.0.0"
+        }
+      },
+      "requires": {
+        "hardwareApi": {
+          "name": "irrigation-hw-api",
+          "range": ">=1.0.0 <2.0.0"
+        }
+      }
+    }
+  },
+  "compatibilityPolicy": {
+    "ok": "All required contracts are present and satisfy the declared ranges.",
+    "warning": "Contracts are compatible but one or more deployed component builds differ from the validated system release manifest.",
+    "error": "A required contract is missing, has a different name, or its version is outside the declared range."
+  }
+}

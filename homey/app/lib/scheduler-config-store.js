@@ -72,6 +72,31 @@ class SchedulerConfigStore {
     const updated = {
       ...config,
       lastRunDate: runDate,
+      pendingRequest: null,
+    };
+    this.settings.set(SETTING.config, updated);
+    return updated;
+  }
+
+  async markPendingRequest(pendingRequest) {
+    const config = await this.getConfig();
+    const updated = {
+      ...config,
+      pendingRequest,
+    };
+    this.settings.set(SETTING.config, updated);
+    return updated;
+  }
+
+  async clearPendingRequest() {
+    const config = await this.getConfig();
+    if (!config.pendingRequest) {
+      return config;
+    }
+
+    const updated = {
+      ...config,
+      pendingRequest: null,
     };
     this.settings.set(SETTING.config, updated);
     return updated;

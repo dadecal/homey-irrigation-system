@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "component": "homey-scripts",
+  "version": "1.3.0",
+  "scripts": [
+    {
+      "name": "Irrigation",
+      "localPath": "homey/src/Irrigation.js",
+      "remoteName": "Irrigation System.js",
+      "homeyScriptId": "bb43000d-2605-4e47-87a8-a7d08381dd7c"
+    },
+    {
+      "name": "IrrigationStatus",
+      "localPath": "homey/src/IrrigationStatus.js",
+      "remoteName": "Irrigation Status.js",
+      "homeyScriptId": "c8d61633-d85c-48af-a24b-0d26859a146f"
+    },
+    {
+      "name": "IrrigationHistory",
+      "localPath": "homey/src/IrrigationHistory.js",
+      "remoteName": "Irrigation History.js",
+      "homeyScriptId": "c53f0ade-6af3-4663-a4b6-794fab2c99db"
+    },
+    {
+      "name": "IrrigationHealth",
+      "localPath": "homey/src/IrrigationHealth.js",
+      "remoteName": "Irrigation Health.js",
+      "homeyScriptId": "53ff24da-870f-4291-a19d-c9ecb8eedb4f"
+    },
+    {
+      "name": "IrrigationRecovery",
+      "localPath": "homey/src/IrrigationRecovery.js",
+      "remoteName": "Irrigation Recovery.js",
+      "homeyScriptId": "90bef5b6-771a-42a7-b977-88abc7347cbc",
+      "deprecated": true,
+      "note": "Sustituido por RecoveryService en la app nativa; mantener sólo si existe en Homey por compatibilidad histórica."
+    }
+  ]
+}

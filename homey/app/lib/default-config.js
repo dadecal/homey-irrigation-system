@@ -18,6 +18,7 @@ function createDefaultConfig() {
     },
     rainDelayUntil: 0,
     lastRunDate: null,
+    pendingRequest: null,
     updatedTs: 0,
   };
 }

@@ -223,7 +223,7 @@ Su ejecución es idempotente.
 
 ⸻
 
-IrrigationRecovery.js
+RecoveryService (app Homey nativa)
 
 Responsabilidad:
 
@@ -236,6 +236,12 @@ Responsabilidad:
 Nunca controla relés, motor ni cola. Es una medida provisional frente a
 bloqueos de reconexión de la integración y no sustituye las protecciones del
 ESP32.
+
+La responsabilidad se ejecuta dentro de la aplicación Homey nativa porque el
+reinicio de aplicaciones requiere permisos de Web API que HomeyScript no puede
+ejercer de forma fiable en este sistema. El contrato persistente se mantiene en
+`Irrigation.Recovery`, `Irrigation.RecoveryMessage` e
+`Irrigation.RecoveryTrigger`.
 
 ⸻
 
@@ -321,6 +327,18 @@ La interfaz de usuario nunca contiene lógica.
 El hardware nunca contiene lógica.
 
 Toda la lógica reside en Homey Scripts.
+
+⸻
+
+Versionado por contratos
+
+Cada componente mantiene su propia versión. Una release de sistema no exige que
+la app Homey, los HomeyScripts y el firmware ESP32 compartan número de versión
+ni que se recompilen si no han cambiado.
+
+La compatibilidad se comprueba mediante contratos publicados y requeridos. Las
+versiones y hashes del manifest aportan trazabilidad exacta de la combinación
+validada.
 
 ⸻
 

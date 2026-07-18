@@ -1,4 +1,7 @@
 // Irrigation System v1.3 - queue architecture
+// Component: homey-scripts@1.3.0
+// Provides: irrigation-scripts-api@1.0.0
+// Requires: irrigation-hw-api >=1.0.0 <2.0.0
 // Responsabilidad: motor de riego, cola, relés y estado operativo.
 // Sensores: IrrigationStatus.js
 // Histórico/Insights: IrrigationHistory.js

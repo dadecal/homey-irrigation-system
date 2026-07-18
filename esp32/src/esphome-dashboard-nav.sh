@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+ESPHOME_BIN="$HOME/.local/bin/esphome"
 PORT=6052
 WAIT_SECONDS=8   # tiempo máximo para esperar que arranque el dashboard
 
@@ -33,6 +34,12 @@ if [ -z "$ESPHOME_DIR" ]; then
   exit 1
 fi
 
+if [ ! -x "$ESPHOME_BIN" ]; then
+  echo "❌ No encuentro ESPHome en $ESPHOME_BIN"
+  echo "Instala/actualiza ESPHome con pipx o ajusta ESPHOME_BIN en este script."
+  exit 1
+fi
+
 URL="http://localhost:$PORT"
 
 # Comprueba si ya está escuchando el puerto
@@ -40,7 +47,8 @@ if lsof -i TCP:$PORT -sTCP:LISTEN >/dev/null 2>&1; then
   echo "✅ ESPHome dashboard ya está corriendo en $URL"
 else
   echo "🚀 Lanzando ESPHome dashboard en background..."
-  nohup esphome dashboard "$ESPHOME_DIR" --port $PORT >/tmp/esphome_dashboard.log 2>&1 &
+  echo "🔧 ESPHome: $("$ESPHOME_BIN" version)"
+  nohup "$ESPHOME_BIN" dashboard "$ESPHOME_DIR" --port "$PORT" >/tmp/esphome_dashboard.log 2>&1 &
   echo "📄 Log: /tmp/esphome_dashboard.log"
 
   echo "⏳ Esperando a que arranque (hasta ${WAIT_SECONDS}s)..."

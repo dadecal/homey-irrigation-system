@@ -17,6 +17,9 @@
   "category": [
     "tools"
   ],
+  "permissions": [
+    "homey:manager:api"
+  ],
   "brandColor": "#256D5A",
   "images": {
     "small": "/assets/app-small.png",
@@ -35,6 +38,10 @@
       "method": "GET",
       "path": "/status"
     },
+    "getRelease": {
+      "method": "GET",
+      "path": "/release"
+    },
     "setRainDelay": {
       "method": "POST",
       "path": "/rain-delay"
@@ -42,6 +49,14 @@
     "clearRainDelay": {
       "method": "DELETE",
       "path": "/rain-delay"
+    },
+    "getRecoveryStatus": {
+      "method": "GET",
+      "path": "/recovery/status"
+    },
+    "checkRecovery": {
+      "method": "POST",
+      "path": "/recovery/check"
     }
   }
 }

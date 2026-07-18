@@ -1,6 +1,9 @@
 esphome:
   name: riego
   friendly_name: Controlador de Riego
+  # ESPHome/PlatformIO 2026 rechaza rutas de build con espacios. El repo vive
+  # en "Homey Irrigation System", así que compilamos fuera del árbol del repo.
+  build_path: /private/tmp/esphome-riego-build
 
 esp32:
   board: esp32dev
@@ -8,14 +11,22 @@ esp32:
     type: arduino
     version: recommended
 
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  # Diagnóstico ESPHome Controller: desactiva el ahorro de energía WiFi para
+  # descartar desconexiones provocadas por latencia/sleep del radio.
+  power_save_mode: none
 
   on_connect:
     then:
       - logger.log:
-          level: INFO
+          level: DEBUG
           format: "WIFI: conectado"
 
   on_disconnect:
@@ -52,7 +63,15 @@ ota:
 
 # Enable logging
 logger:
-  level: INFO
+  # Diagnóstico temporal para ESPHome Controller. Mantener en DEBUG mientras
+  # se investigan desconexiones; volver a INFO cuando se cierre la incidencia.
+  level: DEBUG
+  logs:
+    # Evita que los caudalímetros y sensores inunden el log cada pocos segundos
+    # mientras seguimos viendo el diagnóstico explícito de conexión.
+    pulse_counter: INFO
+    sensor: INFO
+    text_sensor: INFO
   on_message:
     level: WARN
     then:
@@ -74,6 +93,21 @@ logger:
               continue;
             }
             current_message.push_back(raw_message[i]);
+          }
+
+          // Mensajes administrativos de ESPHome: indican que un componente ha
+          // limpiado un warning anterior. No son incidencias accionables y no
+          // deben sobrescribir "ESP Último error" en Homey.
+          if (current_message.find("cleared Warning flag") != std::string::npos) {
+            return;
+          }
+
+          // Ruido del visor local `esphome logs`/dashboard. Estos mensajes
+          // describen la conexión del cliente que mira logs, no una incidencia
+          // del riego ni de la integración ESPHome Controller de Homey.
+          if (current_tag == "api.connection" &&
+              current_message.find("ESPHome Logs") != std::string::npos) {
+            return;
           }
 
           if (current_message.size() > 160) {
@@ -102,6 +136,20 @@ logger:
           id(esp_error_message).publish_state(current_message);
           id(esp_error_sequence).publish_state(id(esp_error_sequence_value));
 
+interval:
+  - interval: 5min
+    then:
+      - logger.log:
+          level: DEBUG
+          tag: "irrigation.diagnostics"
+          format: "DIAG: heap=%.0f B | loop=%.0f ms | rssi=%.1f dBm | uptime=%.0f s | reset=%s"
+          args:
+            - "id(heap_free).has_state() ? id(heap_free).state : NAN"
+            - "id(loop_time_ms).has_state() ? id(loop_time_ms).state : NAN"
+            - "id(wifi_rssi).has_state() ? id(wifi_rssi).state : NAN"
+            - "id(uptime_seconds).has_state() ? id(uptime_seconds).state : NAN"
+            - "id(reset_reason).has_state() ? id(reset_reason).state.c_str() : \"unknown\""
+
 # Enable Home Assistant API
 api:
   port: 6053
@@ -112,39 +160,62 @@ api:
   on_client_connected:
     - logger.log:
         level: INFO
-        format: "API: cliente conectado | heap=%.0f B | loop=%.0f ms | rssi=%.1f dBm | uptime=%.0f s"
+        tag: "irrigation.api"
+        format: "API_CLIENT_CONNECTED: client='%s' address='%s' | heap=%.0f B | loop=%.0f ms | rssi=%.1f dBm | uptime=%.0f s"
         args:
-          - "id(heap_free).state"
-          - "id(loop_time_ms).state"
-          - "id(wifi_rssi).state"
-          - "id(uptime_seconds).state"
+          - "client_info.c_str()"
+          - "client_address.c_str()"
+          - "id(heap_free).has_state() ? id(heap_free).state : NAN"
+          - "id(loop_time_ms).has_state() ? id(loop_time_ms).state : NAN"
+          - "id(wifi_rssi).has_state() ? id(wifi_rssi).state : NAN"
+          - "id(uptime_seconds).has_state() ? id(uptime_seconds).state : NAN"
+    - lambda: |-
+        id(esp_api_last_client).publish_state(
+          std::string("CONNECTED: ") + client_info + " @ " + client_address
+        );
 
   on_client_disconnected:
     - logger.log:
         level: INFO
-        format: "API: cliente desconectado | heap=%.0f B | loop=%.0f ms | rssi=%.1f dBm | uptime=%.0f s"
+        tag: "irrigation.api"
+        format: "API_CLIENT_DISCONNECTED: client='%s' address='%s' | heap=%.0f B | loop=%.0f ms | rssi=%.1f dBm | uptime=%.0f s"
         args:
-          - "id(heap_free).state"
-          - "id(loop_time_ms).state"
-          - "id(wifi_rssi).state"
-          - "id(uptime_seconds).state"
+          - "client_info.c_str()"
+          - "client_address.c_str()"
+          - "id(heap_free).has_state() ? id(heap_free).state : NAN"
+          - "id(loop_time_ms).has_state() ? id(loop_time_ms).state : NAN"
+          - "id(wifi_rssi).has_state() ? id(wifi_rssi).state : NAN"
+          - "id(uptime_seconds).has_state() ? id(uptime_seconds).state : NAN"
+    - lambda: |-
+        id(esp_api_last_client).publish_state(
+          std::string("DISCONNECTED: ") + client_info + " @ " + client_address
+        );
 
 web_server:
   port: 80
 
 #Irrigation specific vars
 substitutions:
+  firmware_version: "1.0.0"
+  hardware_contract_name: "irrigation-hw-api"
+  hardware_contract_version: "1.0.0"
   pulses_per_liter: "396.0"
   leak_threshold_lpm: "0.1"
   leak_clear_threshold_lpm: "0.05"
   min_expected_flow_lpm: "0.1"
+  # Durante la fase de instalación hidráulica no hay caudal real conectado.
+  # Mantener en false para no generar falsos fallos "relé activo sin caudal".
+  # Cambiar a true cuando las tuberías y caudalímetros estén operativos.
+  flow_fault_detection_enabled: "false"
   # Barrera física independiente de Homey. La duración funcional máxima es
   # 30 min; cinco minutos adicionales absorben latencia y cierre normal.
   max_relay_on_minutes: "35"
   # Protección térmica
-  # temp_protection_c: umbral de temperatura del chip (máx absoluto ESP32: 85°C).
-  #   Se actúa a 75°C; histéresis: se desactiva a 70°C.
-  temp_protection_c: "75.0"
+  # temp_protection_c: umbral operativo sobre la temperatura estimada del chip.
+  # Con DHT20 válido se calcula como Temperatura Riego + temp_box_offset_c.
+  # Si el DHT20 no tiene lectura válida, se usa ESP Internal Temp como respaldo.
+  # La histéresis desactiva 5°C por debajo.
+  temp_protection_c: "85.0"
   # temp_box_offset_c: diferencia estimada entre la temperatura del aire de
   #   la caja y la del chip. El chip suele ser 10-20°C más caliente que el
   #   aire que lo rodea según la carga y la ventilación. Ajusta este valor
@@ -202,16 +273,20 @@ sensor:
       id: loop_time_ms
       entity_category: diagnostic
 
-  - platform: dht
-    model: DHT22
-    pin: GPIO13
+  # DHT20 AZ-Delivery. ESPHome lo integra mediante la plataforma AHT10/AHT20:
+  # el DHT20 encapsula un sensor compatible AHT20 y comunica por I2C.
+  - platform: aht10
+    variant: AHT20
+    address: 0x38
     temperature:
       name: "Temperatura Riego"
       id: box_temp
+      accuracy_decimals: 1
       filters:
        - filter_out: nan
     humidity:
       name: "Humedad Riego"
+      accuracy_decimals: 1
       filters:
        - filter_out: nan
     update_interval: 60s
@@ -230,8 +305,8 @@ sensor:
 
   # Temperatura estimada del chip = temp caja + offset.
   # Sirve de referencia en Homey y es la que dispara la protección térmica.
-  # Si en condiciones de carga ves una diferencia sistemática entre este
-  # valor y "ESP Internal Temp", ajusta temp_box_offset_c.
+  # La lectura ambiental DHT20 es la principal; "ESP Internal Temp" queda como
+  # respaldo si el DHT20 falla o todavía no ha publicado una lectura válida.
   - platform: template
     name: "Temp estimada chip ESP"
     id: estimated_chip_temp
@@ -241,12 +316,37 @@ sensor:
     entity_category: diagnostic
     update_interval: 30s
     lambda: |-
-      if (!id(box_temp).has_state()) return NAN;
-      const float t = id(box_temp).state;
-      if (isnan(t)) return NAN;
-      return t + ${temp_box_offset_c};
+      if (id(box_temp).has_state()) {
+        const float t = id(box_temp).state;
+        if (!isnan(t) && !isinf(t)) {
+          return t + ${temp_box_offset_c};
+        }
+      }
+      if (id(esp_internal_temp).has_state()) {
+        const float t = id(esp_internal_temp).state;
+        if (!isnan(t) && !isinf(t)) {
+          return t;
+        }
+      }
+      return NAN;
 
 text_sensor:
+  - platform: template
+    name: "ESP Firmware Version"
+    id: esp_firmware_version
+    entity_category: diagnostic
+    update_interval: 6h
+    lambda: |-
+      return {"${firmware_version}"};
+
+  - platform: template
+    name: "ESP Hardware Contract"
+    id: esp_hardware_contract
+    entity_category: diagnostic
+    update_interval: 6h
+    lambda: |-
+      return {"${hardware_contract_name}@${hardware_contract_version}"};
+
   - platform: template
     name: "ESP Nivel error"
     id: esp_error_level
@@ -265,15 +365,22 @@ text_sensor:
     entity_category: diagnostic
     update_interval: never
 
+  - platform: template
+    name: "ESP Último cliente API"
+    id: esp_api_last_client
+    entity_category: diagnostic
+    update_interval: never
+
   - platform: debug
     reset_reason:
       name: "Motivo último reinicio"
+      id: reset_reason
       entity_category: diagnostic
 
 # ---------------------------------------------------------
 # Protección térmica
 #
-# Si la temperatura interna del ESP32 supera temp_protection_c
+# Si la temperatura estimada del chip supera temp_protection_c
 # durante más de 10s, se cierran todas las válvulas y se bloquea
 # la apertura hasta que el chip se enfríe por debajo de (umbral - 5°C).
 #
@@ -344,5 +451,5 @@ packages:
   linea_2: !include { file: riego/linea.yaml, vars: { line: "2", flow_pin: GPIO25, relay_pin: GPIO17 } }
   linea_3: !include { file: riego/linea.yaml, vars: { line: "3", flow_pin: GPIO26, relay_pin: GPIO18 } }
   linea_4: !include { file: riego/linea.yaml, vars: { line: "4", flow_pin: GPIO27, relay_pin: GPIO19 } }
-  linea_5: !include { file: riego/linea.yaml, vars: { line: "5", flow_pin: GPIO32, relay_pin: GPIO21 } }
-  linea_6: !include { file: riego/linea.yaml, vars: { line: "6", flow_pin: GPIO33, relay_pin: GPIO22 } }
+  linea_5: !include { file: riego/linea.yaml, vars: { line: "5", flow_pin: GPIO32, relay_pin: GPIO23 } }
+  linea_6: !include { file: riego/linea.yaml, vars: { line: "6", flow_pin: GPIO33, relay_pin: GPIO13 } }

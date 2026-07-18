@@ -10,12 +10,19 @@ class ProgramRequestTrigger {
     this.card = homey.flow.getTriggerCard('program_requested');
   }
 
-  async trigger(queue) {
-    const request = createProgramRequest(queue);
+  createRequest(queue, metadata = {}) {
+    return createProgramRequest(queue, Date.now(), metadata);
+  }
+
+  async triggerRequest(request) {
     await this.card.trigger({
       request: serializeProgramRequest(request),
     });
     return request;
+  }
+
+  async trigger(queue, metadata = {}) {
+    return this.triggerRequest(this.createRequest(queue, metadata));
   }
 }
 
