@@ -7,7 +7,7 @@
       "sourcePaths": [
         "homey/app"
       ],
-      "artifactPattern": "homey-irrigation-app-{version}.zip",
+      "artifactPattern": "homey-irrigation-app-{version}.tgz",
       "provides": {
         "schedulerApi": {
           "name": "irrigation-scheduler-api",

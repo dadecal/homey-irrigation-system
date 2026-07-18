@@ -530,12 +530,21 @@ node tools/release/build-homey-app.mjs
 
 El script comprueba que `homey/app/package.json`, `homey/app/app.json` y
 `release/components.json` declaran la misma versión de app, ejecuta
-`npm run validate`, `npm test`, `npx homey app build` y comprime la carpeta
-preprocesada `homey/app/.homeybuild`. El zip resultante representa la build de
-Homey que debe subirse a GitHub Releases. Para instalar exactamente esa misma
-build en Homey, ejecutar `npx homey app install --skip-build` desde
-`homey/app` inmediatamente después de generar el artefacto, evitando que el CLI
-vuelva a construir otra salida distinta.
+`npm run validate`, `npm test`, `npx homey app build` y empaqueta la carpeta
+preprocesada `homey/app/.homeybuild` con el mismo formato `tar.gz` usado por el
+CLI de Homey al instalar. El `.tgz` resultante representa la build de Homey que
+debe subirse a GitHub Releases.
+
+Para instalar exactamente ese mismo artefacto en Homey:
+
+```bash
+node tools/release/install-homey-app-artifact.mjs \
+  --artifact dist/artifacts/homey-app/homey-irrigation-app-0.1.0.tgz
+```
+
+No usar `npx homey app install --skip-build` para esta garantía. En la versión
+actual del CLI, esa opción valida contra `.homeybuild` pero empaqueta la ruta
+raíz de la app, por lo que no representa exactamente el artefacto generado.
 
 Los HomeyScripts se empaquetan con:
 

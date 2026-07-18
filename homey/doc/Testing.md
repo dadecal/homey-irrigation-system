@@ -547,8 +547,8 @@ Antes de publicar una release de sistema:
   explícitamente si se trata de una release provisional o si falta commitear;
 * si se despliega firmware ESP32, subir exactamente el `.ota.bin` registrado en
   el manifest mediante `esphome upload ... --file`;
-* si se despliega app Homey, instalar la build ya generada con
-  `npx homey app install --skip-build`;
+* si se despliega app Homey, instalar el artefacto `.tgz` ya generado con
+  `node tools/release/install-homey-app-artifact.mjs --artifact <file.tgz>`;
 * si se despliegan HomeyScripts, comprobar que los scripts subidos a Homey
   corresponden al artefacto `homey-scripts-<version>.zip` y sus hashes;
 * cuando exista exportación remota de scripts, ejecutar

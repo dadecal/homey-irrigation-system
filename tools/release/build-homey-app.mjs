@@ -1,15 +1,19 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto';
-import { mkdir, mkdtemp, readFile, rename, rm } from 'node:fs/promises';
+import { createWriteStream } from 'node:fs';
+import { mkdir, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
-import os from 'node:os';
 import { execFileSync } from 'node:child_process';
+import { pipeline } from 'node:stream/promises';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const APP_DIR = path.join(ROOT, 'homey', 'app');
 const COMPONENTS_FILE = path.join(ROOT, 'release', 'components.json');
+const require = createRequire(import.meta.url);
+const HomeyCliApp = require(path.join(APP_DIR, 'node_modules', 'homey', 'lib', 'App.js'));
 
 function parseArgs(argv) {
   const args = {
@@ -38,7 +42,8 @@ Options:
   --skip-tests         Do not run npm test.
 
 The script always runs 'npx homey app build' and packages the generated
-homey/app/.homeybuild directory as the release artifact.
+homey/app/.homeybuild directory with the same tar.gz packer used by the Homey
+CLI installer. The resulting .tgz is the deployable release artifact.
 `);
 }
 
@@ -101,16 +106,15 @@ async function main() {
 
   const targetName = artifactName(component.artifactPattern, component.version);
   const target = path.join(outDir, targetName);
-  const tmpDir = await mkdtemp(path.join(os.tmpdir(), 'homey-app-artifact-'));
-  const tmpZip = path.join(tmpDir, targetName);
+  await rm(target, { force: true });
 
-  run('zip', ['-qr', tmpZip, '.'], path.join(APP_DIR, '.homeybuild'));
-  await rename(tmpZip, target);
-  await rm(tmpDir, { recursive: true, force: true });
+  const app = new HomeyCliApp(APP_DIR);
+  const packStream = await app._getPackStream();
+  await pipeline(packStream, createWriteStream(target));
 
   console.log(`Homey app artifact generated: ${path.relative(ROOT, target)}`);
   console.log(`SHA256: ${await sha256(target)}`);
-  console.log('To deploy this exact build, run from homey/app: npx homey app install --skip-build');
+  console.log(`To deploy this exact artifact, run: node tools/release/install-homey-app-artifact.mjs --artifact ${path.relative(ROOT, target)}`);
 }
 
 main().catch(error => {

@@ -82,7 +82,15 @@ node tools/release/build-homey-app.mjs
 ```
 
 El script valida, ejecuta tests, genera `.homeybuild` con el CLI de Homey y
-crea `dist/artifacts/homey-app/homey-irrigation-app-<version>.zip`.
+crea `dist/artifacts/homey-app/homey-irrigation-app-<version>.tgz` con el mismo
+formato `tar.gz` que Homey recibe al instalar la app.
+
+Para desplegar exactamente ese artefacto:
+
+```bash
+node tools/release/install-homey-app-artifact.mjs \
+  --artifact dist/artifacts/homey-app/homey-irrigation-app-0.1.0.tgz
+```
 
 Para generar el artefacto versionado de los HomeyScripts:
 
@@ -117,7 +125,7 @@ ESP32:
 node tools/release/prepare-release.mjs \
   --system-release v1.0.0 \
   --esp32-bin /private/tmp/esphome-riego-build/.pioenvs/riego/firmware.ota.bin \
-  --homey-app-artifact dist/artifacts/homey-app/homey-irrigation-app-0.1.0.zip \
+  --homey-app-artifact dist/artifacts/homey-app/homey-irrigation-app-0.1.0.tgz \
   --homey-scripts-artifact dist/artifacts/homey-scripts/homey-scripts-1.3.0.zip
 ```
 
@@ -125,10 +133,10 @@ El resultado se escribe en `dist/releases/<release>/`, excluido de Git para
 evitar commitear binarios por accidente. Esos artefactos son los que deben
 subirse a GitHub Releases.
 
-Para que la app instalada en Homey coincida con el artefacto, después de
-generar el zip debe instalarse la build ya generada:
+Para que la app instalada en Homey coincida con el artefacto, instalar el `.tgz`
+con:
 
 ```bash
-cd homey/app
-npx homey app install --skip-build
+node tools/release/install-homey-app-artifact.mjs \
+  --artifact dist/artifacts/homey-app/homey-irrigation-app-0.1.0.tgz
 ```
