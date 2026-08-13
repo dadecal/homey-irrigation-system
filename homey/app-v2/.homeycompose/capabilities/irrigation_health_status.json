@@ -1,0 +1,11 @@
+{
+  "type": "string",
+  "icon": "/assets/capability-icons/watchdog.svg",
+  "title": {
+    "en": "Health status",
+    "es": "Estado de salud"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor"
+}

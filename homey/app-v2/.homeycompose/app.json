@@ -1,0 +1,190 @@
+{
+  "id": "com.dadecal.irrigation.v2",
+  "version": "2.0.9",
+  "sdk": 3,
+  "compatibility": ">=10.0.0",
+  "name": {
+    "en": "Irrigation System v2",
+    "es": "Sistema de Riego v2"
+  },
+  "description": {
+    "en": "Second-generation native Homey app for the irrigation system.",
+    "es": "Aplicacion Homey nativa de segunda generacion para el sistema de riego."
+  },
+  "author": {
+    "name": "Dadecal"
+  },
+  "category": [
+    "tools"
+  ],
+  "permissions": [
+    "homey:manager:api"
+  ],
+  "brandColor": "#256D5A",
+  "images": {
+    "small": "/assets/app-small.png",
+    "large": "/assets/app-large.png"
+  },
+  "api": {
+    "getConfig": {
+      "method": "GET",
+      "path": "/config"
+    },
+    "putConfig": {
+      "method": "PUT",
+      "path": "/config"
+    },
+    "getStatus": {
+      "method": "GET",
+      "path": "/status"
+    },
+    "getRelease": {
+      "method": "GET",
+      "path": "/release"
+    },
+    "getHealthStatus": {
+      "method": "GET",
+      "path": "/health/status"
+    },
+    "checkHealth": {
+      "method": "POST",
+      "path": "/health/check"
+    },
+    "getStatusSyncStatus": {
+      "method": "GET",
+      "path": "/status-sync/status"
+    },
+    "checkStatusSync": {
+      "method": "POST",
+      "path": "/status-sync/check"
+    },
+    "getHistoryStatus": {
+      "method": "GET",
+      "path": "/history/status"
+    },
+    "checkHistory": {
+      "method": "POST",
+      "path": "/history/check"
+    },
+    "ensureHistoryDevice": {
+      "method": "POST",
+      "path": "/history-device/ensure"
+    },
+    "getRecoveryStatus": {
+      "method": "GET",
+      "path": "/recovery/status"
+    },
+    "checkRecovery": {
+      "method": "POST",
+      "path": "/recovery/check"
+    },
+    "restartControllerProbe": {
+      "method": "POST",
+      "path": "/recovery/restart-controller/probe"
+    },
+    "getRecoveryTokenStatus": {
+      "method": "GET",
+      "path": "/recovery/token"
+    },
+    "putRecoveryToken": {
+      "method": "PUT",
+      "path": "/recovery/token"
+    },
+    "clearRecoveryToken": {
+      "method": "DELETE",
+      "path": "/recovery/token"
+    },
+    "getEngineStatus": {
+      "method": "GET",
+      "path": "/engine/status"
+    },
+    "checkEngine": {
+      "method": "POST",
+      "path": "/engine/check"
+    },
+    "previewEngineManualStart": {
+      "method": "POST",
+      "path": "/engine/manual-start/preview"
+    },
+    "previewEngineProgramStart": {
+      "method": "POST",
+      "path": "/engine/program-start/preview"
+    },
+    "previewEngineManualStop": {
+      "method": "POST",
+      "path": "/engine/manual-stop/preview"
+    },
+    "startEngineManual": {
+      "method": "POST",
+      "path": "/engine/manual-start"
+    },
+    "startEngineProgram": {
+      "method": "POST",
+      "path": "/engine/program-start"
+    },
+    "stopEngineManual": {
+      "method": "POST",
+      "path": "/engine/manual-stop"
+    },
+    "tickEngine": {
+      "method": "POST",
+      "path": "/engine/tick"
+    },
+    "recoverEngine": {
+      "method": "POST",
+      "path": "/engine/recover"
+    },
+    "getSystemDeviceStatus": {
+      "method": "GET",
+      "path": "/system-device/status"
+    },
+    "checkSystemDevice": {
+      "method": "POST",
+      "path": "/system-device/check"
+    },
+    "ensureSystemDevice": {
+      "method": "POST",
+      "path": "/system-device/ensure"
+    },
+    "getManualDeviceStatus": {
+      "method": "GET",
+      "path": "/manual-device/status"
+    },
+    "checkManualDevice": {
+      "method": "POST",
+      "path": "/manual-device/check"
+    },
+    "ensureManualDevice": {
+      "method": "POST",
+      "path": "/manual-device/ensure"
+    },
+    "getMigrationReadiness": {
+      "method": "GET",
+      "path": "/migration/readiness"
+    },
+    "getDiagnosticsStatus": {
+      "method": "GET",
+      "path": "/diagnostics/status"
+    },
+    "checkMigrationReadiness": {
+      "method": "POST",
+      "path": "/migration/readiness/check"
+    },
+    "putMigrationControl": {
+      "method": "PUT",
+      "path": "/migration/control"
+    },
+    "probeLogicWrite": {
+      "method": "POST",
+      "path": "/diagnostics/logic-write-probe"
+    },
+    "setRainDelay": {
+      "method": "POST",
+      "path": "/rain-delay"
+    },
+    "clearRainDelay": {
+      "method": "DELETE",
+      "path": "/rain-delay"
+    }
+  }
+}

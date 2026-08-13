@@ -1,0 +1,39 @@
+{
+  "title": {
+    "en": "The irrigation health status changes",
+    "es": "Cambia el estado de salud del riego"
+  },
+  "hint": {
+    "en": "Use this trigger to notify hardware, ESPHome or engine health incidents detected by the native app.",
+    "es": "Usa este disparador para avisar incidencias de hardware, ESPHome o motor detectadas por la app nativa."
+  },
+  "tokens": [
+    {
+      "name": "status",
+      "type": "string",
+      "title": {
+        "en": "Status",
+        "es": "Estado"
+      },
+      "example": "OFFLINE"
+    },
+    {
+      "name": "message",
+      "type": "string",
+      "title": {
+        "en": "Message",
+        "es": "Mensaje"
+      },
+      "example": "OFFLINE - Controlador ESP32 desconectado"
+    },
+    {
+      "name": "issueCodes",
+      "type": "string",
+      "title": {
+        "en": "Issue codes",
+        "es": "Codigos de incidencia"
+      },
+      "example": "ESP_OFFLINE,ENGINE_CONTROLLER_OFFLINE"
+    }
+  ]
+}

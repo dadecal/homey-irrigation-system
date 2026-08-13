@@ -16,6 +16,12 @@ El sistema debe permitir:
 
 El diseño busca desacoplar completamente la lógica de negocio del hardware y de la interfaz de usuario.
 
+La Rama 2, una nueva generacion basada en una app Homey nativa completa, se
+documenta en `AppMigrationPlan.md`. Ese documento es la fuente de seguimiento
+para separar Rama 1 y Rama 2 en codigo, artefactos, binarios y documentacion, y
+para controlar los cambios de responsabilidad entre HomeyScripts, Flows,
+dispositivos virtuales y servicios internos de la app.
+
 ⸻
 
 2. Arquitectura general

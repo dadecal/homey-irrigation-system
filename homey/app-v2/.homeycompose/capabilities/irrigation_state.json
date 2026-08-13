@@ -1,0 +1,11 @@
+{
+  "type": "string",
+  "icon": "/assets/capability-icons/state.svg",
+  "title": {
+    "en": "State",
+    "es": "Estado"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor"
+}

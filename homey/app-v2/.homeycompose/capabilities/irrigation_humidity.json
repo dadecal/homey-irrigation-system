@@ -1,0 +1,17 @@
+{
+  "type": "number",
+  "icon": "/assets/capability-icons/humidity.svg",
+  "title": {
+    "en": "Ambient humidity",
+    "es": "Humedad ambiente"
+  },
+  "units": {
+    "en": "%",
+    "es": "%"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "decimals": 1,
+  "insights": true
+}

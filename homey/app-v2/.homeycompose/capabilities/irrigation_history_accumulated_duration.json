@@ -1,0 +1,17 @@
+{
+  "type": "number",
+  "icon": "/assets/capability-icons/clock.svg",
+  "title": {
+    "en": "Accumulated duration",
+    "es": "Duracion acumulada"
+  },
+  "units": {
+    "en": "min",
+    "es": "min"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "decimals": 1,
+  "insights": true
+}

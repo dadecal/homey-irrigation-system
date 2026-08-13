@@ -14,6 +14,127 @@ Siempre que sea posible, las pruebas deben realizarse utilizando el hardware rea
 
 1. Validación del motor (Irrigation.js)
 
+Durante Rama 2, antes de sustituir `Irrigation.js`, el contrato del motor se
+protege tambien con pruebas unitarias en `homey/app-v2/test/engine-contract.test.js`.
+Estas pruebas no controlan hardware; verifican reglas puras extraidas del
+motor actual:
+
+* limites de sector y duracion;
+* normalizacion de solicitudes `SCHEDULER`;
+* forma de cola manual y programada;
+* calculo de minutos restantes;
+* decisiones de `tick` para `timeout`, watchdog, grace period y ejecucion
+  obsoleta;
+* forma del evento de historico.
+
+Estas pruebas deben pasar antes de iniciar el modo sombra del motor nativo.
+
+En Fase 6.1, validar además:
+
+* `/api/app/com.dadecal.irrigation.v2/engine/status` devuelve `mode=SHADOW`,
+  `controlsHardware=false`, `writesOperationalVariables=false` y
+  `activeCompatSupported=false`;
+* `/api/app/com.dadecal.irrigation.v2/engine/check` lee estado legacy, relés
+  RAW y cola, calcula `tickDecision` y no escribe ningún valor;
+* `migrationControlV2.services.engine` permanece en `SHADOW`;
+* intentar activar `engine=ACTIVE_COMPAT` debe fallar hasta una fase posterior.
+
+En Fase 6.2, validar además:
+
+* `/engine/check` incluye `dryRunTransaction`;
+* todos los pasos del plan devuelven `dryRun=true`;
+* para `STOP_TIMEOUT`, el plan apaga relés antes de persistir historico, emite
+  trigger de historico antes de actualizar UI y no apaga el device manual si
+  queda cola pendiente;
+* para parada manual/watchdog, el plan vacia cola antes de historico y apaga el
+  device manual;
+* `failurePlan` conserva `activeSector` cuando existe un sector activo y
+  planifica `state=ERROR`, `stopReason=error`;
+* ninguna prueba dry-run debe escribir relés, Variables Logic ni capabilities.
+
+En Fase 6.3, validar además:
+
+* `POST /engine/manual-start/preview` acepta `sector` y `duration`, construye
+  una cola manual y devuelve `type=startQueuedItem` con todos los pasos
+  `dryRun=true`;
+* `POST /engine/program-start/preview` acepta una solicitud versionada de
+  scheduler, conserva la cola restante y devuelve `accepted=true` si el motor
+  legacy esta libre;
+* `POST /engine/manual-stop/preview` devuelve un plan `type=stop` sin ejecutar
+  apagado de relés, persistencia, historico ni proyeccion UI;
+* si el motor legacy esta `RUNNING` o en `ERROR`, las previsualizaciones de
+  arranque nativo deben devolver `accepted=false`;
+* `engine` debe continuar en `SHADOW` y `ACTIVE_COMPAT` debe seguir bloqueado.
+
+En preparacion de Fase 6.4, validar antes de cualquier cutover:
+
+* readiness de migracion sin blockers distintos de `engine` mientras aun no
+  este implementado el modo activo;
+* los endpoints reales `/engine/manual-start`, `/engine/program-start`,
+  `/engine/manual-stop`, `/engine/tick` y `/engine/recover` devuelven error de
+  compuerta mientras `engine=SHADOW`;
+* app v2 `running`, ESPHome Controller `running` y RAW `Riego` disponible;
+* motor `IDLE`, cola `0`, `activeSector=0` y todos los relés apagados;
+* Health sin incidencias `ERROR` activas de ESPHome;
+* inventario de Flows reales coincide con el runbook de `AppMigrationPlan.md`;
+* `Irrigation.js` remoto permanece intacto como rollback.
+* `MigrationReadinessService.checkEngineActivation()` devuelve blockers
+  especificos si cualquiera de esas condiciones falla;
+* si `readyToActivateEngine=true`, `safeToDisableTechnicalFlows` debe seguir
+  siendo `false` hasta que se ejecute el runbook fisico.
+
+En Fase 6.4 activa, validar:
+
+* `engine=ACTIVE_COMPAT` solo se acepta con confirmacion explicita;
+* `/engine/status` declara `controlsHardware=true`,
+  `writesOperationalVariables=false`, `writesInternalState=true` y
+  `activeCompatSupported=true`;
+* `MotorConfirmationStore` confirma solicitudes del Scheduler contra
+  `appStateV2.engine` cuando `engine=ACTIVE_COMPAT`, tanto con motor `RUNNING`
+  como con historico nativo ya persistido;
+* los Flows legacy `Riego motor - ON`, `Riego motor - OFF`,
+  `Riego programador v2 - solicitud` y `Riego motor - tick 1 min` quedan
+  deshabilitados durante la prueba;
+* arranque manual nativo activa solo el relé elegido;
+* parada manual nativa apaga todos los relés, vacia cola, persiste historico y
+  proyecta devices;
+* timeout nativo apaga relés, genera historico y continua cola si existe;
+* si el motor queda `IDLE` con cola pendiente y reles apagados, el siguiente
+  tick debe reanudar la cola con `START_PENDING_QUEUE` y no vaciarla;
+* si `programStart` y `tick` coinciden al inicio de un programa, el tick debe
+  saltarse con `OPERATION_RUNNING` y la cola restante S2-S6 debe conservarse;
+* con motor `IDLE`, cola vacia y todos los relés apagados, `FORCE_IDLE_NONE`
+  no debe escribir relés ni tener `failurePlan`; una indisponibilidad puntual
+  del RAW `Riego` no debe convertir el reposo normal en `ERROR`;
+* si el motor no esta `RUNNING` pero se observa algun relé activo,
+  `FORCE_IDLE_WATCHDOG` sí debe apagar relés y conservar el plan de fallo
+  fisico;
+* cada tick nativo añade una entrada compacta en
+  `appStateV2.engine.tickDiagnostics`, visible desde
+  `/engine/status.diagnostics.lastTicks`, con decision, relés observados,
+  cola, disponibilidad RAW y resultado de ejecucion;
+* las acciones relevantes del motor aparecen en
+  `/engine/status.diagnostics.lastActions`;
+* rollback devuelve `engine=SHADOW` y rehabilita los Flows legacy en el orden
+  documentado.
+
+Tras el intento abortado del 2026-07-25, validar ademas antes de repetir el
+cutover:
+
+* el backend `stateBackend=appState` del `EnginePlanExecutor` aplica estado,
+  cola, historico y eventos en `appStateV2.engine` sin escrituras Logic;
+* `IrrigationEngineService` lee Logic en `SHADOW`, lee `appStateV2.engine` en
+  `ACTIVE_COMPAT` y sus acciones reales no escriben Variables Logic;
+* Health, Recovery, SystemDevice y History leen la fuente activa correcta del
+  motor cuando `engine=ACTIVE_COMPAT`;
+* con Health/Recovery/History en `ACTIVE_COMPAT` pero `engine=SHADOW`, esos
+  servicios siguen leyendo Variables Logic para conservar la convivencia
+  actual;
+* Health no reemite `health_transition` para el mismo error accionable cuando
+  solo cambian warnings no accionables de ESPHome;
+* `MigrationReadinessService` mantiene `readyToActivateEngine=false` mientras
+  el motor nativo no declare soporte activo real sin dependencia de Logic.
+
 1.1 Arranque manual
 
 Objetivo
@@ -156,10 +277,16 @@ Validar desde los ajustes de la app las cuatro combinaciones de
 Resultado esperado:
 
 * cada sector de una cola emite exactamente un evento de inicio y uno de fin;
+* en Rama 2 activa, las notificaciones salen por las Flow Cards nativas
+  `sector_started` y `sector_ended`;
+* los Flows legacy basados en `Irrigation.SectorStartTrigger` e
+  `Irrigation.SectorEndTrigger` permanecen deshabilitados mientras
+  `engine=ACTIVE_COMPAT`;
 * sólo se crea la notificación cuyo booleano está activo;
 * el aviso de inicio incluye sector, duración y origen;
 * el aviso de fin incluye sector, litros y motivo cuando no termina por tiempo;
-* el mensaje se persiste antes de actualizar su trigger;
+* `appStateV2.engine.lastSectorEvent` se persiste antes de disparar la Flow
+  Card nativa;
 * una ejecución `status`, `tick` o `sync` no genera notificaciones de sector.
 
 ⸻
@@ -338,12 +465,23 @@ Comprobar siempre el orden:
 * interfaz actualizada al final;
 * ninguna notificación duplicada sin cambio de firma.
 
-Flows de supervisión:
+Flows de supervisión en Rama 2:
 
-* `Riego - Supervisión hardware cada minuto` está habilitado y ejecuta
-  `IrrigationHealth.js`;
-* `Riego - Aviso de incidencia hardware` está habilitado, no está roto y se
-  dispara al cambiar `Irrigation.HealthTrigger`;
+* `Riego - Supervisión hardware cada minuto` está deshabilitado; Health corre
+  dentro de `HealthService` en la app v2;
+* `Riego - Aviso de incidencia hardware v2` está habilitado, no está roto y se
+  dispara con la Flow Card nativa `health_transition` solo para `ERROR` u
+  `OFFLINE`;
+* el texto de la notificacion v2 debe incluir el detalle del token `message`
+  con el formato `Incidencia en sistema de riego: [[message]]`;
+* una recuperacion a `OK` no debe generar notificacion de incidencia;
+* un estado `WARNING` debe quedar visible en Health/UI sin generar
+  notificacion movil de incidencia;
+* warnings genericos de ESPHome procedentes de `api`, `web_server` o `httpd`
+  con mensajes `Reading failed CONNECTION_CLOSED` o
+  `Unsupported content type` no deben generar incidencia;
+* `Riego - Aviso de incidencia hardware` legacy permanece deshabilitado tras el
+  cutover a Health v2;
 * una incidencia nueva genera una notificación y las ejecuciones posteriores
   con la misma firma no generan otra.
 
@@ -359,8 +497,8 @@ Simular además los dos fallos críticos del motor:
 
 4.2 RecoveryService
 
-Validar con `/api/app/com.dadecal.irrigation/recovery/status` que localiza la
-app ESPHome Controller, informa `restartSupported = true` y no modifica su
+Validar con `/api/app/com.dadecal.irrigation.v2/recovery/status` que localiza
+la app ESPHome Controller, informa `restartSupported = true` y no modifica su
 estado.
 
 Simular indisponibilidad del dispositivo `Riego` y comprobar:
@@ -374,10 +512,16 @@ Simular indisponibilidad del dispositivo `Riego` y comprobar:
 * nunca modifica relés, motor ni cola;
 * cada evento genera como máximo una notificación.
 
-El Flow `Riego - Supervisión hardware cada minuto` debe ejecutar únicamente
-`IrrigationHealth.js`. Recovery corre dentro de la app nativa con timer interno;
-el script antiguo `IrrigationRecovery.js` no debe quedar conectado al Flow para
-evitar duplicar intentos durante una incidencia.
+El Flow `Riego - Supervisión hardware cada minuto` debe permanecer
+deshabilitado mientras `HealthService` este activo en Rama 2. Recovery corre
+dentro de la app v2 con timer interno; el script antiguo
+`IrrigationRecovery.js` no debe quedar conectado a ningun Flow para evitar
+duplicar intentos durante una incidencia.
+
+El Flow legacy `Riego - Aviso autorrecuperación ESPHome` debe permanecer
+deshabilitado. Las notificaciones de Recovery deben salir por
+`Riego - Aviso autorrecuperacion ESPHome v2` y la Flow Card nativa
+`recovery_event`.
 
 ⸻
 

@@ -1,0 +1,1 @@
+{"type":"number","icon":"/assets/capability-icons/water.svg","title":{"en":"S5 avg flow","es":"S5 caudal medio"},"units":{"en":"L/min","es":"L/min"},"getable":true,"setable":false,"uiComponent":"sensor","decimals":2,"insights":true}

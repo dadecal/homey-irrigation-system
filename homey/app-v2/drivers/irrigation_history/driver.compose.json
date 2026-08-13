@@ -1,0 +1,62 @@
+{
+  "name": {
+    "en": "Irrigation History",
+    "es": "Historico de Riego"
+  },
+  "class": "other",
+  "capabilities": [
+    "irrigation_history_last_watering",
+    "irrigation_history_timestamp",
+    "irrigation_history_program",
+    "irrigation_history_last_duration",
+    "irrigation_history_last_liters",
+    "irrigation_history_accumulated_liters",
+    "irrigation_history_watering_count",
+    "irrigation_history_accumulated_duration",
+    "irrigation_history_sector_1_last",
+    "irrigation_history_sector_1_duration",
+    "irrigation_history_sector_1_liters",
+    "irrigation_history_sector_1_avg_flow",
+    "irrigation_history_sector_2_last",
+    "irrigation_history_sector_2_duration",
+    "irrigation_history_sector_2_liters",
+    "irrigation_history_sector_2_avg_flow",
+    "irrigation_history_sector_3_last",
+    "irrigation_history_sector_3_duration",
+    "irrigation_history_sector_3_liters",
+    "irrigation_history_sector_3_avg_flow",
+    "irrigation_history_sector_4_last",
+    "irrigation_history_sector_4_duration",
+    "irrigation_history_sector_4_liters",
+    "irrigation_history_sector_4_avg_flow",
+    "irrigation_history_sector_5_last",
+    "irrigation_history_sector_5_duration",
+    "irrigation_history_sector_5_liters",
+    "irrigation_history_sector_5_avg_flow",
+    "irrigation_history_sector_6_last",
+    "irrigation_history_sector_6_duration",
+    "irrigation_history_sector_6_liters",
+    "irrigation_history_sector_6_avg_flow"
+  ],
+  "ui": {
+    "quickAction": null
+  },
+  "uiIndicator": "irrigation_history_timestamp",
+  "images": {
+    "small": "/assets/device-icons/irrigation-history-small.png",
+    "large": "/assets/device-icons/irrigation-history-large.png"
+  },
+  "pair": [
+    {
+      "id": "list_devices",
+      "template": "list_devices",
+      "navigation": {
+        "next": "add_devices"
+      }
+    },
+    {
+      "id": "add_devices",
+      "template": "add_devices"
+    }
+  ]
+}

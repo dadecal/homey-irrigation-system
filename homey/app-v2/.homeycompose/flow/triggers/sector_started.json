@@ -1,0 +1,48 @@
+{
+  "title": {
+    "en": "An irrigation sector starts",
+    "es": "Empieza un sector de riego"
+  },
+  "hint": {
+    "en": "Use this trigger to notify sector starts emitted by the native Rama 2 engine.",
+    "es": "Usa este disparador para avisar inicios de sector emitidos por el motor nativo de Rama 2."
+  },
+  "tokens": [
+    {
+      "name": "message",
+      "type": "string",
+      "title": {
+        "en": "Message",
+        "es": "Mensaje"
+      },
+      "example": "Iniciado sector 1: 5 min (MANUAL)"
+    },
+    {
+      "name": "sector",
+      "type": "number",
+      "title": {
+        "en": "Sector",
+        "es": "Sector"
+      },
+      "example": 1
+    },
+    {
+      "name": "duration",
+      "type": "number",
+      "title": {
+        "en": "Duration",
+        "es": "Duracion"
+      },
+      "example": 5
+    },
+    {
+      "name": "source",
+      "type": "string",
+      "title": {
+        "en": "Source",
+        "es": "Origen"
+      },
+      "example": "MANUAL"
+    }
+  ]
+}

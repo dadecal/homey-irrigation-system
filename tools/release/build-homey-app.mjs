@@ -10,19 +10,21 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const APP_DIR = path.join(ROOT, 'homey', 'app');
+const DEFAULT_APP_DIR = path.join(ROOT, 'homey', 'app');
 const COMPONENTS_FILE = path.join(ROOT, 'release', 'components.json');
 const require = createRequire(import.meta.url);
-const HomeyCliApp = require(path.join(APP_DIR, 'node_modules', 'homey', 'lib', 'App.js'));
+const HomeyCliApp = require(path.join(DEFAULT_APP_DIR, 'node_modules', 'homey', 'lib', 'App.js'));
 
 function parseArgs(argv) {
   const args = {
     outDir: 'dist/artifacts/homey-app',
+    component: 'homeyApp',
   };
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--out-dir') args.outDir = argv[++i];
+    else if (arg === '--component') args.component = argv[++i];
     else if (arg === '--skip-tests') args.skipTests = true;
     else if (arg === '--skip-validate') args.skipValidate = true;
     else if (arg === '--help' || arg === '-h') args.help = true;
@@ -38,11 +40,13 @@ function printHelp() {
 
 Options:
   --out-dir <dir>      Output directory. Default: dist/artifacts/homey-app
+  --component <name>   Component key from release/components.json.
+                       Supported: homeyApp, homeyAppV2. Default: homeyApp
   --skip-validate      Do not run npm run validate.
   --skip-tests         Do not run npm test.
 
 The script always runs 'npx homey app build' and packages the generated
-homey/app/.homeybuild directory with the same tar.gz packer used by the Homey
+the selected app's .homeybuild directory with the same tar.gz packer used by the Homey
 CLI installer. The resulting .tgz is the deployable release artifact.
 `);
 }
@@ -75,9 +79,18 @@ async function main() {
   }
 
   const components = await readJson(COMPONENTS_FILE);
-  const packageJson = await readJson(path.join(APP_DIR, 'package.json'));
-  const appJson = await readJson(path.join(APP_DIR, 'app.json'));
-  const component = components.components.homeyApp;
+  const component = components.components[args.component];
+  if (!component) {
+    throw new Error(`Unknown Homey app component: ${args.component}`);
+  }
+
+  if (!Array.isArray(component.sourcePaths) || component.sourcePaths.length !== 1) {
+    throw new Error(`Component ${args.component} must declare exactly one sourcePath`);
+  }
+
+  const appDir = path.join(ROOT, component.sourcePaths[0]);
+  const packageJson = await readJson(path.join(appDir, 'package.json'));
+  const appJson = await readJson(path.join(appDir, 'app.json'));
 
   if (packageJson.version !== appJson.version) {
     throw new Error(
@@ -92,14 +105,14 @@ async function main() {
   }
 
   if (!args.skipValidate) {
-    run('npm', ['run', 'validate'], APP_DIR);
+    run('npm', ['run', 'validate'], appDir);
   }
 
   if (!args.skipTests) {
-    run('npm', ['test'], APP_DIR);
+    run('npm', ['test'], appDir);
   }
 
-  run('npx', ['homey', 'app', 'build'], APP_DIR);
+  run('npx', ['homey', 'app', 'build'], appDir);
 
   const outDir = path.resolve(ROOT, args.outDir);
   await mkdir(outDir, { recursive: true });
@@ -108,13 +121,13 @@ async function main() {
   const target = path.join(outDir, targetName);
   await rm(target, { force: true });
 
-  const app = new HomeyCliApp(APP_DIR);
+  const app = new HomeyCliApp(appDir);
   const packStream = await app._getPackStream();
   await pipeline(packStream, createWriteStream(target));
 
   console.log(`Homey app artifact generated: ${path.relative(ROOT, target)}`);
   console.log(`SHA256: ${await sha256(target)}`);
-  console.log(`To deploy this exact artifact, run: node tools/release/install-homey-app-artifact.mjs --artifact ${path.relative(ROOT, target)}`);
+  console.log(`To deploy this exact artifact, run: node tools/release/install-homey-app-artifact.mjs --artifact ${path.relative(ROOT, target)} --app-dir ${component.sourcePaths[0]}`);
 }
 
 main().catch(error => {

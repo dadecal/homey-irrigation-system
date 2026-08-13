@@ -1,0 +1,17 @@
+{
+  "type": "number",
+  "icon": "/assets/capability-icons/clock.svg",
+  "title": {
+    "en": "Remaining time",
+    "es": "Tiempo restante"
+  },
+  "units": {
+    "en": "min",
+    "es": "min"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "decimals": 0,
+  "insights": true
+}

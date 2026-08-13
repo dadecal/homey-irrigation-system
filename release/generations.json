@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "generations": {
+    "branch1": {
+      "id": "branch1",
+      "label": "Rama 1",
+      "status": "stable",
+      "description": "Generacion publicada basada en ESPHome, HomeyScripts, Variables Logic, Flows tecnicos, dispositivos virtuales y app nativa del programador.",
+      "versionMajor": 1,
+      "artifactSuffix": "",
+      "policy": "Solo correcciones criticas y releases de mantenimiento.",
+      "components": {
+        "homeyApp": {
+          "versionRange": ">=0.1.0 <2.0.0",
+          "artifactPattern": "homey-irrigation-app-{version}.tgz"
+        },
+        "homeyScripts": {
+          "versionRange": ">=1.0.0 <2.0.0",
+          "artifactPattern": "homey-scripts-{version}.zip"
+        },
+        "esp32Firmware": {
+          "versionRange": ">=1.0.0 <2.0.0",
+          "artifactPattern": "riego-esp32-{version}.ota.bin"
+        }
+      }
+    },
+    "branch2": {
+      "id": "branch2",
+      "label": "Rama 2",
+      "status": "shadow",
+      "description": "Nueva generacion basada en una app Homey nativa completa con servicios internos, devices propios, Flow Cards propias y Variables Logic como proyeccion publica.",
+      "versionMajor": 2,
+      "artifactSuffix": "v2",
+      "policy": "Desarrollo separado. No mezclar artefactos ni despliegues con Rama 1.",
+      "recommendedDevelopmentAppId": "com.dadecal.irrigation.v2",
+      "components": {
+        "homeyApp": {
+          "versionRange": ">=2.0.0 <3.0.0",
+          "artifactPattern": "homey-irrigation-app-v2-{version}.tgz"
+        },
+        "esp32Firmware": {
+          "versionRange": ">=2.0.0 <3.0.0",
+          "artifactPattern": "riego-esp32-v2-{version}.ota.bin",
+          "note": "Solo crear binario v2 si cambia el contrato hardware. Si no cambia, Rama 2 puede requerir irrigation-hw-api@1.x."
+        }
+      }
+    }
+  }
+}

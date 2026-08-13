@@ -1,0 +1,1 @@
+{"type":"number","icon":"/assets/capability-icons/water.svg","title":{"en":"S6 water","es":"S6 litros"},"units":{"en":"L","es":"L"},"getable":true,"setable":false,"uiComponent":"sensor","decimals":2,"insights":true}

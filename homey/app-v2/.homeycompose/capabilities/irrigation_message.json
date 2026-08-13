@@ -1,0 +1,11 @@
+{
+  "type": "string",
+  "icon": "/assets/capability-icons/message.svg",
+  "title": {
+    "en": "Last message",
+    "es": "Ultimo mensaje"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor"
+}

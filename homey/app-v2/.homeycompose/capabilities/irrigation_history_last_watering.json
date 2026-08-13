@@ -1,0 +1,11 @@
+{
+  "type": "string",
+  "icon": "/assets/capability-icons/message.svg",
+  "title": {
+    "en": "Last watering",
+    "es": "Ultimo riego"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor"
+}

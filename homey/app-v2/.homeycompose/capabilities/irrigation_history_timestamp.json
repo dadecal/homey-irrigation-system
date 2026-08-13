@@ -1,0 +1,11 @@
+{
+  "type": "string",
+  "icon": "/assets/capability-icons/clock.svg",
+  "title": {
+    "en": "Timestamp",
+    "es": "Fecha"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor"
+}

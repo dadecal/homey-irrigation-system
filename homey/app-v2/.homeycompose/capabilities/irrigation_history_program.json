@@ -1,0 +1,11 @@
+{
+  "type": "string",
+  "icon": "/assets/capability-icons/history-program.svg",
+  "title": {
+    "en": "Program",
+    "es": "Programa"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor"
+}

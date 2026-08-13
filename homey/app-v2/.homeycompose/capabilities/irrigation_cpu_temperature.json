@@ -1,0 +1,17 @@
+{
+  "type": "number",
+  "icon": "/assets/capability-icons/temperature.svg",
+  "title": {
+    "en": "ESP32 temperature",
+    "es": "Temperatura ESP32"
+  },
+  "units": {
+    "en": "°C",
+    "es": "°C"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "decimals": 1,
+  "insights": true
+}

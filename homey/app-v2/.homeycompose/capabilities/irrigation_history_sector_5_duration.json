@@ -1,0 +1,1 @@
+{"type":"number","icon":"/assets/capability-icons/clock.svg","title":{"en":"S5 duration","es":"S5 duracion"},"units":{"en":"min","es":"min"},"getable":true,"setable":false,"uiComponent":"sensor","decimals":1,"insights":true}

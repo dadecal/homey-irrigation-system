@@ -1,0 +1,43 @@
+{
+  "name": {
+    "en": "Irrigation System",
+    "es": "Sistema de Riego"
+  },
+  "class": "other",
+  "capabilities": [
+    "irrigation_state",
+    "irrigation_active_sector",
+    "irrigation_remaining_minutes",
+    "irrigation_queue_length",
+    "irrigation_source",
+    "irrigation_program",
+    "irrigation_message",
+    "irrigation_esp_connected",
+    "irrigation_leak_status",
+    "irrigation_temperature",
+    "irrigation_humidity",
+    "irrigation_cpu_temperature",
+    "irrigation_health_status"
+  ],
+  "ui": {
+    "quickAction": null
+  },
+  "uiIndicator": "irrigation_state",
+  "images": {
+    "small": "/assets/device-icons/irrigation-system-small.png",
+    "large": "/assets/device-icons/irrigation-system-large.png"
+  },
+  "pair": [
+    {
+      "id": "list_devices",
+      "template": "list_devices",
+      "navigation": {
+        "next": "add_devices"
+      }
+    },
+    {
+      "id": "add_devices",
+      "template": "add_devices"
+    }
+  ]
+}

@@ -1,3 +1,759 @@
+## 2026-08-13
+
+### Release Rama 2 v2.0.9
+- Se completa la separacion tecnica de Rama 2 respecto a Rama 1: `homey/app-v2`
+  deja de referenciar codigo, artefactos y Variables Logic `Irrigation.*` de V1
+  incluso como fallback.
+- Se eliminan `LogicVariableStore`, `logic-write-probe` y la ruta
+  `/diagnostics/logic-write-probe`.
+- `EngineStateSource`, `IrrigationEngineService`, `EnginePlanExecutor`,
+  `HealthService`, `HistoryService`, `RecoveryService`,
+  `SystemDeviceProjectionService` y `MotorConfirmationStore` quedan alineados
+  con `appStateV2` y devices/Flow Cards nativos.
+- La pagina de settings mejora la visibilidad de la pestana activa. El boton
+  Guardar queda deshabilitado sin cambios pendientes, se activa al modificar el
+  formulario y muestra feedback de guardado.
+- Verificacion local: `npm run validate`, `npm test` con 141 tests OK,
+  `homey app build` y `homey app validate` correctos.
+- Artefacto generado:
+  `dist/artifacts/homey-app/homey-irrigation-app-v2-2.0.9.tgz`
+  (`SHA256 da3620aecc4ed5b5318614979b847c470af76c1c60f1fe06888e370c8d647028`).
+- Release formal generada en `dist/releases/v2.0.9`, incluyendo de nuevo
+  `riego-esp32-1.0.0.ota.bin`
+  (`SHA256 3c9fb7a6fb671e6f621ceabfe2aa25055c478ccd58845bf5f5fc48f30a054961`)
+  sin cambios de firmware.
+- Manifest de release: compatibilidad `OK`, `homeyAppV2.version=2.0.9` y
+  contrato `irrigation-app-api@2.0.9`.
+- Instalacion validada en Homey Pro desde el artefacto exacto:
+  `com.dadecal.irrigation.v2` queda `version=2.0.9`, `state=running`,
+  `enabled=true`. `/release` y `/status.release` devuelven `appVersion=2.0.9`.
+  `engine`, `health`, `history`, `recovery`, `system-device`,
+  `manual-device`, `status-sync` y `diagnostics` quedan sin `lastError`;
+  `status-sync` conserva `retired=true`, `timerActive=false`.
+
+### Release Rama 2 v2.0.8
+- Se completa la retirada runtime de devices legacy V1. La app deja de escribir,
+  proyectar o comprobar activamente `Riego manual`, `Sistema de Riego` e
+  `Historico de Riego`.
+- `EngineLegacyProjectionService` queda eliminado del plan del motor. Las
+  pruebas verifican que los planes activos no contienen pasos de proyeccion
+  legacy.
+- `ManualDeviceService` deja de depender del device legacy `Riego manual`; los
+  comandos `onoff` llaman al motor nativo y la proyeccion visual se deriva de
+  `appStateV2.engine`.
+- `HealthService` conserva persistencia interna y Flow Card nativa
+  `health_transition`, pero ya no proyecta watchdog/conexion en
+  `Sistema de Riego` V1.
+- `StatusSyncService` queda retirado: no arranca timer, no lee RAW/sensores y
+  reporta `retired=true`. La proyeccion de `Sistema de Riego v2` queda en
+  `SystemDeviceProjectionService`.
+- `HistoryService` proyecta solo a `Historico de Riego v2` y a
+  `appStateV2.history`. Se añade idempotencia por estado nativo para evitar
+  duplicar acumulados si `appStateV2.history.lastProjectedEventId` esta vacio
+  pero el device nativo ya contiene el ultimo evento.
+- Artefacto generado:
+  `dist/artifacts/homey-app/homey-irrigation-app-v2-2.0.8.tgz`
+  (`SHA256 af3574d675f03308e6cdc2d7b09f66efc04ff9ae5db39a13be9704ec5d4f28d2`).
+- Release formal generada en `dist/releases/v2.0.8`, incluyendo de nuevo
+  `riego-esp32-1.0.0.ota.bin` sin cambios de firmware.
+- Instalacion validada en Homey Pro: app `com.dadecal.irrigation.v2`
+  `version=2.0.8`, `state=running`, `enabled=true`. `/release` devuelve
+  `appVersion=2.0.8`; `scheduler`, `engine`, `health`, `history`, `recovery`,
+  `system-device` y `manual-device` estan sin `lastError`; `StatusSyncService`
+  devuelve `retired=true`, `timerActive=false`.
+- Se eliminan de Homey los Flows V1/deshabilitados de riego. Permanecen solo
+  los cuatro Flows v2 activos basados en Flow Cards nativas:
+  autorrecuperacion ESPHome v2, incidencia hardware v2, inicio de sector v2 y
+  fin de sector v2.
+
+### Release Rama 2 v2.0.7
+- Se prepara la retirada controlada de devices legacy V1. Las proyecciones
+  hacia `Riego manual`, `Sistema de Riego` e `Historico de Riego` dejan de ser
+  dependencias duras: si el device legacy no existe, la app registra un `skip`
+  `LEGACY_DEVICE_NOT_FOUND` y continúa con la operación nativa.
+- `EnginePlanExecutor` no falla planes activos del motor por ausencia de
+  devices legacy de proyección. El RAW ESPHome `Riego` sigue siendo obligatorio
+  para operaciones físicas.
+- `ManualDeviceService` deja de escribir sector/duración en `Riego manual` V1
+  cuando `engine=ACTIVE_COMPAT`; conserva valores desde el device nativo y usa
+  el motor nativo para arrancar/parar.
+- `StatusSyncService`, `HealthService` e `HistoryService` toleran la ausencia
+  de `Sistema de Riego`/`Historico de Riego` V1. History puede proyectar y
+  avanzar idempotencia en `appStateV2` usando el device nativo
+  `Historico de Riego v2`.
+- Artefactos:
+  `homey-irrigation-app-v2-2.0.7.tgz`
+  SHA256 `1184e17620542971a05a6f650270ec3627b4baede8b028a894a56b5cdbb3f994`;
+  `riego-esp32-1.0.0.ota.bin`
+  SHA256 `3c9fb7a6fb671e6f621ceabfe2aa25055c478ccd58845bf5f5fc48f30a054961`.
+- Verificacion local: `npm test` pasa con 147 tests. El build formal ejecuta
+  `npm run validate`, `npm test`, `homey app build` y `homey app validate`
+  correctamente.
+- Verificacion en Homey: instalada desde artefacto formal sin `--clean`;
+  `/release` devuelve `appVersion=2.0.7`, `artifactPattern` correcto y
+  contrato `irrigation-app-api@2.0.7`. `engine`, `health`, `statusSync`,
+  `history`, `recovery`, `manualDevice` y `systemDevice` quedan en
+  `ACTIVE_COMPAT` sin `lastError`. Checks activos: Health `OK`, StatusSync y
+  SystemDevice proyectan, History queda `NO_HISTORY`, ManualDevice proyecta
+  hacia el device nativo.
+- Estado operativo: queda habilitada la siguiente fase de eliminacion
+  controlada de los devices V1, sin borrar todavía desde esta release.
+
+### Retirada devices legacy V1
+- Se eliminan de Homey los tres devices virtuales de Rama 1:
+  `Riego manual` (`f702f97b-7ba3-4ba2-9a82-426ca94a05f8`),
+  `Sistema de Riego` (`611125df-85eb-4fa0-bce1-aabbbdabc55e`) e
+  `Historico de Riego` (`4e479970-4f59-4bb1-8e4f-8cbfc1ef0bdb`).
+- Verificacion posterior: los tres IDs legacy ya no existen; los devices v2
+  siguen disponibles en zona `Riego`: `Sistema de Riego v2`
+  (`9b64ed88-17cd-4dd0-bd0d-484850ad83fd`), `Historico de Riego v2`
+  (`793d9117-8709-43f2-a0d8-9938d07ab22e`) y `Riego Manual v2`
+  (`8171ea4e-7f63-4597-b53d-0a027a540840`).
+- Servicios tras retirada: `engine`, `health`, `statusSync`, `history`,
+  `recovery`, `manualDevice` y `systemDevice` continúan en `ACTIVE_COMPAT` sin
+  `lastError`. Health devuelve `OK`.
+- Resultado esperado observado: `StatusSyncService` reporta
+  `LEGACY_DEVICE_NOT_FOUND` para `Sistema de Riego` V1 y `ManualDeviceService`
+  `legacyDeviceAvailable=false`, manteniendo la proyeccion nativa.
+
+### Release Rama 2 v2.0.6
+- Se corrige un falso positivo de Health observado en la cronologia de Homey:
+  durante reposo (`IDLE`, sin relés activos), el tick nativo ejecutaba
+  `FORCE_IDLE_NONE` intentando apagar todos los relés. Si en ese instante Homey
+  marcaba el RAW `Riego` como no disponible, la escritura defensiva fallaba y
+  el plan de fallo dejaba el motor en `ERROR`, generando el mensaje
+  "Riego interrumpido: comprobar que todas las electroválvulas están cerradas".
+- `FORCE_IDLE_NONE` mantiene la normalizacion de estado/proyecciones, pero ya
+  no escribe relés ni tiene `failurePlan` fisico. `FORCE_IDLE_WATCHDOG` conserva
+  el apagado de relés y el plan de fallo porque sí representa una condicion de
+  seguridad real.
+- `HealthService` separa la firma de notificacion de la firma completa de
+  salud: un mismo error accionable no vuelve a disparar `health_transition` si
+  solo cambian warnings no accionables de ESPHome.
+- Artefactos:
+  `homey-irrigation-app-v2-2.0.6.tgz`
+  SHA256 `8c252742cef01c575fe7b00a9e72094d05e8745cafbc0358b88672969f03feae`;
+  `riego-esp32-1.0.0.ota.bin`
+  SHA256 `3c9fb7a6fb671e6f621ceabfe2aa25055c478ccd58845bf5f5fc48f30a054961`.
+- Verificacion local: `npm run validate`, `npm test` con 142 tests y build
+  formal pasan correctamente.
+- Verificacion en Homey: instalada desde artefacto formal sin `--clean`;
+  `/release` devuelve `appVersion=2.0.6`. `POST /health/check` queda en `OK`,
+  `notificationChanged=false` y trigger `UNCHANGED`. `POST /engine/tick` en
+  reposo genera `FORCE_IDLE_NONE` sin `EspHomeIrrigationHardwareAdapter` y con
+  `failurePlan=[]`.
+
+### Release Rama 2 v2.0.5
+- Se corrige definitivamente el icono visible de los drivers nativos v2
+  declarando `drivers/<driverId>/assets/icon.svg` para `irrigation_system`,
+  `irrigation_history` e `irrigation_manual`. Homey usa este asset para
+  calcular el `iconObj` del driver y de los nuevos devices emparejados.
+- Se eliminan los `iconOverride` legacy de los servicios de recreacion interna;
+  los devices nativos deben crearse sin override para heredar el icono del
+  driver.
+- Se mantiene la equivalencia UI con V1: `Sistema de Riego v2` usa
+  `irrigation_state` como indicador, `Historico de Riego v2` usa
+  `irrigation_history_timestamp` y `Riego Manual v2` usa quick action `onoff`
+  con indicador `.none`.
+- Artefactos:
+  `homey-irrigation-app-v2-2.0.5.tgz`
+  SHA256 `239961c2e21d072f3c55109d77e2fa7172f1fe9649553788bd8d6e52c2e8037e`;
+  `riego-esp32-1.0.0.ota.bin`
+  SHA256 `3c9fb7a6fb671e6f621ceabfe2aa25055c478ccd58845bf5f5fc48f30a054961`.
+- Verificacion local: `npm run validate`, `npm test` con 139 tests y build
+  formal pasan correctamente.
+- Verificacion en Homey: instalada desde artefacto formal sin `--clean`;
+  `/release` devuelve `appVersion=2.0.5`. Se recrean los tres devices v2 en la
+  zona `Riego`: `Sistema de Riego v2`
+  (`9b64ed88-17cd-4dd0-bd0d-484850ad83fd`), `Historico de Riego v2`
+  (`793d9117-8709-43f2-a0d8-9938d07ab22e`) y `Riego Manual v2`
+  (`8171ea4e-7f63-4597-b53d-0a027a540840`).
+- Se validan por API local los metadatos finales: `iconOverride=null`,
+  `iconObj` propio por driver, `uiIndicator` fijado y proyecciones iniciales
+  ejecutadas (`system-device/check`, `manual-device/check`, `history/check`).
+
+### Release Rama 2 v2.0.4
+- Se corrige la recreacion de devices nativos v2 para que no use
+  `iconOverride` legacy de Device Capabilities. Los nuevos devices deben
+  heredar el icono PNG declarado por su driver nativo.
+- Se alinean los indicadores principales con V1: `Sistema de Riego v2`
+  `irrigation_state`, `Historico de Riego v2` `irrigation_history_timestamp`
+  y `Riego Manual v2` `.none`.
+- Se comprueba que Homey permite actualizar `uiIndicator` en devices existentes
+  pero rechaza actualizar `ui.quickAction` por API; icono de device y accion
+  por defecto quedan fijados al emparejar y requieren recrear los devices v2.
+- Artefactos:
+  `homey-irrigation-app-v2-2.0.4.tgz`
+  SHA256 `30f4f4dcd7e880c69c754813578bd59086853960fac9d3b86ed095dd758e523f`;
+  `riego-esp32-1.0.0.ota.bin`
+  SHA256 `3c9fb7a6fb671e6f621ceabfe2aa25055c478ccd58845bf5f5fc48f30a054961`.
+- Verificacion local: `npm run validate`, `npm test` con 139 tests y build
+  formal pasan correctamente.
+- Verificacion en Homey: instalada desde artefacto formal sin `--clean`;
+  Manager Apps reporta version `2.0.4`, estado `running` y `/release` devuelve
+  `appVersion=2.0.4`.
+
+### Release Rama 2 v2.0.3
+- Se prepara `homeyAppV2` version `2.0.3` para corregir presentacion de los
+  devices nativos v2.
+- Los tres drivers v2 usan iconos PNG propios empaquetados en
+  `homey/app-v2/assets/device-icons`, en lugar del icono generico de la app.
+- Se declaran ajustes UI de driver: `Riego Manual v2` usa `onoff` como quick
+  action; `Sistema de Riego v2` usa `irrigation_state` como indicador;
+  `Historico de Riego v2` usa `irrigation_history_last_watering`; `Riego
+  Manual v2` usa `irrigation_manual_message`.
+- La release incluye de nuevo el binario ESP32 compatible
+  `riego-esp32-1.0.0.ota.bin`, sin cambios de firmware.
+- Artefactos:
+  `homey-irrigation-app-v2-2.0.3.tgz`
+  SHA256 `bfeb3f99552c3b028338538e8d36f57ae1a3ee6fec9ce7fbbe28a240c386b7a5`;
+  `riego-esp32-1.0.0.ota.bin`
+  SHA256 `3c9fb7a6fb671e6f621ceabfe2aa25055c478ccd58845bf5f5fc48f30a054961`.
+- Verificacion local: `npm run validate`, `npm test` con 139 tests, build
+  formal y `homey app validate` pasan correctamente.
+- Verificacion en Homey: instalada desde artefacto formal sin `--clean`;
+  Manager Apps reporta version `2.0.3`, estado `running` y `/release` devuelve
+  `appVersion=2.0.3`.
+
+### Restauracion devices Rama 2
+- Se detecta que los devices nativos de Rama 2 no existen ya en Homey,
+  probablemente por una reinstalacion previa con limpieza.
+- No se borran devices V1 porque siguen siendo rollback y, hasta esta
+  restauracion, eran la unica interfaz de dispositivo visible.
+- Se recrean por PairSession CLI:
+  `Sistema de Riego v2` (`67bd9d74-d638-4f41-9e68-0e721d447925`),
+  `Historico de Riego v2` (`925622ad-4530-4b34-be25-fff9fb89586f`) y
+  `Riego Manual v2` (`79ff2ec7-07a6-49f0-af93-7e562445114e`).
+- Se validan proyecciones iniciales: `Sistema de Riego v2` queda `IDLE`,
+  salud `OK`, ESP32 conectado; `Riego Manual v2` queda apagado y puenteado al
+  device legacy; `Historico de Riego v2` existe pero no reproyecta entrada
+  nueva porque `HistoryService` informa `NO_HISTORY`.
+- Antes de eliminar los devices legacy V1 debe validarse visualmente de nuevo
+  que los tres devices v2 aparecen correctamente en Homey y reciben valores.
+- Se corrige la ubicacion de los tres devices v2 a la zona `Riego`
+  (`c00ba2c5-9d67-4e16-89c0-cc4ef82b5d1f`) y se aplica `iconOverride` con las
+  mismas rutas de icono de los devices V1:
+  `DeviceCapabilityVirtualDevice_1.svg`, `DeviceCapabilityVirtualDevice_2.svg`
+  y `DeviceCapabilityVirtualDevice_3.svg`.
+- Los endpoints internos de recreacion (`/system-device/ensure`,
+  `/history-device/ensure` y `/manual-device/ensure`) quedan ajustados para
+  crear por defecto en la zona `Riego` y con el icono legacy equivalente.
+- Se comprueba visualmente que `iconOverride` hacia rutas `userdata` legacy no
+  sustituye el icono generico de los devices nativos. Se añaden iconos PNG
+  propios de driver en `homey/app-v2/assets/device-icons` y los tres drivers
+  v2 dejan de apuntar al icono generico de la app.
+- Se declaran ajustes UI de driver para Rama 2: `Riego Manual v2` usa
+  `onoff` como quick action; `Sistema de Riego v2` muestra
+  `irrigation_state` como indicador; `Historico de Riego v2` muestra
+  `irrigation_history_last_watering`; `Riego Manual v2` muestra
+  `irrigation_manual_message`.
+- Limitacion observada: Homey no permite actualizar `ui.quickAction` en un
+  device existente por API, y la CLI esta temporalmente bloqueada por
+  `Too many requests` para aplicar `uiIndicator` en caliente. Los cambios de
+  icono/quick action requieren reinstalar o recrear los devices v2 desde el
+  paquete actualizado.
+
+### Release Rama 2 v2.0.2
+- Se publica `homeyAppV2` version `2.0.2`.
+- La pantalla de settings separa la configuracion del programador y el
+  diagnostico en dos pestanas internas: `Programacion` y `Diagnostico`.
+- `Programacion` conserva el flujo principal de usuario: hora, intervalo,
+  duraciones, notificaciones, Rain Delay, proximo riego y `Guardar cambios`.
+- `Diagnostico` queda fuera del recorrido de guardado y refresca el estado al
+  abrirse o al pulsar `Actualizar`.
+- La release de sistema `v2.0.2` incluye tambien el binario ESP32 compatible
+  `riego-esp32-1.0.0.ota.bin`, sin cambios de firmware respecto a la release
+  validada anterior.
+- Artefactos:
+  `homey-irrigation-app-v2-2.0.2.tgz`
+  SHA256 `b20a4ca6e1b670dc6bc3903cb048cd64d988ef7a26762fd0f86ec453a16bce4d`;
+  `riego-esp32-1.0.0.ota.bin`
+  SHA256 `3c9fb7a6fb671e6f621ceabfe2aa25055c478ccd58845bf5f5fc48f30a054961`.
+- Verificacion local: `npm run validate`, `npm test` con 139 tests y build
+  formal pasan correctamente.
+- Verificacion en Homey: `/release` devuelve `appVersion=2.0.2`; `/status`
+  conserva programador `READY`, `ACTIVE_COMPAT`, `preflightBlock=null` y
+  proximo riego `2026-08-13 22:00`.
+
+## 2026-08-12
+
+### Release Rama 2 v2.0.1
+- Se publica formalmente `homeyAppV2` version `2.0.1`.
+- La release de sistema `v2.0.1` incluye tambien el binario ESP32 compatible
+  `riego-esp32-1.0.0.ota.bin`, reutilizado de la release validada v1.0.1 sin
+  cambios de firmware. SHA256:
+  `3c9fb7a6fb671e6f621ceabfe2aa25055c478ccd58845bf5f5fc48f30a054961`.
+- Se fija la regla general: toda release liberada debe incluir o referenciar
+  artefacto Homey y binario ESP32 compatible, aunque solo cambie la app o solo
+  cambie el firmware.
+- Se añade preflight del Scheduler v2 antes de arrancar riegos programados:
+  bloquea si Health esta `ERROR/OFFLINE`, Recovery esta recuperando, ESPHome
+  Controller acaba de reiniciarse/recuperarse, el motor no esta `IDLE`, RAW no
+  esta disponible o hay reles activos observados.
+- Si el preflight bloquea, el Scheduler reintenta durante 15 minutos mediante
+  `schedulerConfigV2.preflightBlock`. Si no se estabiliza, cancela el riego
+  del dia, marca `lastRunDate` y registra `PREFLIGHT_CANCELLED`.
+- Se añade `DiagnosticsService` y endpoint `/diagnostics/status` con estado
+  agregado de Scheduler, Health, Recovery, motor, ticks, acciones y eventos.
+- La pantalla de settings de la app v2 incorpora una seccion `Diagnostico`.
+- `appStateV2.events` aumenta su retencion a 150 eventos.
+- Se crea una API Key local `Irrigation Recovery v2` con scope `homey.app` y se
+  configura en `recoveryControllerTokenV2`; `/recovery/status` confirma
+  `canRestartController=true`.
+- Se corrigen las herramientas de release para soportar `homeyAppV2`, instalar
+  artefactos Rama 2 con `--app-dir homey/app-v2` y copiar artefactos v2 al
+  manifest de release.
+- Se documenta como regla de release que Rama 2 no debe liberarse con
+  `homey app install` directo salvo emergencia; debe construirse artefacto,
+  instalarse ese artefacto exacto y registrar manifest/checksums.
+- Verificacion local: `npm run validate` y `npm test` pasan con 139 tests.
+- Estado desplegado tras cutover: `scheduler`, `health`, `statusSync`,
+  `history`, `recovery` y `engine` en `ACTIVE_COMPAT`; motor `IDLE`, sector
+  activo `0`, `preflightBlock=null`, proximo riego `2026-08-13`.
+
+## 2026-07-26
+
+### Scheduler Rama 2
+- Se diagnostica el riego del 2026-07-25: S1 finalizo con motivo `watchdog`,
+  por lo que el motor nativo aborto la cola por seguridad y no continuo con
+  S2-S6.
+- Se corrige `MotorConfirmationStore` en `homey/app-v2`: cuando
+  `engine=ACTIVE_COMPAT`, la confirmacion del programador lee
+  `appStateV2.engine` en lugar de Variables Logic legacy.
+- Se mantiene la compatibilidad en `SHADOW`, donde la confirmacion sigue
+  leyendo `Irrigation.State`, `Irrigation.StartTimestamp` e
+  `Irrigation.History`.
+- Se anaden pruebas unitarias para confirmacion desde motor nativo en curso,
+  historico nativo y rechazo de estados antiguos.
+- Se añade diagnostico persistente de ticks nativos en
+  `appStateV2.engine.tickDiagnostics`, expuesto por `/engine/status` como
+  `diagnostics.lastTicks`, para auditar decisiones `watchdog`, `timeout` y
+  arranques de siguiente sector.
+- Se actualiza en Homey el Flow `Riego - Aviso de incidencia hardware v2` para
+  que la notificacion use el detalle del token `message`:
+  `Incidencia en sistema de riego: [[message]]`.
+- Se diagnostica el riego del 2026-07-26: S1 arranco a las 22:00:05 y termino
+  a las 22:06:05 por `timeout`, pero no se ejecutaron S2-S6. La cola exacta de
+  las 22:06 ya no estaba disponible porque el anillo de ticks solo retenia unos
+  20 minutos.
+- Se corrige el cableado de los avisos nativos de sector: la app creaba las
+  Flow Cards `sector_started` y `sector_ended`, pero no las inyectaba en
+  `IrrigationEngineService`, por lo que `appStateV2.engine.lastSectorEvent` se
+  actualizaba sin disparar las notificaciones.
+- El motor nativo pasa a tratar `IDLE + cola pendiente + reles apagados` como
+  estado recuperable: en el siguiente tick arranca el siguiente elemento de la
+  cola en lugar de ejecutar `forceIdle` y limpiar la cola.
+- `appStateV2.engine.tickDiagnostics` aumenta su retencion a 240 ticks y se
+  anade `appStateV2.engine.actionDiagnostics` para conservar acciones
+  relevantes como `programStart`, `startNextQueuedItem`, paradas y errores.
+- Se anaden pruebas de regresion para continuidad de cola tras `timeout`,
+  reanudacion de cola pendiente en `IDLE` y disparo de Flow Card nativa al
+  arrancar un sector.
+- Se ajusta la politica de notificaciones de Health v2: la Flow Card
+  `health_transition` ya no se emite para recuperaciones `OK` ni para estados
+  `WARNING`; el Flow `Riego - Aviso de incidencia hardware v2` queda reservado
+  a `ERROR` y `OFFLINE`.
+- Se filtran como ruido no accionable los warnings genericos de ESPHome
+  procedentes de `api`, `web_server` o `httpd`, como
+  `Reading failed CONNECTION_CLOSED` o `Unsupported content type`.
+
+## 2026-07-27
+
+### Motor Rama 2
+- Se diagnostica el riego del 2026-07-27: el Scheduler genero correctamente la
+  cola S1-S6 y `programStart` planifico S2-S6 como cola restante, pero un tick
+  nativo entro casi simultaneamente con el estado anterior `IDLE + cola 0`,
+  ejecuto `forceIdle` y limpio la cola mientras el arranque estaba en curso.
+  S1 quedo corriendo, pero el motor persistio `queue=[]`, por lo que al
+  finalizar S1 por `timeout` no habia S2 para continuar.
+- Se corrige `IrrigationEngineService` con una exclusion mutua interna para
+  acciones activas del motor. `startManual`, `startProgram`, `stopManual`,
+  `recover` y `tick` ya no pueden intercalarse. Si un tick coincide con otra
+  operacion activa se salta ese ciclo con `OPERATION_RUNNING`.
+- Se añade prueba de regresion que reproduce la carrera `programStart` contra
+  `tick` y verifica que la cola restante no se pierde.
+
+## 2026-07-25
+
+### App Rama 2
+- Se intenta la activacion fisica controlada de `engine=ACTIVE_COMPAT` con el
+  sistema real delante. El precheck inicial estaba limpio: Health `OK`, motor
+  `IDLE`, cola `0` y relés apagados.
+- El intento se aborta antes de deshabilitar Flows legacy porque el tick nativo
+  registra `Missing Scopes` inmediatamente tras activar el motor. El fallo es
+  coherente con la limitacion conocida de escritura de Variables Logic desde la
+  app nativa.
+- Rollback completado: `engine=SHADOW`, Flows legacy de motor activos, motor
+  `IDLE`, cola `0`, relés apagados y sin riego fisico iniciado.
+- Se refuerza la compuerta: `MigrationReadinessService` vuelve a bloquear
+  `engine=ACTIVE_COMPAT` si `/engine/check` no declara soporte activo real, y
+  `MigrationControlStore` limpia `activeCompatSupported.engine=false` al volver
+  el motor a `SHADOW`.
+- Se inicia el rediseño para eliminar la dependencia de Logic en el motor
+  nativo: `appStateV2.engine` queda normalizado en `AppStateStore` y
+  `EnginePlanExecutor` incorpora `stateBackend=appState` para aplicar estado,
+  cola, historico y eventos tecnicos sin escribir Variables Logic.
+- `IrrigationEngineService` queda preparado para usar `appStateV2.engine` como
+  fuente de snapshot en `ACTIVE_COMPAT` y para ejecutar planes reales contra el
+  backend appState. En `SHADOW` sigue leyendo Logic para comparar con Rama 1.
+- El soporte activo del motor continua bloqueado hasta migrar los lectores
+  restantes del estado del motor.
+- Se añade `engine-state-source.js` y se migran Health, Recovery,
+  SystemDevice e History a lectura dual: Logic mientras `engine=SHADOW` y
+  `appStateV2.engine` cuando `engine=ACTIVE_COMPAT`.
+- La compuerta depende del modo del servicio `engine`, no del modo propio de
+  Health/History/Recovery, para no alterar la operacion actual ya activa de
+  esos servicios.
+- `IrrigationEngineService` pasa a declarar `activeCompatSupported=true` cuando
+  dispone de `appStateV2.engine`; las acciones activas escriben estado interno
+  en ManagerSettings y no Variables Logic operativas.
+- `MigrationControlStore` mantiene el soporte de implementacion del motor al
+  volver a `SHADOW`; el bloqueo de seguridad queda en el precheck limpio y el
+  acknowledge explicito de `PUT /migration/control`.
+- `MigrationReadinessService` ya no bloquea por motor no implementado si
+  `/engine/check` declara soporte activo, pero sigue bloqueando por RAW no
+  disponible, motor no `IDLE`, cola no vacia, relés activos, incidencias de
+  Health o invariantes del motor.
+- Se reinstala la app v2 en Homey y el precheck real queda limpio:
+  `readyToActivateEngine=true`, `engineActivation.allowed=true`, sin blockers,
+  motor `IDLE`, cola `0`, relés apagados y Health `OK`.
+- Se ejecuta el cutover fisico del motor nativo: se deshabilitan los Flows
+  legacy `Riego motor - ON`, `Riego motor - OFF`,
+  `Riego programador v2 - solicitud` y `Riego motor - tick 1 min`, y se activa
+  `engine=ACTIVE_COMPAT`.
+- `/engine/status` confirma control fisico activo con
+  `controlsHardware=true`, `writesOperationalVariables=false`,
+  `writesInternalState=true`, `activeTickEnabled=true` y
+  `activeCompatSupported=true`.
+- Prueba manual nativa: sector 1 arranca, solo activa el relé 1 y la parada
+  manual apaga relés, deja cola vacia y genera historico interno.
+- Prueba de timeout nativa: sector 1 durante 1 minuto finaliza por tick
+  nativo con motivo `timeout`, relé apagado e historico proyectado en legacy y
+  v2.
+- Health posterior permanece `OK` y lee el motor desde `appStateV2.engine`.
+- Se añaden Flow Cards nativas `sector_started` y `sector_ended`; el motor
+  nativo las dispara despues de persistir `appStateV2.engine.lastSectorEvent`.
+- Se crean y habilitan los Flows `Riego - Aviso inicio de sector v2` y
+  `Riego - Aviso fin de sector v2`, usando las condiciones nativas existentes
+  de notificacion por sector.
+- Se deshabilitan los Flows legacy `Riego - Aviso inicio de sector` y
+  `Riego - Aviso fin de sector`, que dependian de Variables Logic.
+- No se modifica `Irrigation.js`.
+
+## 2026-07-21
+
+### App Rama 2
+- Se añade el driver nativo `irrigation_history` y el device
+  `Historico de Riego v2`.
+- `HistoryService` proyecta el historico al device nativo usando la misma
+  proyeccion que el dispositivo legacy, sin escribir Variables Logic ni tocar
+  motor o cola.
+- Se añaden capabilities custom de solo lectura para ultimo riego, acumulados y
+  ultimo riego por sectores 1..6.
+- Se añade `/history-device/ensure`; detecta el device existente sin duplicarlo.
+  La creacion interna desde la app queda limitada por `Missing Scopes`, por lo
+  que el alta inicial se hizo con PairSession externa.
+- Se corrige la comparacion `null`/`0` en `HistoryService` para escribir
+  correctamente valores numericos cero.
+- Se crea y valida en Homey el device
+  `40413129-f263-433b-adba-69c67bea662c`.
+- Se replican en `Sistema de Riego v2` los iconos de capabilities del
+  dispositivo virtual legacy mediante assets SVG locales.
+- `Historico de Riego v2` usa los iconos legacy disponibles para campos de
+  texto y equivalentes semanticos del mismo set para campos numericos sin
+  `iconObj` explicito en Rama 1.
+- Se normalizan los iconos SVG de sector, watchdog y ultimo mensaje para
+  evitar problemas de renderizado en capabilities de Homey.
+- Se añade el driver nativo `irrigation_manual` y el device `Riego Manual v2`.
+- `ManualDeviceService` actua como puente de compatibilidad hacia el device
+  legacy `Riego manual`, sin tocar `Irrigation.js`, reles, motor ni cola.
+- Se añaden endpoints `/manual-device/status`, `/manual-device/check` y
+  `/manual-device/ensure`.
+- Se crea y valida en Homey el device
+  `b0121276-44e0-4d4f-9214-982084c83e17` con prueba segura de sector/duracion
+  sin activar riego fisico.
+- `Riego Manual v2` programa refrescos rapidos de `Sistema de Riego v2` tras
+  `START/STOP` para reducir la latencia visual frente al polling normal de 60
+  segundos.
+- Se habilitan Insights en las capabilities numericas custom de
+  `Sistema de Riego v2`, `Historico de Riego v2` y `Riego Manual v2`.
+- Se valida fisicamente `Riego Manual v2`: arranque y parada funcionan de
+  extremo a extremo mediante el puente legacy hacia `Irrigation.js`.
+- Se da por completada funcionalmente la fase de devices nativos de Rama 2.
+- Se abre la fase de limpieza y control previa a migrar `Irrigation.js`, con
+  regla explicita de no deshabilitar tick, Flows manuales ni borrar devices
+  legacy sin inventario y rollback.
+- Se documenta la matriz inicial de Flows/devices a mantener, deshabilitar o
+  auditar antes de Fase 6, y se actualiza `Testing.md` para reflejar Health y
+  Recovery en Rama 2.
+- Se completa el inventario vivo de Flows, devices y apps en Homey; app v2
+  queda `running`, app Rama 1 `stopped`, y todos los dispositivos legacy/v2
+  relevantes estan disponibles.
+- Se deshabilitan en Homey los Flows legacy de notificacion
+  `Riego - Aviso de incidencia hardware` y
+  `Riego - Aviso autorrecuperación ESPHome`, sustituidos por sus Flow Cards
+  nativas v2.
+- Se documenta la Fase 6 de migracion controlada del motor: arquitectura
+  propuesta, modos `SHADOW`/`ACTIVE_COMPAT`/`NATIVE_ONLY`, subfases, cutover,
+  rollback y riesgos antes de portar `Irrigation.js`.
+- Se ejecuta Fase 6.0 sin cambios operativos: se añade
+  `lib/engine-contract.js` con reglas puras extraidas de `Irrigation.js` y
+  pruebas unitarias para validacion de cola, solicitudes programadas, tick,
+  watchdog, stale run, timeout e historico.
+- Se implementa Fase 6.1 local: `IrrigationEngineService` en `SHADOW`, rutas
+  `/engine/status` y `/engine/check`, integracion con readiness y bloqueo
+  explicito de `engine=ACTIVE_COMPAT`.
+- Se instala la app v2 actualizada en Homey y se verifica `/engine/check`:
+  motor legacy `IDLE`, cola `0`, RAW disponible, sin relés activos,
+  `tickDecision=FORCE_IDLE_NONE`, sin issues y blockers de cutover esperados.
+- Se implementa Fase 6.2: adaptadores dry-run `EngineStateStore`,
+  `EspHomeIrrigationHardwareAdapter` y `EngineLegacyProjectionService`, con
+  `dryRunTransaction` en `/engine/check` y pruebas del orden transaccional y
+  del plan de fallo al apagar relés.
+- Se implementa Fase 6.3: endpoints de previsualizacion nativa
+  `/engine/manual-start/preview`, `/engine/program-start/preview` y
+  `/engine/manual-stop/preview`, todos en `SHADOW` y sin escrituras reales.
+- Se valida Fase 6.3 en Homey real: arranque manual S2/3 min, arranque
+  programado S1/5 min + S2/6 min y parada manual devuelven transacciones
+  `dryRun=true`, con `engine=ACTIVE_COMPAT` todavia bloqueado.
+- Se prepara el runbook de Fase 6.4: compuertas de ejecucion real,
+  redireccion de manual/scheduler/tick, orden de deshabilitado de Flows y
+  rollback hacia `Irrigation.js`.
+- Se consulta el estado real de Homey antes de 6.4: app v2 y ESPHome
+  Controller `running`, Flows legacy de motor activos, motor `IDLE`, cola `0`
+  y relés apagados. La entrada a 6.4C queda bloqueada por Health debido al
+  evento ESPHome `Line 2 exceeded maximum relay-on time; forcing OFF`.
+- Se implementa Fase 6.4A/6.4B en codigo, sin activar cutover: nuevo
+  `EnginePlanExecutor`, acciones reales protegidas en `IrrigationEngineService`,
+  redireccion condicional de `ManualDeviceService` y `Scheduler`, y tick nativo
+  interno condicionado a `engine=ACTIVE_COMPAT`.
+- Se exponen endpoints reales protegidos `/engine/manual-start`,
+  `/engine/program-start`, `/engine/manual-stop`, `/engine/tick` y
+  `/engine/recover`. En Homey real se verifica que `/engine/manual-start`
+  rechaza la ejecucion en `SHADOW` y no modifica hardware, cola ni estado.
+- Se implementa la compuerta inteligente para `engine=ACTIVE_COMPAT`:
+  `MigrationReadinessService` calcula `engineActivation`, la API ejecuta ese
+  precheck antes de llamar a `MigrationControlStore`, y el store solo acepta el
+  cambio con precheck limpio y confirmacion explicita.
+- El precheck diferencia `readyToActivateEngine` de
+  `safeToDisableTechnicalFlows`: aunque el motor este listo para activarse, los
+  Flows legacy no deben deshabilitarse hasta ejecutar el runbook fisico.
+- Se reinstala la build final en Homey y se verifica readiness real:
+  `readyToActivateEngine=true`, `engineActivation.allowed=true`,
+  `safeToDisableTechnicalFlows=false`, motor `IDLE`, cola `0`, relés apagados
+  y Health `OK`. `/engine/manual-start` sigue bloqueado en `SHADOW`.
+
+## 2026-07-19
+
+### Rama 2
+- Se porta `RecoveryService` a `homey/app-v2` como servicio nativo en modo
+  sombra, gobernado por `migrationControlV2.services.recovery`.
+- La app v2 expone `/recovery/status` y `/recovery/check`.
+- Recovery v2 usa `appStateV2.recovery` en `ACTIVE_COMPAT` y no escribe
+  Variables Logic operativas.
+- Se añade la Flow Card nativa `recovery_event` para sustituir el aviso legacy
+  basado en `Irrigation.RecoveryTrigger` cuando se haga el cutover.
+- `MigrationReadinessService` incluye Recovery en el precheck de Rama 2.
+- Se instala la app v2 actualizada en Homey, se crea el Flow
+  `Riego - Aviso autorrecuperacion ESPHome v2`
+  (`20cfcfe6-0802-4d42-aca4-9a127f9ccdd4`) basado en `recovery_event`, se
+  desactiva la app Rama 1 `com.dadecal.irrigation` y se activa
+  `recovery=ACTIVE_COMPAT`.
+- La verificacion en Homey confirma Recovery v2 activo con
+  `restartSupported=true`, `canRestartController=true`, `available=true`,
+  `timerActive=true`, sin fallos consecutivos ni error.
+- Se implementa el primer device nativo de Rama 2, driver `irrigation_system`,
+  con capabilities custom de solo lectura para el estado del sistema.
+- Se añade `SystemDeviceProjectionService` y los endpoints
+  `/system-device/status` y `/system-device/check`.
+- Se instala la app v2 y se valida que la proyeccion nativa calcula estado
+  `IDLE`, ESPHome `Conectado`, fuga `No detectada`, salud `WARNING` y
+  `writesOperationalVariables=false`.
+- Se crea el device nativo `Sistema de Riego v2`
+  (`fafc57a1-b4f9-4882-b9e2-6dc170d312c2`) mediante pairing API y se valida
+  que recibe estado `IDLE`, sector `0`, tiempo restante `0`, cola `0`, origen
+  `SCHEDULER`, ESPHome `Conectado`, fuga `No detectada`, temperatura `32.1`,
+  humedad `59.7` y temperatura ESP32 `85`.
+- Se corrige la comparacion de capabilities nativas para no considerar `null`
+  equivalente a `0`.
+
+## 2026-07-18
+
+### Rama 2
+- Se redefine la migracion a app nativa como Rama 2: una generacion distinta,
+  no un evolutivo menor de Rama 1.
+- Rama 1 queda considerada estable/congelada como generacion publicada basada
+  en ESPHome, HomeyScripts, Variables Logic, Flows tecnicos, dispositivos
+  virtuales y app nativa del programador.
+- Se crea `release/generations.json` para separar politicas de versionado,
+  nombres de artefactos y estrategia de releases entre Rama 1 y Rama 2.
+- `AppMigrationPlan.md` pasa a ser el plan vivo de Rama 2.
+- Se crea `homey/app-v2` como app Homey separada, con id
+  `com.dadecal.irrigation.v2`, version `2.0.0`, endpoints `/status` y
+  `/release`, y sin responsabilidades de riego activas.
+- Se instala `com.dadecal.irrigation.v2` en Homey y se verifica que convive con
+  Rama 1: ambas apps quedan `running`.
+- Se porta el programador actual a Rama 2 en modo sombra: settings GUI,
+  configuracion propia `schedulerConfigV2`, calculo de proximo riego y Rain
+  Delay. Rama 2 no declara Flow Trigger ni puede emitir solicitudes al motor.
+- Se valida en Homey que Rama 2 calcula el mismo proximo riego que Rama 1 con
+  la configuracion actual, mientras Rama 1 conserva su `lastRunDate` y su Flow
+  `program_requested`.
+- Se migra `IrrigationHealth.js` a `HealthService` en Rama 2 en modo sombra:
+  timer interno, endpoints `/health/status` y `/health/check`, comparacion con
+  `Irrigation.Health`, sin escrituras operativas ni actualizacion de
+  dispositivos virtuales.
+- Se valida en Homey que `HealthService` v2 calcula `OK`, coincide con
+  `Irrigation.Health` y mantiene `writesOperationalVariables=false` y
+  `updatesDevices=false`.
+- Se migra `IrrigationStatus.js` a `StatusSyncService` en Rama 2 en modo
+  sombra: timer interno, endpoints `/status-sync/status` y
+  `/status-sync/check`, comparacion contra el dispositivo virtual "Sistema de
+  Riego", sin escrituras de capabilities ni Variables Logic.
+- La validacion en Homey detecta que los dispositivos auxiliares de temperatura
+  y humedad referenciados por `IrrigationStatus.js` ya no existen. Rama 2 usa
+  como fuente de respaldo las capabilities RAW actuales
+  `measure_temperature.temperatura` y `measure_humidity.humedad_riego`.
+- Se migra `IrrigationHistory.js` a `HistoryService` en Rama 2 en modo sombra:
+  timer interno, endpoints `/history/status` y `/history/check`, lectura de
+  `Irrigation.History` e `Irrigation.HistoryLastProjectedId`, comparacion
+  contra el dispositivo virtual "Historico de Riego", sin escrituras de
+  capabilities ni Variables Logic.
+- Se valida en Homey que el ultimo evento persistido
+  `1784323620114-6` ya esta proyectado, `HistoryService` devuelve `READY` y no
+  intentaria reprocesarlo.
+- Se añade `MigrationReadinessService` en Rama 2 con endpoints
+  `/migration/readiness` y `/migration/readiness/check`. El precheck agrega los
+  servicios sombra y mantiene `safeToDisableTechnicalFlows=false` hasta que
+  exista modo activo compatible.
+- Se valida en Homey que el precheck bloquea correctamente la reduccion de
+  Flows tecnicos: Health e History estan listos, StatusSync tiene diferencias
+  conocidas de temperatura/humedad y Scheduler sigue sin emitir solicitudes.
+- Se implementa `ACTIVE_COMPAT` para `StatusSyncService` sin activarlo. El modo
+  activo puede actualizar solo las capabilities de estado ambiental/conexion del
+  dispositivo virtual "Sistema de Riego" y requiere confirmacion explicita en
+  `/migration/control`.
+- Se valida en Homey que `StatusSyncService` permanece en `SHADOW`,
+  `updatesDevices=false`, y readiness reconoce
+  `activeCompatSupported=true` para StatusSync sin retirar ningun Flow tecnico.
+- Se activa `StatusSyncService` en `ACTIVE_COMPAT` tras deshabilitar el Flow
+  tecnico `Riego status - sync 1 min`. La app v2 pasa a ser propietaria activa
+  de la proyeccion ambiental/conexion hacia "Sistema de Riego".
+- Se valida en Homey que `StatusSyncService` aplica temperatura `33.3`,
+  humedad `57.5`, temperatura ESP32 `85.6`, fuga `No detectada` y ESPHome
+  `Conectado`, sin escribir Variables Logic ni tocar motor, cola o relés.
+- Se implementa `ACTIVE_COMPAT` para `HistoryService` sin activarlo. En modo
+  activo proyectara el ultimo evento de `Irrigation.History` y persistira
+  `Irrigation.HistoryLastProjectedId` al final para mantener idempotencia.
+- Se valida en Homey que History sigue en `SHADOW`,
+  `activeCompatSupported=true`, ultimo evento `1784323620114-6` ya proyectado y
+  sin diferencias frente al dispositivo virtual.
+- Se activa `HistoryService` en `ACTIVE_COMPAT` tras deshabilitar los Flows
+  `Riego History`, `Riego history - sync 1 min` y `Riego history - on OFF`.
+  La app v2 pasa a ser propietaria activa de la proyeccion de historico.
+- Se valida en Homey que el ultimo evento ya estaba proyectado, que
+  `HistoryService` no reprocesa acumulados y que el dispositivo "Historico de
+  Riego" mantiene contador `90`, duracion acumulada `1507` y litros acumulados
+  `0`.
+- Se implementa `ACTIVE_COMPAT` para `HealthService` sin activarlo. En modo
+  activo conservara el contrato de `IrrigationHealth.js`: persistir
+  `Irrigation.Health`, disparar `Irrigation.HealthTrigger` solo ante cambios de
+  firma y proyectar watchdog/conexion ESPHome en "Sistema de Riego".
+- Se corrige `LogicVariableStore` de Rama 2 para soportar escrituras reales de
+  Variables Logic, necesarias para History y Health en `ACTIVE_COMPAT`.
+- Se intenta activar `HealthService` en `ACTIVE_COMPAT` tras deshabilitar el
+  Flow tecnico `Riego - Supervision hardware cada minuto`, pero el check activo
+  falla con `Missing Scopes` al escribir Variables Logic desde la app nativa.
+- Se ejecuta rollback operativo: `HealthService` vuelve a `SHADOW` y el Flow
+  tecnico `Riego - Supervision hardware cada minuto` queda reactivado. El Flow
+  `Riego - Aviso de incidencia hardware` permanece activo.
+- Se bloquea temporalmente `ACTIVE_COMPAT` para Health en
+  `MigrationControlStore` hasta resolver el scope efectivo de escritura Logic.
+- Se añade endpoint diagnostico temporal `/diagnostics/logic-write-probe`. El
+  probe confirma en Homey que `homey.logic` directo no esta disponible dentro
+  de la app y que `HomeyAPI.createAppAPI().logic` falla con `403 Missing
+  Scopes`, mientras la CLI externa si puede crear, actualizar y borrar
+  Variables Logic.
+- Se detecta que el mismo bloqueo hace inseguro `HistoryService` en
+  `ACTIVE_COMPAT`, porque no podria avanzar
+  `Irrigation.HistoryLastProjectedId` tras proyectar un evento nuevo.
+- Se ejecuta rollback de History: `HistoryService` vuelve a `SHADOW`, el Flow
+  `Riego History` queda activo y los Flows `Riego history - sync 1 min` y
+  `Riego history - on OFF` vuelven a quedar deshabilitados como estaban antes
+  del cutover.
+- Se bloquea temporalmente `ACTIVE_COMPAT` para History en
+  `MigrationControlStore` hasta resolver la escritura Logic desde app nativa.
+- Se decide que Rama 2 dejara de usar Variables Logic como fuente de verdad:
+  la app nativa persistira estado propio y Logic quedara como compatibilidad u
+  observabilidad legacy.
+- Se introduce `AppStateStore` en Rama 2 con persistencia `appStateV2` para
+  iniciar el traslado de estado interno de Health, History y eventos fuera de
+  Variables Logic.
+- `HealthService` en modo activo deja de escribir Variables Logic: persiste la
+  salud en `appStateV2`, registra transiciones en `appStateV2.events` y
+  mantiene solo la proyeccion UI de watchdog/conexion ESPHome.
+- Se añade el Flow Trigger nativo `health_transition` en Rama 2 para sustituir
+  el aviso legacy basado en `Irrigation.HealthTrigger`.
+- En `ACTIVE_COMPAT`, `HealthService` emite `health_transition` solo cuando
+  cambia la firma de salud, despues de persistir `appStateV2` y antes de
+  proyectar UI.
+- `MigrationControlStore` vuelve a permitir `ACTIVE_COMPAT` para Health.
+  Scheduler e History siguen bloqueados para modo activo.
+- Se corrige la declaracion Homey Compose de `health_transition` creando
+  `.homeycompose/flow/triggers/health_transition.json`; Homey publica la
+  tarjeta como `homey:app:com.dadecal.irrigation.v2:health_transition`.
+- Se instala la app Rama 2 corregida y queda `running`.
+- Se crea y habilita el Flow `Riego - Aviso de incidencia hardware v2`
+  (`b902c1a4-a148-476e-9478-29704db9c3e4`) con la nueva Flow Card nativa.
+- Se activa `HealthService` en `ACTIVE_COMPAT` y se valida en Homey que
+  persiste `appStateV2`, mantiene `writesOperationalVariables=false`, proyecta
+  UI y no dispara aviso si la firma de salud no ha cambiado.
+- Se deshabilita el Flow tecnico `Riego - Supervision hardware cada minuto`
+  (`2f02d7f8-0a4a-44b6-b469-5dffc6622065`), de modo que
+  `IrrigationHealth.js` deja de ejecutarse periodicamente.
+- `HistoryService` en `ACTIVE_COMPAT` deja de escribir
+  `Irrigation.HistoryLastProjectedId`. La barrera activa de idempotencia pasa a
+  `appStateV2.history.lastProjectedEventId`.
+- Se añade bootstrap seguro de History: si `appStateV2` aun no tiene marca pero
+  `Irrigation.HistoryLastProjectedId` coincide con el ultimo evento, Rama 2
+  inicializa la marca interna sin reprocesar acumulados, contador ni duracion.
+- `MigrationControlStore` vuelve a permitir `ACTIVE_COMPAT` para History.
+- Se instala la app Rama 2 actualizada en Homey y se activa `HistoryService` en
+  `ACTIVE_COMPAT`.
+- El check activo valida el bootstrap del evento `1784410020110-6`: historico
+  ya proyectado, `writesOperationalVariables=false`, `writesInternalState=true`
+  y `appStateV2.history.lastProjectedEventId=1784410020110-6`.
+- Se deshabilita el Flow `Riego History`
+  (`4571a073-1f27-45bd-8317-33a94c6b18fb`). Los Flows legacy
+  `Riego history - sync 1 min` y `Riego history - on OFF` permanecen
+  deshabilitados.
+- Se porta el puente productivo del Scheduler a Rama 2: contrato
+  `program_requested`, `ProgramRequestTrigger`, confirmacion del motor y
+  `Scheduler` con compuerta `migrationControlV2.services.scheduler`.
+- Se crea y habilita el Flow `Riego programador v2 - solicitud`
+  (`64919d62-ac08-43cd-b4de-f7472f696336`), que entrega la etiqueta
+  `request` de `homey:app:com.dadecal.irrigation.v2:program_requested` a
+  `Irrigation.js` mediante HomeyScript con argumento.
+- Se desactiva el Scheduler de Rama 1 (`enabled=false`) y se deshabilita el
+  Flow antiguo `Riego programador - solicitud`
+  (`e13d0fd1-8ad5-4cef-a210-dd843766e0a8`) para evitar doble entrega.
+- Se activa Scheduler v2 en `ACTIVE_COMPAT`. La verificacion en Homey confirma
+  `due=false`, proximo riego `2026-07-19 22:00`, sin `pendingRequest` y sin
+  errores.
+- Los Flows `Riego - Aviso inicio de sector` y `Riego - Aviso fin de sector`
+  pasan a usar las condiciones de app v2
+  `notify_sector_start_enabled` y `notify_sector_end_enabled`.
+
+## 2026-07-19
+
+### App Rama 2
+- El driver nativo `irrigation_system` declara explicitamente las vistas de
+  pairing `list_devices` y `add_devices`.
+- Se añade el endpoint idempotente `/system-device/ensure` para recrear
+  `Sistema de Riego v2` si se borra accidentalmente, sin crear duplicados si ya
+  existe.
+- Se añaden pruebas unitarias de existencia previa y creacion por PairSession.
+
 ## 2026-07-12
 
 ### Recovery

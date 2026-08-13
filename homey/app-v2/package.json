@@ -1,0 +1,19 @@
+{
+  "name": "homey-irrigation-app-v2",
+  "version": "2.0.9",
+  "private": true,
+  "main": "app.js",
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "test": "node --test",
+    "validate": "node -c app.js && node -c api.js && node -c lib/app-state-store.js && node -c lib/calendar.js && node -c lib/constants.js && node -c lib/default-config.js && node -c lib/diagnostics-service.js && node -c lib/engine-contract.js && node -c lib/engine-dry-run-adapters.js && node -c lib/engine-plan-executor.js && node -c lib/engine-state-source.js && node -c lib/irrigation-engine-service.js && node -c lib/homey-api-client.js && node -c lib/health-service.js && node -c lib/status-sync-service.js && node -c lib/history-service.js && node -c lib/recovery-service.js && node -c lib/system-device-projection-service.js && node -c lib/manual-device-service.js && node -c lib/motor-confirmation-store.js && node -c lib/program-request.js && node -c lib/program-request-trigger.js && node -c lib/scheduler.js && node -c lib/scheduler-preflight-service.js && node -c lib/migration-control-store.js && node -c lib/migration-readiness-service.js && node -c lib/next-run-calculator.js && node -c lib/release-info.js && node -c lib/scheduler-config-store.js && node -c lib/scheduler-config-validator.js && node -c drivers/irrigation_system/driver.js && node -c drivers/irrigation_system/device.js && node -c drivers/irrigation_history/driver.js && node -c drivers/irrigation_history/device.js && node -c drivers/irrigation_manual/driver.js && node -c settings/settings-calculations.js && node -c settings/settings.js"
+  },
+  "dependencies": {
+    "homey-api": "^3.19.1"
+  },
+  "devDependencies": {
+    "homey": "^3.0.0"
+  }
+}

@@ -22,6 +22,7 @@ function parseArgs(argv) {
     else if (arg === '--out-dir') args.outDir = argv[++i];
     else if (arg === '--esp32-bin') args.esp32Bin = argv[++i];
     else if (arg === '--homey-app-artifact') args.homeyAppArtifact = argv[++i];
+    else if (arg === '--homey-app-v2-artifact') args.homeyAppV2Artifact = argv[++i];
     else if (arg === '--homey-scripts-artifact') args.homeyScriptsArtifact = argv[++i];
     else if (arg === '--no-esp32-artifact') args.includeEsp32Artifact = false;
     else if (arg === '--help' || arg === '-h') args.help = true;
@@ -41,6 +42,7 @@ Options:
                                   Defaults to the path declared in release/components.json.
   --no-esp32-artifact             Do not copy an ESP32 binary; only hash sources.
   --homey-app-artifact <file>     Homey app package/zip to copy into the release.
+  --homey-app-v2-artifact <file>  Homey app v2 package to copy into the release.
   --homey-scripts-artifact <file> HomeyScripts package/zip to copy into the release.
 `);
 }
@@ -250,6 +252,16 @@ async function main() {
       targetName: artifactName(homeyApp.artifactPattern, homeyApp.version),
     });
     if (copied) components.homeyApp.artifact = copied;
+  }
+
+  if (args.homeyAppV2Artifact) {
+    const homeyAppV2 = componentsConfig.components.homeyAppV2;
+    const copied = await copyArtifact({
+      source: args.homeyAppV2Artifact,
+      targetDir: outDir,
+      targetName: artifactName(homeyAppV2.artifactPattern, homeyAppV2.version),
+    });
+    if (copied) components.homeyAppV2.artifact = copied;
   }
 
   if (args.homeyScriptsArtifact) {

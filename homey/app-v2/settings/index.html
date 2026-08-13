@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sistema de Riego v2</title>
+    <link rel="stylesheet" href="./settings.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="title-block">
+          <h1>Sistema de Riego v2</h1>
+          <p id="statusText" aria-live="polite">Cargando configuracion...</p>
+        </div>
+        <label class="switch" for="enabled">
+          <input id="enabled" type="checkbox">
+          <span class="switch-track" aria-hidden="true"></span>
+          <span class="switch-label">Programador activo</span>
+        </label>
+      </header>
+
+      <nav class="tabbar" role="tablist" aria-label="Secciones">
+        <button type="button" id="tabSchedule" class="tab-button active" role="tab" aria-selected="true" aria-controls="scheduleTab" data-tab-target="schedule">Programacion</button>
+        <button type="button" id="tabDiagnostics" class="tab-button" role="tab" aria-selected="false" aria-controls="diagnosticsTab" data-tab-target="diagnostics">Diagnostico</button>
+      </nav>
+
+      <p id="notice" class="notice" role="status" aria-live="polite"></p>
+
+      <div id="scheduleTab" class="tab-panel active" role="tabpanel" aria-labelledby="tabSchedule" data-tab-panel="schedule">
+        <section class="panel schedule-panel">
+          <div class="schedule-column">
+            <label class="field-label">
+              <span>Hora de inicio</span>
+              <input id="startTime" type="time" value="07:30">
+            </label>
+            <div class="calculated-time">
+              <span>Hora de fin estimada</span>
+              <strong id="endTime">--:--</strong>
+            </div>
+          </div>
+
+          <label class="field-label">
+            <span>Intervalo de dias</span>
+            <input id="intervalDays" type="number" min="1" max="30" step="1">
+          </label>
+        </section>
+
+        <section class="panel">
+          <h2>Duracion por sector</h2>
+          <div id="sectorDurations" class="sector-grid">
+            <label class="field-label"><span>Sector 1</span><span class="number-field"><input type="number" min="0" max="30" step="1" data-sector="1" value="0"><span>min</span></span></label>
+            <label class="field-label"><span>Sector 2</span><span class="number-field"><input type="number" min="0" max="30" step="1" data-sector="2" value="0"><span>min</span></span></label>
+            <label class="field-label"><span>Sector 3</span><span class="number-field"><input type="number" min="0" max="30" step="1" data-sector="3" value="0"><span>min</span></span></label>
+            <label class="field-label"><span>Sector 4</span><span class="number-field"><input type="number" min="0" max="30" step="1" data-sector="4" value="0"><span>min</span></span></label>
+            <label class="field-label"><span>Sector 5</span><span class="number-field"><input type="number" min="0" max="30" step="1" data-sector="5" value="0"><span>min</span></span></label>
+            <label class="field-label"><span>Sector 6</span><span class="number-field"><input type="number" min="0" max="30" step="1" data-sector="6" value="0"><span>min</span></span></label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Notificaciones por sector</h2>
+          <div class="notification-options">
+            <label class="switch" for="notifySectorStart">
+              <input id="notifySectorStart" type="checkbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="switch-label">Avisar al iniciar un sector</span>
+            </label>
+            <label class="switch" for="notifySectorEnd">
+              <input id="notifySectorEnd" type="checkbox">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="switch-label">Avisar al finalizar un sector</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="panel rain-delay">
+          <div class="section-heading">
+            <h2>Rain Delay</h2>
+            <span id="rainDelayText">Sin aplazamiento</span>
+          </div>
+          <div class="button-row" aria-label="Duracion del Rain Delay">
+            <button type="button" data-rain-delay="24">24h</button>
+            <button type="button" data-rain-delay="48">48h</button>
+            <button type="button" data-rain-delay="72">72h</button>
+            <button type="button" id="clearRainDelay" class="secondary">Cancelar</button>
+          </div>
+        </section>
+
+        <footer class="footer">
+          <div>
+            <strong>Proximo riego</strong>
+            <span id="nextRun">Sin calcular</span>
+          </div>
+          <button id="saveButton" type="button" disabled>Guardar cambios</button>
+        </footer>
+      </div>
+
+      <div id="diagnosticsTab" class="tab-panel" role="tabpanel" aria-labelledby="tabDiagnostics" data-tab-panel="diagnostics" hidden>
+        <section class="panel diagnostics-panel">
+          <div class="section-heading">
+            <h2>Diagnostico</h2>
+            <button type="button" id="refreshDiagnostics" class="secondary small-button">Actualizar</button>
+          </div>
+          <div class="diagnostics-grid">
+            <div><span>Salud</span><strong id="diagnosticHealth">--</strong></div>
+            <div><span>Recovery</span><strong id="diagnosticRecovery">--</strong></div>
+            <div><span>Motor</span><strong id="diagnosticEngine">--</strong></div>
+            <div><span>Preflight</span><strong id="diagnosticPreflight">--</strong></div>
+          </div>
+          <ol id="diagnosticEvents" class="diagnostic-events"></ol>
+        </section>
+      </div>
+    </main>
+
+    <script src="/homey.js" data-origin="settings"></script>
+    <script src="./settings-calculations.js"></script>
+    <script src="./settings.js"></script>
+  </body>
+</html>

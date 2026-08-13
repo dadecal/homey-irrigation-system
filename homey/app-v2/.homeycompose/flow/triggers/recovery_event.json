@@ -1,0 +1,40 @@
+{
+  "id": "recovery_event",
+  "title": {
+    "en": "An ESPHome Controller recovery event occurs",
+    "es": "Ocurre un evento de recuperacion de ESPHome Controller"
+  },
+  "hint": {
+    "en": "Use this trigger to notify automatic ESPHome Controller recovery attempts handled by the native app.",
+    "es": "Usa este disparador para avisar intentos de recuperacion automatica de ESPHome Controller gestionados por la app nativa."
+  },
+  "tokens": [
+    {
+      "name": "status",
+      "type": "string",
+      "title": {
+        "en": "Status",
+        "es": "Estado"
+      },
+      "example": "RESTART_REQUESTED"
+    },
+    {
+      "name": "message",
+      "type": "string",
+      "title": {
+        "en": "Message",
+        "es": "Mensaje"
+      },
+      "example": "Reinicio automatico 1/3 de ESPHome Controller solicitado"
+    },
+    {
+      "name": "attempts",
+      "type": "number",
+      "title": {
+        "en": "Attempts",
+        "es": "Intentos"
+      },
+      "example": 1
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "type": "string",
+  "icon": "/assets/capability-icons/water.svg",
+  "title": {
+    "en": "Leak detected",
+    "es": "Fuga detectada"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor"
+}

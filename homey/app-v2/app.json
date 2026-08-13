@@ -1,0 +1,1297 @@
+{
+  "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
+  "id": "com.dadecal.irrigation.v2",
+  "version": "2.0.9",
+  "sdk": 3,
+  "compatibility": ">=10.0.0",
+  "name": {
+    "en": "Irrigation System v2",
+    "es": "Sistema de Riego v2"
+  },
+  "description": {
+    "en": "Second-generation native Homey app for the irrigation system.",
+    "es": "Aplicacion Homey nativa de segunda generacion para el sistema de riego."
+  },
+  "author": {
+    "name": "Dadecal"
+  },
+  "category": [
+    "tools"
+  ],
+  "permissions": [
+    "homey:manager:api"
+  ],
+  "brandColor": "#256D5A",
+  "images": {
+    "small": "/assets/app-small.png",
+    "large": "/assets/app-large.png"
+  },
+  "api": {
+    "getConfig": {
+      "method": "GET",
+      "path": "/config"
+    },
+    "putConfig": {
+      "method": "PUT",
+      "path": "/config"
+    },
+    "getStatus": {
+      "method": "GET",
+      "path": "/status"
+    },
+    "getRelease": {
+      "method": "GET",
+      "path": "/release"
+    },
+    "getHealthStatus": {
+      "method": "GET",
+      "path": "/health/status"
+    },
+    "checkHealth": {
+      "method": "POST",
+      "path": "/health/check"
+    },
+    "getStatusSyncStatus": {
+      "method": "GET",
+      "path": "/status-sync/status"
+    },
+    "checkStatusSync": {
+      "method": "POST",
+      "path": "/status-sync/check"
+    },
+    "getHistoryStatus": {
+      "method": "GET",
+      "path": "/history/status"
+    },
+    "checkHistory": {
+      "method": "POST",
+      "path": "/history/check"
+    },
+    "ensureHistoryDevice": {
+      "method": "POST",
+      "path": "/history-device/ensure"
+    },
+    "getRecoveryStatus": {
+      "method": "GET",
+      "path": "/recovery/status"
+    },
+    "checkRecovery": {
+      "method": "POST",
+      "path": "/recovery/check"
+    },
+    "restartControllerProbe": {
+      "method": "POST",
+      "path": "/recovery/restart-controller/probe"
+    },
+    "getRecoveryTokenStatus": {
+      "method": "GET",
+      "path": "/recovery/token"
+    },
+    "putRecoveryToken": {
+      "method": "PUT",
+      "path": "/recovery/token"
+    },
+    "clearRecoveryToken": {
+      "method": "DELETE",
+      "path": "/recovery/token"
+    },
+    "getEngineStatus": {
+      "method": "GET",
+      "path": "/engine/status"
+    },
+    "checkEngine": {
+      "method": "POST",
+      "path": "/engine/check"
+    },
+    "previewEngineManualStart": {
+      "method": "POST",
+      "path": "/engine/manual-start/preview"
+    },
+    "previewEngineProgramStart": {
+      "method": "POST",
+      "path": "/engine/program-start/preview"
+    },
+    "previewEngineManualStop": {
+      "method": "POST",
+      "path": "/engine/manual-stop/preview"
+    },
+    "startEngineManual": {
+      "method": "POST",
+      "path": "/engine/manual-start"
+    },
+    "startEngineProgram": {
+      "method": "POST",
+      "path": "/engine/program-start"
+    },
+    "stopEngineManual": {
+      "method": "POST",
+      "path": "/engine/manual-stop"
+    },
+    "tickEngine": {
+      "method": "POST",
+      "path": "/engine/tick"
+    },
+    "recoverEngine": {
+      "method": "POST",
+      "path": "/engine/recover"
+    },
+    "getSystemDeviceStatus": {
+      "method": "GET",
+      "path": "/system-device/status"
+    },
+    "checkSystemDevice": {
+      "method": "POST",
+      "path": "/system-device/check"
+    },
+    "ensureSystemDevice": {
+      "method": "POST",
+      "path": "/system-device/ensure"
+    },
+    "getManualDeviceStatus": {
+      "method": "GET",
+      "path": "/manual-device/status"
+    },
+    "checkManualDevice": {
+      "method": "POST",
+      "path": "/manual-device/check"
+    },
+    "ensureManualDevice": {
+      "method": "POST",
+      "path": "/manual-device/ensure"
+    },
+    "getMigrationReadiness": {
+      "method": "GET",
+      "path": "/migration/readiness"
+    },
+    "getDiagnosticsStatus": {
+      "method": "GET",
+      "path": "/diagnostics/status"
+    },
+    "checkMigrationReadiness": {
+      "method": "POST",
+      "path": "/migration/readiness/check"
+    },
+    "putMigrationControl": {
+      "method": "PUT",
+      "path": "/migration/control"
+    },
+    "probeLogicWrite": {
+      "method": "POST",
+      "path": "/diagnostics/logic-write-probe"
+    },
+    "setRainDelay": {
+      "method": "POST",
+      "path": "/rain-delay"
+    },
+    "clearRainDelay": {
+      "method": "DELETE",
+      "path": "/rain-delay"
+    }
+  },
+  "flow": {
+    "triggers": [
+      {
+        "title": {
+          "en": "The irrigation health status changes",
+          "es": "Cambia el estado de salud del riego"
+        },
+        "hint": {
+          "en": "Use this trigger to notify hardware, ESPHome or engine health incidents detected by the native app.",
+          "es": "Usa este disparador para avisar incidencias de hardware, ESPHome o motor detectadas por la app nativa."
+        },
+        "tokens": [
+          {
+            "name": "status",
+            "type": "string",
+            "title": {
+              "en": "Status",
+              "es": "Estado"
+            },
+            "example": "OFFLINE"
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "title": {
+              "en": "Message",
+              "es": "Mensaje"
+            },
+            "example": "OFFLINE - Controlador ESP32 desconectado"
+          },
+          {
+            "name": "issueCodes",
+            "type": "string",
+            "title": {
+              "en": "Issue codes",
+              "es": "Codigos de incidencia"
+            },
+            "example": "ESP_OFFLINE,ENGINE_CONTROLLER_OFFLINE"
+          }
+        ],
+        "id": "health_transition"
+      },
+      {
+        "title": {
+          "en": "The scheduler requests an irrigation program",
+          "es": "El programador solicita un programa de riego"
+        },
+        "hint": {
+          "en": "Pass the Request token to Irrigation.js using the HomeyScript card with an argument.",
+          "es": "Entrega la etiqueta Solicitud a Irrigation.js mediante la tarjeta HomeyScript con argumento."
+        },
+        "tokens": [
+          {
+            "name": "request",
+            "type": "string",
+            "title": {
+              "en": "Request",
+              "es": "Solicitud"
+            },
+            "example": "{\"version\":1,\"requestId\":\"...\",\"queue\":[{\"sector\":1,\"duration\":10}]}"
+          }
+        ],
+        "id": "program_requested"
+      },
+      {
+        "id": "recovery_event",
+        "title": {
+          "en": "An ESPHome Controller recovery event occurs",
+          "es": "Ocurre un evento de recuperacion de ESPHome Controller"
+        },
+        "hint": {
+          "en": "Use this trigger to notify automatic ESPHome Controller recovery attempts handled by the native app.",
+          "es": "Usa este disparador para avisar intentos de recuperacion automatica de ESPHome Controller gestionados por la app nativa."
+        },
+        "tokens": [
+          {
+            "name": "status",
+            "type": "string",
+            "title": {
+              "en": "Status",
+              "es": "Estado"
+            },
+            "example": "RESTART_REQUESTED"
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "title": {
+              "en": "Message",
+              "es": "Mensaje"
+            },
+            "example": "Reinicio automatico 1/3 de ESPHome Controller solicitado"
+          },
+          {
+            "name": "attempts",
+            "type": "number",
+            "title": {
+              "en": "Attempts",
+              "es": "Intentos"
+            },
+            "example": 1
+          }
+        ]
+      },
+      {
+        "title": {
+          "en": "An irrigation sector ends",
+          "es": "Termina un sector de riego"
+        },
+        "hint": {
+          "en": "Use this trigger to notify sector endings emitted by the native Rama 2 engine.",
+          "es": "Usa este disparador para avisar finales de sector emitidos por el motor nativo de Rama 2."
+        },
+        "tokens": [
+          {
+            "name": "message",
+            "type": "string",
+            "title": {
+              "en": "Message",
+              "es": "Mensaje"
+            },
+            "example": "Finalizado sector 1: 12.5 L"
+          },
+          {
+            "name": "sector",
+            "type": "number",
+            "title": {
+              "en": "Sector",
+              "es": "Sector"
+            },
+            "example": 1
+          },
+          {
+            "name": "duration",
+            "type": "number",
+            "title": {
+              "en": "Duration",
+              "es": "Duracion"
+            },
+            "example": 5
+          },
+          {
+            "name": "liters",
+            "type": "number",
+            "title": {
+              "en": "Liters",
+              "es": "Litros"
+            },
+            "example": 12.5
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "title": {
+              "en": "Reason",
+              "es": "Motivo"
+            },
+            "example": "timeout"
+          },
+          {
+            "name": "source",
+            "type": "string",
+            "title": {
+              "en": "Source",
+              "es": "Origen"
+            },
+            "example": "MANUAL"
+          }
+        ],
+        "id": "sector_ended"
+      },
+      {
+        "title": {
+          "en": "An irrigation sector starts",
+          "es": "Empieza un sector de riego"
+        },
+        "hint": {
+          "en": "Use this trigger to notify sector starts emitted by the native Rama 2 engine.",
+          "es": "Usa este disparador para avisar inicios de sector emitidos por el motor nativo de Rama 2."
+        },
+        "tokens": [
+          {
+            "name": "message",
+            "type": "string",
+            "title": {
+              "en": "Message",
+              "es": "Mensaje"
+            },
+            "example": "Iniciado sector 1: 5 min (MANUAL)"
+          },
+          {
+            "name": "sector",
+            "type": "number",
+            "title": {
+              "en": "Sector",
+              "es": "Sector"
+            },
+            "example": 1
+          },
+          {
+            "name": "duration",
+            "type": "number",
+            "title": {
+              "en": "Duration",
+              "es": "Duracion"
+            },
+            "example": 5
+          },
+          {
+            "name": "source",
+            "type": "string",
+            "title": {
+              "en": "Source",
+              "es": "Origen"
+            },
+            "example": "MANUAL"
+          }
+        ],
+        "id": "sector_started"
+      }
+    ],
+    "conditions": [
+      {
+        "title": {
+          "en": "End notifications are enabled",
+          "es": "Los avisos de fin de sector están activos"
+        },
+        "id": "notify_sector_end_enabled"
+      },
+      {
+        "title": {
+          "en": "Start notifications are enabled",
+          "es": "Los avisos de inicio de sector están activos"
+        },
+        "id": "notify_sector_start_enabled"
+      }
+    ]
+  },
+  "drivers": [
+    {
+      "name": {
+        "en": "Irrigation History",
+        "es": "Historico de Riego"
+      },
+      "class": "other",
+      "capabilities": [
+        "irrigation_history_last_watering",
+        "irrigation_history_timestamp",
+        "irrigation_history_program",
+        "irrigation_history_last_duration",
+        "irrigation_history_last_liters",
+        "irrigation_history_accumulated_liters",
+        "irrigation_history_watering_count",
+        "irrigation_history_accumulated_duration",
+        "irrigation_history_sector_1_last",
+        "irrigation_history_sector_1_duration",
+        "irrigation_history_sector_1_liters",
+        "irrigation_history_sector_1_avg_flow",
+        "irrigation_history_sector_2_last",
+        "irrigation_history_sector_2_duration",
+        "irrigation_history_sector_2_liters",
+        "irrigation_history_sector_2_avg_flow",
+        "irrigation_history_sector_3_last",
+        "irrigation_history_sector_3_duration",
+        "irrigation_history_sector_3_liters",
+        "irrigation_history_sector_3_avg_flow",
+        "irrigation_history_sector_4_last",
+        "irrigation_history_sector_4_duration",
+        "irrigation_history_sector_4_liters",
+        "irrigation_history_sector_4_avg_flow",
+        "irrigation_history_sector_5_last",
+        "irrigation_history_sector_5_duration",
+        "irrigation_history_sector_5_liters",
+        "irrigation_history_sector_5_avg_flow",
+        "irrigation_history_sector_6_last",
+        "irrigation_history_sector_6_duration",
+        "irrigation_history_sector_6_liters",
+        "irrigation_history_sector_6_avg_flow"
+      ],
+      "ui": {
+        "quickAction": null
+      },
+      "uiIndicator": "irrigation_history_timestamp",
+      "images": {
+        "small": "/assets/device-icons/irrigation-history-small.png",
+        "large": "/assets/device-icons/irrigation-history-large.png"
+      },
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "id": "irrigation_history"
+    },
+    {
+      "name": {
+        "en": "Manual Irrigation",
+        "es": "Riego Manual"
+      },
+      "class": "other",
+      "capabilities": [
+        "irrigation_manual_sector",
+        "irrigation_manual_duration",
+        "onoff",
+        "irrigation_manual_remaining",
+        "irrigation_manual_message"
+      ],
+      "ui": {
+        "quickAction": "onoff"
+      },
+      "uiIndicator": ".none",
+      "images": {
+        "small": "/assets/device-icons/irrigation-manual-small.png",
+        "large": "/assets/device-icons/irrigation-manual-large.png"
+      },
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "id": "irrigation_manual"
+    },
+    {
+      "name": {
+        "en": "Irrigation System",
+        "es": "Sistema de Riego"
+      },
+      "class": "other",
+      "capabilities": [
+        "irrigation_state",
+        "irrigation_active_sector",
+        "irrigation_remaining_minutes",
+        "irrigation_queue_length",
+        "irrigation_source",
+        "irrigation_program",
+        "irrigation_message",
+        "irrigation_esp_connected",
+        "irrigation_leak_status",
+        "irrigation_temperature",
+        "irrigation_humidity",
+        "irrigation_cpu_temperature",
+        "irrigation_health_status"
+      ],
+      "ui": {
+        "quickAction": null
+      },
+      "uiIndicator": "irrigation_state",
+      "images": {
+        "small": "/assets/device-icons/irrigation-system-small.png",
+        "large": "/assets/device-icons/irrigation-system-large.png"
+      },
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "id": "irrigation_system"
+    }
+  ],
+  "capabilities": {
+    "irrigation_active_sector": {
+      "type": "number",
+      "icon": "/assets/capability-icons/sector.svg",
+      "title": {
+        "en": "Active sector",
+        "es": "Sector activo"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 0,
+      "insights": true
+    },
+    "irrigation_cpu_temperature": {
+      "type": "number",
+      "icon": "/assets/capability-icons/temperature.svg",
+      "title": {
+        "en": "ESP32 temperature",
+        "es": "Temperatura ESP32"
+      },
+      "units": {
+        "en": "°C",
+        "es": "°C"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 1,
+      "insights": true
+    },
+    "irrigation_esp_connected": {
+      "type": "string",
+      "icon": "/assets/capability-icons/connection.svg",
+      "title": {
+        "en": "ESP32 connected",
+        "es": "ESP32 conectado"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "irrigation_health_status": {
+      "type": "string",
+      "icon": "/assets/capability-icons/watchdog.svg",
+      "title": {
+        "en": "Health status",
+        "es": "Estado de salud"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "irrigation_history_accumulated_duration": {
+      "type": "number",
+      "icon": "/assets/capability-icons/clock.svg",
+      "title": {
+        "en": "Accumulated duration",
+        "es": "Duracion acumulada"
+      },
+      "units": {
+        "en": "min",
+        "es": "min"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 1,
+      "insights": true
+    },
+    "irrigation_history_accumulated_liters": {
+      "type": "number",
+      "icon": "/assets/capability-icons/water.svg",
+      "title": {
+        "en": "Accumulated water",
+        "es": "Litros acumulados"
+      },
+      "units": {
+        "en": "L",
+        "es": "L"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 2,
+      "insights": true
+    },
+    "irrigation_history_last_duration": {
+      "type": "number",
+      "icon": "/assets/capability-icons/clock.svg",
+      "title": {
+        "en": "Last duration",
+        "es": "Ultima duracion"
+      },
+      "units": {
+        "en": "min",
+        "es": "min"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 1,
+      "insights": true
+    },
+    "irrigation_history_last_liters": {
+      "type": "number",
+      "icon": "/assets/capability-icons/water.svg",
+      "title": {
+        "en": "Last water",
+        "es": "Ultimos litros"
+      },
+      "units": {
+        "en": "L",
+        "es": "L"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 2,
+      "insights": true
+    },
+    "irrigation_history_last_watering": {
+      "type": "string",
+      "icon": "/assets/capability-icons/message.svg",
+      "title": {
+        "en": "Last watering",
+        "es": "Ultimo riego"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "irrigation_history_program": {
+      "type": "string",
+      "icon": "/assets/capability-icons/history-program.svg",
+      "title": {
+        "en": "Program",
+        "es": "Programa"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "irrigation_history_sector_1_avg_flow": {
+      "type": "number",
+      "icon": "/assets/capability-icons/water.svg",
+      "title": {
+        "en": "S1 avg flow",
+        "es": "S1 caudal medio"
+      },
+      "units": {
+        "en": "L/min",
+        "es": "L/min"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 2,
+      "insights": true
+    },
+    "irrigation_history_sector_1_duration": {
+      "type": "number",
+      "icon": "/assets/capability-icons/clock.svg",
+      "title": {
+        "en": "S1 duration",
+        "es": "S1 duracion"
+      },
+      "units": {
+        "en": "min",
+        "es": "min"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 1,
+      "insights": true
+    },
+    "irrigation_history_sector_1_last": {
+      "type": "string",
+      "icon": "/assets/capability-icons/message.svg",
+      "title": {
+        "en": "S1 last watering",
+        "es": "S1 ultimo riego"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "irrigation_history_sector_1_liters": {
+      "type": "number",
+      "icon": "/assets/capability-icons/water.svg",
+      "title": {
+        "en": "S1 water",
+        "es": "S1 litros"
+      },
+      "units": {
+        "en": "L",
+        "es": "L"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 2,
+      "insights": true
+    },
+    "irrigation_history_sector_2_avg_flow": {
+      "type": "number",
+      "icon": "/assets/capability-icons/water.svg",
+      "title": {
+        "en": "S2 avg flow",
+        "es": "S2 caudal medio"
+      },
+      "units": {
+        "en": "L/min",
+        "es": "L/min"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 2,
+      "insights": true
+    },
+    "irrigation_history_sector_2_duration": {
+      "type": "number",
+      "icon": "/assets/capability-icons/clock.svg",
+      "title": {
+        "en": "S2 duration",
+        "es": "S2 duracion"
+      },
+      "units": {
+        "en": "min",
+        "es": "min"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 1,
+      "insights": true
+    },
+    "irrigation_history_sector_2_last": {
+      "type": "string",
+      "icon": "/assets/capability-icons/message.svg",
+      "title": {
+        "en": "S2 last watering",
+        "es": "S2 ultimo riego"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "irrigation_history_sector_2_liters": {
+      "type": "number",
+      "icon": "/assets/capability-icons/water.svg",
+      "title": {
+        "en": "S2 water",
+        "es": "S2 litros"
+      },
+      "units": {
+        "en": "L",
+        "es": "L"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 2,
+      "insights": true
+    },
+    "irrigation_history_sector_3_avg_flow": {
+      "type": "number",
+      "icon": "/assets/capability-icons/water.svg",
+      "title": {
+        "en": "S3 avg flow",
+        "es": "S3 caudal medio"
+      },
+      "units": {
+        "en": "L/min",
+        "es": "L/min"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 2,
+      "insights": true
+    },
+    "irrigation_history_sector_3_duration": {
+      "type": "number",
+      "icon": "/assets/capability-icons/clock.svg",
+      "title": {
+        "en": "S3 duration",
+        "es": "S3 duracion"
+      },
+      "units": {
+        "en": "min",
+        "es": "min"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 1,
+      "insights": true
+    },
+    "irrigation_history_sector_3_last": {
+      "type": "string",
+      "icon": "/assets/capability-icons/message.svg",
+      "title": {
+        "en": "S3 last watering",
+        "es": "S3 ultimo riego"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "irrigation_history_sector_3_liters": {
+      "type": "number",
+      "icon": "/assets/capability-icons/water.svg",
+      "title": {
+        "en": "S3 water",
+        "es": "S3 litros"
+      },
+      "units": {
+        "en": "L",
+        "es": "L"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 2,
+      "insights": true
+    },
+    "irrigation_history_sector_4_avg_flow": {
+      "type": "number",
+      "icon": "/assets/capability-icons/water.svg",
+      "title": {
+        "en": "S4 avg flow",
+        "es": "S4 caudal medio"
+      },
+      "units": {
+        "en": "L/min",
+        "es": "L/min"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 2,
+      "insights": true
+    },
+    "irrigation_history_sector_4_duration": {
+      "type": "number",
+      "icon": "/assets/capability-icons/clock.svg",
+      "title": {
+        "en": "S4 duration",
+        "es": "S4 duracion"
+      },
+      "units": {
+        "en": "min",
+        "es": "min"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 1,
+      "insights": true
+    },
+    "irrigation_history_sector_4_last": {
+      "type": "string",
+      "icon": "/assets/capability-icons/message.svg",
+      "title": {
+        "en": "S4 last watering",
+        "es": "S4 ultimo riego"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "irrigation_history_sector_4_liters": {
+      "type": "number",
+      "icon": "/assets/capability-icons/water.svg",
+      "title": {
+        "en": "S4 water",
+        "es": "S4 litros"
+      },
+      "units": {
+        "en": "L",
+        "es": "L"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 2,
+      "insights": true
+    },
+    "irrigation_history_sector_5_avg_flow": {
+      "type": "number",
+      "icon": "/assets/capability-icons/water.svg",
+      "title": {
+        "en": "S5 avg flow",
+        "es": "S5 caudal medio"
+      },
+      "units": {
+        "en": "L/min",
+        "es": "L/min"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 2,
+      "insights": true
+    },
+    "irrigation_history_sector_5_duration": {
+      "type": "number",
+      "icon": "/assets/capability-icons/clock.svg",
+      "title": {
+        "en": "S5 duration",
+        "es": "S5 duracion"
+      },
+      "units": {
+        "en": "min",
+        "es": "min"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 1,
+      "insights": true
+    },
+    "irrigation_history_sector_5_last": {
+      "type": "string",
+      "icon": "/assets/capability-icons/message.svg",
+      "title": {
+        "en": "S5 last watering",
+        "es": "S5 ultimo riego"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "irrigation_history_sector_5_liters": {
+      "type": "number",
+      "icon": "/assets/capability-icons/water.svg",
+      "title": {
+        "en": "S5 water",
+        "es": "S5 litros"
+      },
+      "units": {
+        "en": "L",
+        "es": "L"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 2,
+      "insights": true
+    },
+    "irrigation_history_sector_6_avg_flow": {
+      "type": "number",
+      "icon": "/assets/capability-icons/water.svg",
+      "title": {
+        "en": "S6 avg flow",
+        "es": "S6 caudal medio"
+      },
+      "units": {
+        "en": "L/min",
+        "es": "L/min"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 2,
+      "insights": true
+    },
+    "irrigation_history_sector_6_duration": {
+      "type": "number",
+      "icon": "/assets/capability-icons/clock.svg",
+      "title": {
+        "en": "S6 duration",
+        "es": "S6 duracion"
+      },
+      "units": {
+        "en": "min",
+        "es": "min"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 1,
+      "insights": true
+    },
+    "irrigation_history_sector_6_last": {
+      "type": "string",
+      "icon": "/assets/capability-icons/message.svg",
+      "title": {
+        "en": "S6 last watering",
+        "es": "S6 ultimo riego"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "irrigation_history_sector_6_liters": {
+      "type": "number",
+      "icon": "/assets/capability-icons/water.svg",
+      "title": {
+        "en": "S6 water",
+        "es": "S6 litros"
+      },
+      "units": {
+        "en": "L",
+        "es": "L"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 2,
+      "insights": true
+    },
+    "irrigation_history_timestamp": {
+      "type": "string",
+      "icon": "/assets/capability-icons/clock.svg",
+      "title": {
+        "en": "Timestamp",
+        "es": "Fecha"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "irrigation_history_watering_count": {
+      "type": "number",
+      "icon": "/assets/capability-icons/queue.svg",
+      "title": {
+        "en": "Watering count",
+        "es": "Numero de riegos"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 0,
+      "insights": true
+    },
+    "irrigation_humidity": {
+      "type": "number",
+      "icon": "/assets/capability-icons/humidity.svg",
+      "title": {
+        "en": "Ambient humidity",
+        "es": "Humedad ambiente"
+      },
+      "units": {
+        "en": "%",
+        "es": "%"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 1,
+      "insights": true
+    },
+    "irrigation_leak_status": {
+      "type": "string",
+      "icon": "/assets/capability-icons/water.svg",
+      "title": {
+        "en": "Leak detected",
+        "es": "Fuga detectada"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "irrigation_manual_duration": {
+      "type": "number",
+      "icon": "/assets/capability-icons/clock.svg",
+      "title": {
+        "en": "Duration",
+        "es": "Duracion"
+      },
+      "units": {
+        "en": "min",
+        "es": "min"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": "slider",
+      "min": 1,
+      "max": 30,
+      "step": 1,
+      "decimals": 0,
+      "insights": true
+    },
+    "irrigation_manual_message": {
+      "type": "string",
+      "icon": "/assets/capability-icons/message.svg",
+      "title": {
+        "en": "Information",
+        "es": "Informacion"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "irrigation_manual_remaining": {
+      "type": "number",
+      "icon": "/assets/capability-icons/clock.svg",
+      "title": {
+        "en": "Remaining time",
+        "es": "Tiempo restante"
+      },
+      "units": {
+        "en": "min",
+        "es": "min"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 0,
+      "insights": true
+    },
+    "irrigation_manual_sector": {
+      "type": "number",
+      "icon": "/assets/capability-icons/sector.svg",
+      "title": {
+        "en": "Sector",
+        "es": "Sector"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": "slider",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "decimals": 0,
+      "insights": true
+    },
+    "irrigation_message": {
+      "type": "string",
+      "icon": "/assets/capability-icons/message.svg",
+      "title": {
+        "en": "Last message",
+        "es": "Ultimo mensaje"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "irrigation_program": {
+      "type": "string",
+      "icon": "/assets/capability-icons/program.svg",
+      "title": {
+        "en": "Active program",
+        "es": "Programa activo"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "irrigation_queue_length": {
+      "type": "number",
+      "icon": "/assets/capability-icons/queue.svg",
+      "title": {
+        "en": "Pending queue",
+        "es": "Cola pendiente"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 0,
+      "insights": true
+    },
+    "irrigation_remaining_minutes": {
+      "type": "number",
+      "icon": "/assets/capability-icons/clock.svg",
+      "title": {
+        "en": "Remaining time",
+        "es": "Tiempo restante"
+      },
+      "units": {
+        "en": "min",
+        "es": "min"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 0,
+      "insights": true
+    },
+    "irrigation_source": {
+      "type": "string",
+      "icon": "/assets/capability-icons/origin.svg",
+      "title": {
+        "en": "Source",
+        "es": "Origen"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "irrigation_state": {
+      "type": "string",
+      "icon": "/assets/capability-icons/state.svg",
+      "title": {
+        "en": "State",
+        "es": "Estado"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "irrigation_temperature": {
+      "type": "number",
+      "icon": "/assets/capability-icons/temperature.svg",
+      "title": {
+        "en": "Ambient temperature",
+        "es": "Temperatura ambiente"
+      },
+      "units": {
+        "en": "°C",
+        "es": "°C"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 1,
+      "insights": true
+    }
+  }
+}

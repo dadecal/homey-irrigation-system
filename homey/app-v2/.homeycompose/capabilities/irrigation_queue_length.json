@@ -1,0 +1,13 @@
+{
+  "type": "number",
+  "icon": "/assets/capability-icons/queue.svg",
+  "title": {
+    "en": "Pending queue",
+    "es": "Cola pendiente"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "decimals": 0,
+  "insights": true
+}

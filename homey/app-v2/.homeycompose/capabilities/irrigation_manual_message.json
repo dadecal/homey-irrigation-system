@@ -1,0 +1,11 @@
+{
+  "type": "string",
+  "icon": "/assets/capability-icons/message.svg",
+  "title": {
+    "en": "Information",
+    "es": "Informacion"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor"
+}

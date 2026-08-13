@@ -182,6 +182,9 @@ Campos principales:
 * `lastRestartTs`: último reinicio, utilizado para el cooldown;
 * `awaitingRecovery`: existe un reinicio pendiente de verificar;
 * `exhaustedNotified`: evita repetir el aviso de intentos agotados;
+* `restartBlockedReason` y `restartBlockedTs`: motivo y fecha de bloqueo si
+  Homey no permite ejecutar el reinicio automatico, por ejemplo
+  `MISSING_SCOPES`;
 * `lastRecoveryTs` y `lastMessage`;
 * `events`: máximo veinte eventos, más reciente primero.
 
@@ -192,6 +195,98 @@ antes de actualizar mensaje y trigger.
 Este contrato sustituye a la ejecución de `IrrigationRecovery.js` desde
 HomeyScript, pero mantiene nombres y estructura para conservar compatibilidad
 con los Flows de notificación existentes.
+
+En Rama 2, la app nativa usa `appStateV2.recovery` como estado interno activo
+de Recovery. Las Variables Logic `Irrigation.Recovery*` quedan como contrato
+legacy de Rama 1 y compatibilidad externa; Recovery v2 no depende de poder
+escribirlas. Los eventos de notificacion nuevos se emiten mediante la Flow Card
+nativa `recovery_event`.
+
+Si `restartApp` de Homey devuelve `Missing Scopes`, Recovery v2 registra el
+evento `RESTART_UNAVAILABLE`, bloquea nuevos intentos de reinicio durante el
+incidente activo y expone `canRestartController=false` en `/recovery/status`.
+El bloqueo se limpia cuando el dispositivo ESPHome vuelve a estar disponible.
+
+`recoveryControllerTokenV2` es una clave privada de ManagerSettings para un
+token de usuario opcional con scope suficiente para `homey.app`. Si esta
+configurado, Recovery v2 lo usa directamente para `restartApp` y evita el
+intento conocido con el token interno de la app. Si no esta configurado,
+Recovery v2 conserva el intento con el token interno y registra
+`RESTART_UNAVAILABLE` si Homey devuelve `Missing Scopes`. No forma parte del
+contrato publico legacy ni se proyecta a Variables Logic.
+
+⸻
+
+appStateV2.engine
+
+Tipo
+
+Objeto interno de ManagerSettings.
+
+Descripcion
+
+Fuente de verdad prevista para el motor nativo de Rama 2 cuando sustituya a
+`Irrigation.js`. No forma parte del contrato publico legacy y no requiere
+escrituras en Variables Logic.
+
+Campos principales:
+
+* `state`, `activeSector`, `startTs`, `endTs`, `source`, `stopReason`;
+* `queue`: cola interna del motor nativo;
+* `history`: historico interno generado por el motor nativo;
+* `tickDiagnostics`: ultimos 240 ticks compactos del motor nativo para diagnostico
+  de incidencias, con decision, relés observados, cola, fuente de estado y
+  resultado de ejecucion;
+* `actionDiagnostics`: ultimas 80 acciones relevantes del motor nativo, como
+  arranques de programa, arranques de siguiente sector, paradas, recuperacion y
+  errores;
+* `lastTickTs`;
+* `lastHistoryTriggerTs` y `lastHistoryEntryId`;
+* `lastSectorEvent`.
+
+Mientras el motor siga en `SHADOW`, Variables Logic continuan siendo la lectura
+legacy de comparacion. En modo activo futuro, los servicios de Rama 2 deberan
+leer `appStateV2.engine` como fuente primaria.
+
+⸻
+
+appStateV2.events
+
+Tipo
+
+Array interno de ManagerSettings.
+
+Descripcion
+
+Registro compacto de transiciones y decisiones relevantes de Rama 2. Retiene
+las ultimas 150 entradas, mas reciente primero. Incluye eventos de Health,
+Recovery y Scheduler, por ejemplo `health.transition`, `recovery.event` y
+`scheduler.event`. No sustituye al historico de riego; es una caja negra
+operativa para diagnostico.
+
+⸻
+
+schedulerConfigV2.preflightBlock
+
+Tipo
+
+Objeto interno de ManagerSettings o `null`.
+
+Descripcion
+
+Marca persistente usada por el Scheduler v2 cuando un riego programado esta en
+hora pero el preflight no permite arrancar. Campos principales:
+
+* `runDate`: fecha local del riego bloqueado;
+* `firstBlockedTs` y `lastBlockedTs`;
+* `attempts`;
+* `code`;
+* `message`.
+
+El Scheduler reintenta durante 15 minutos. Si el sistema no se estabiliza,
+marca `lastRunDate=runDate`, limpia `preflightBlock` y registra
+`PREFLIGHT_CANCELLED` en `appStateV2.events`, evitando tanto perder el fallo en
+silencio como arrancar horas tarde.
 
 ⸻
 

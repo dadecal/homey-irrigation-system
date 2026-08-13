@@ -1,0 +1,66 @@
+{
+  "title": {
+    "en": "An irrigation sector ends",
+    "es": "Termina un sector de riego"
+  },
+  "hint": {
+    "en": "Use this trigger to notify sector endings emitted by the native Rama 2 engine.",
+    "es": "Usa este disparador para avisar finales de sector emitidos por el motor nativo de Rama 2."
+  },
+  "tokens": [
+    {
+      "name": "message",
+      "type": "string",
+      "title": {
+        "en": "Message",
+        "es": "Mensaje"
+      },
+      "example": "Finalizado sector 1: 12.5 L"
+    },
+    {
+      "name": "sector",
+      "type": "number",
+      "title": {
+        "en": "Sector",
+        "es": "Sector"
+      },
+      "example": 1
+    },
+    {
+      "name": "duration",
+      "type": "number",
+      "title": {
+        "en": "Duration",
+        "es": "Duracion"
+      },
+      "example": 5
+    },
+    {
+      "name": "liters",
+      "type": "number",
+      "title": {
+        "en": "Liters",
+        "es": "Litros"
+      },
+      "example": 12.5
+    },
+    {
+      "name": "reason",
+      "type": "string",
+      "title": {
+        "en": "Reason",
+        "es": "Motivo"
+      },
+      "example": "timeout"
+    },
+    {
+      "name": "source",
+      "type": "string",
+      "title": {
+        "en": "Source",
+        "es": "Origen"
+      },
+      "example": "MANUAL"
+    }
+  ]
+}

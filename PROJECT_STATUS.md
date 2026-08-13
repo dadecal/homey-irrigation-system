@@ -4,17 +4,17 @@ Sistema de Riego ESP32 + Homey
 
 Estado del proyecto
 
-Última actualización: 3 de julio de 2026
+Última actualización: 13 de agosto de 2026
 
 ⸻
 
 Resumen ejecutivo
 
-El proyecto dispone actualmente de un motor de riego completamente funcional basado en Homey y un controlador ESP32 con ESPHome.
+El proyecto dispone actualmente de un sistema Rama 2 operativo basado en una
+app Homey nativa completa y un controlador ESP32 con ESPHome.
 
-La arquitectura principal está consolidada y se considera estable.
-
-Los próximos desarrollos se centrarán en nuevas funcionalidades, no en cambios estructurales del núcleo.
+La Rama 1 basada en HomeyScripts queda congelada como rollback. La Rama 2 es la
+generacion activa y usa ManagerSettings como fuente de verdad interna.
 
 ⸻
 
@@ -33,7 +33,7 @@ Dispositivo “Riego Manual”	✅ Finalizado
 Histórico de riego	✅ Finalizado
 Sincronización sensores	✅ Finalizada
 Persistencia	✅ Finalizada
-Aplicación Homey nativa	✅ Finalizada
+Aplicación Homey nativa Rama 2	✅ Activa v2.0.9
 Scheduler	✅ Finalizado
 Programador	✅ Finalizado
 Rain Delay	✅ Finalizado
@@ -56,13 +56,13 @@ Hardware.
 
 ⸻
 
-Homey Scripts
+Homey Scripts Rama 1
 
 Irrigation.js
 
 Estado:
 
-✅ Estable
+✅ Estable / rollback
 
 Responsabilidad:
 
@@ -94,11 +94,28 @@ Proyección del histórico.
 
 ⸻
 
-Aplicación Homey nativa
+Aplicación Homey nativa Rama 2
 
 Estado:
 
-✅ Instalada, validada y estable
+✅ Instalada desde artefacto release v2.0.9
+
+Release activa:
+
+`v2.0.9` completa la separacion tecnica de Rama 2 respecto a Rama 1. La app ya
+no referencia codigo, artefactos ni Variables Logic V1 como fallback: el motor
+nativo, Health, History, Recovery, el device manual v2 y la proyeccion de
+sistema usan `appStateV2` y devices nativos. `StatusSyncService` queda retirado.
+La release mejora tambien la pagina de settings: la pestana activa queda
+marcada visualmente y el boton Guardar solo se activa con cambios, mostrando
+feedback de guardado. La release incluye de nuevo el binario ESP32 compatible
+`riego-esp32-1.0.0.ota.bin`, sin cambios de firmware. Los devices V1
+`Riego manual`, `Sistema de Riego` e `Historico de Riego` ya fueron eliminados
+de Homey; los Flows V1/deshabilitados de riego tambien han sido eliminados.
+Permanecen solo los tres devices v2 en la zona `Riego` y los cuatro Flows v2
+activos de notificacion. Homey Pro confirma `com.dadecal.irrigation.v2`
+`version=2.0.9`, `enabled=true`, `state=running`; `/release` devuelve
+`appVersion=2.0.9` y los servicios v2 verificados quedan sin `lastError`.
 
 Responsabilidad:
 
@@ -106,9 +123,13 @@ Responsabilidad:
 * persistir la configuración del programador;
 * calcular el próximo riego;
 * aplicar y cancelar Rain Delay;
-* solicitar programas mediante el evento program_requested.
+* ejecutar Scheduler, Health, History, Recovery y motor nativo;
+* mantener `StatusSyncService` retirado sin timer ni lecturas duplicadas;
+* controlar relés exclusivamente desde `IrrigationEngineService` cuando
+  `engine=ACTIVE_COMPAT`;
+* registrar diagnostico operativo en `appStateV2`.
 
-La aplicación no controla relés ni modifica el estado o la cola del motor.
+Estado activo: todos los servicios Rama 2 estan en `ACTIVE_COMPAT`.
 
 ⸻
 
@@ -125,7 +146,8 @@ Principios ya consolidados:
 * Comunicación mediante eventos.
 * Scripts desacoplados.
 * Flows sin lógica.
-* Variables Logic como fuente de verdad.
+* Variables Logic como compatibilidad/observabilidad legacy.
+* ManagerSettings `appStateV2` como fuente de verdad interna de Rama 2.
 
 ⸻
 
@@ -145,15 +167,16 @@ Actualmente el sistema permite:
 * aplicar Rain Delay de 24, 48 o 72 horas y cancelarlo;
 * calcular y mostrar el próximo riego;
 * generar solicitudes versionadas de programa;
-* ejecutar el puente App -> Flow -> Irrigation.js -> ESPHome.
+* ejecutar riegos desde el motor nativo Rama 2;
+* bloquear arranques programados inseguros mediante preflight;
+* diagnosticar decisiones con `/diagnostics/status`.
 
 ⸻
 
 Funcionalidades pendientes
 
-No quedan funcionalidades pendientes de prioridad alta para el programa único actual.
-
-La configuración real del horario y de las duraciones corresponde al usuario y permanece deshabilitada hasta que se complete desde la app.
+Queda pendiente monitorizar el primer riego programado completo tras la release
+Rama 2 v2.0.2.
 
 ⸻
 
@@ -197,12 +220,12 @@ No asumir que son permanentes.
 
 Próximo objetivo
 
-El siguiente objetivo es la estabilización operativa:
+El siguiente objetivo es la estabilización operativa de Rama 2:
 
-* introducir la configuración real del jardín;
 * observar las primeras ejecuciones automáticas;
 * confirmar próximo riego, histórico y recuperación tras reinicio;
-* mantener la configuración deshabilitada hasta completar estas comprobaciones.
+* confirmar que el preflight no bloquea falsos positivos y registra los
+  bloqueos reales.
 
 Los programas múltiples y las integraciones meteorológicas permanecen como evoluciones futuras.
 

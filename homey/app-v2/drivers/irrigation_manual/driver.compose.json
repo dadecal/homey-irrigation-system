@@ -1,0 +1,35 @@
+{
+  "name": {
+    "en": "Manual Irrigation",
+    "es": "Riego Manual"
+  },
+  "class": "other",
+  "capabilities": [
+    "irrigation_manual_sector",
+    "irrigation_manual_duration",
+    "onoff",
+    "irrigation_manual_remaining",
+    "irrigation_manual_message"
+  ],
+  "ui": {
+    "quickAction": "onoff"
+  },
+  "uiIndicator": ".none",
+  "images": {
+    "small": "/assets/device-icons/irrigation-manual-small.png",
+    "large": "/assets/device-icons/irrigation-manual-large.png"
+  },
+  "pair": [
+    {
+      "id": "list_devices",
+      "template": "list_devices",
+      "navigation": {
+        "next": "add_devices"
+      }
+    },
+    {
+      "id": "add_devices",
+      "template": "add_devices"
+    }
+  ]
+}

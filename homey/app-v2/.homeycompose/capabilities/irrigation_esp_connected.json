@@ -1,0 +1,11 @@
+{
+  "type": "string",
+  "icon": "/assets/capability-icons/connection.svg",
+  "title": {
+    "en": "ESP32 connected",
+    "es": "ESP32 conectado"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor"
+}

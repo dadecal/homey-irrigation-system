@@ -1,0 +1,17 @@
+{
+  "type": "number",
+  "icon": "/assets/capability-icons/water.svg",
+  "title": {
+    "en": "Accumulated water",
+    "es": "Litros acumulados"
+  },
+  "units": {
+    "en": "L",
+    "es": "L"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "decimals": 2,
+  "insights": true
+}
