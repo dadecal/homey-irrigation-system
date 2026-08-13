@@ -301,7 +301,8 @@ Comprobar:
 * Guardar está deshabilitado tras cargar o guardar;
 * Guardar se habilita al modificar cualquier campo persistido;
 * devolver todos los campos a su valor original vuelve a deshabilitar Guardar;
-* con cambios pendientes, Rain Delay queda bloqueado;
+* con cambios pendientes, Rain Delay no aplica cambios y muestra un aviso
+  explicito pidiendo guardar antes;
 * abandonar la página con cambios pendientes muestra confirmación;
 * cerrar el diálogo Configurar con cambios pendientes muestra un aviso Homey;
 * abandonar la página sin cambios no muestra confirmación.

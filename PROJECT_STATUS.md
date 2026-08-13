@@ -33,7 +33,7 @@ Dispositivo “Riego Manual”	✅ Finalizado
 Histórico de riego	✅ Finalizado
 Sincronización sensores	✅ Finalizada
 Persistencia	✅ Finalizada
-Aplicación Homey nativa Rama 2	✅ Activa v2.0.9
+Aplicación Homey nativa Rama 2	✅ Activa v2.0.10
 Scheduler	✅ Finalizado
 Programador	✅ Finalizado
 Rain Delay	✅ Finalizado
@@ -102,20 +102,22 @@ Estado:
 
 Release activa:
 
-`v2.0.9` completa la separacion tecnica de Rama 2 respecto a Rama 1. La app ya
+`v2.0.10` mantiene la separacion tecnica de Rama 2 respecto a Rama 1. La app ya
 no referencia codigo, artefactos ni Variables Logic V1 como fallback: el motor
 nativo, Health, History, Recovery, el device manual v2 y la proyeccion de
 sistema usan `appStateV2` y devices nativos. `StatusSyncService` queda retirado.
-La release mejora tambien la pagina de settings: la pestana activa queda
-marcada visualmente y el boton Guardar solo se activa con cambios, mostrando
-feedback de guardado. La release incluye de nuevo el binario ESP32 compatible
+La release corrige Rain Delay en la pagina de settings: los botones ya no
+parecen inactivos cuando hay cambios pendientes y muestran un aviso explicito
+para guardar antes de aplicar o cancelar el aplazamiento. Tambien mantiene la
+mejora visual de pestanas y feedback de guardado. La release incluye de nuevo
+el binario ESP32 compatible
 `riego-esp32-1.0.0.ota.bin`, sin cambios de firmware. Los devices V1
 `Riego manual`, `Sistema de Riego` e `Historico de Riego` ya fueron eliminados
 de Homey; los Flows V1/deshabilitados de riego tambien han sido eliminados.
 Permanecen solo los tres devices v2 en la zona `Riego` y los cuatro Flows v2
 activos de notificacion. Homey Pro confirma `com.dadecal.irrigation.v2`
-`version=2.0.9`, `enabled=true`, `state=running`; `/release` devuelve
-`appVersion=2.0.9` y los servicios v2 verificados quedan sin `lastError`.
+`version=2.0.10`, `enabled=true`, `state=running`; `/release` devuelve
+`appVersion=2.0.10` y los servicios v2 verificados quedan sin `lastError`.
 
 Responsabilidad:
 

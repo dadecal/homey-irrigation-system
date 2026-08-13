@@ -948,6 +948,13 @@ el binario ESP32 compatible o referenciarlo mediante `--esp32-bin`. Usar
 `--no-esp32-artifact` solo es aceptable para builds parciales de diagnostico,
 no para una release liberada.
 
+Despues de validar e instalar una release, el cierre obligatorio incluye subir
+a GitHub el codigo, las herramientas, la documentacion y los entregables de esa
+version. La release no se considera cerrada mientras el commit correspondiente
+no este publicado en `origin/main` y contenga el directorio
+`dist/releases/<version>` con su manifest, checksums, artefacto Homey y binario
+ESP32 compatible.
+
 De forma simetrica, si solo cambia ESP32, debe generarse la release con el
 nuevo `--esp32-bin` y el artefacto Homey compatible mediante
 `--homey-app-v2-artifact`. No liberar binarios ESP32 sueltos fuera de un

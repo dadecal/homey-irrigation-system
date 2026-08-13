@@ -1,6 +1,6 @@
 {
   "id": "com.dadecal.irrigation.v2",
-  "version": "2.0.9",
+  "version": "2.0.10",
   "sdk": 3,
   "compatibility": ">=10.0.0",
   "name": {
@@ -173,10 +173,6 @@
     "putMigrationControl": {
       "method": "PUT",
       "path": "/migration/control"
-    },
-    "probeLogicWrite": {
-      "method": "POST",
-      "path": "/diagnostics/logic-write-probe"
     },
     "setRainDelay": {
       "method": "POST",

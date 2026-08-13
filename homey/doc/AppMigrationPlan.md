@@ -8,7 +8,7 @@ dejemos una decision pendiente.
 
 ## Estado actual - 2026-08-13
 
-* Release activa: `homeyAppV2@2.0.9`.
+* Release activa: `homeyAppV2@2.0.10`.
 * La retirada runtime de devices legacy V1 queda completada y Rama 2 ya no debe
   referenciar codigo, artefactos ni Variables Logic V1 ni siquiera como
   fallback. Su fuente de verdad activa es `appStateV2` mas devices/Flow Cards
@@ -23,7 +23,7 @@ dejemos una decision pendiente.
 * `HistoryService` proyecta solo a `Historico de Riego v2` y
   `appStateV2.history`; su idempotencia activa no depende de
   `Irrigation.HistoryLastProjectedId`.
-* Artefactos: `dist/releases/v2.0.9` contiene la app v2.0.9 y el binario ESP32
+* Artefactos: `dist/releases/v2.0.10` contiene la app v2.0.10 y el binario ESP32
   compatible `riego-esp32-1.0.0.ota.bin`.
 * Validacion: `npm run validate`, `npm test` con 141 tests, `homey app build`
   y `homey app validate` correctos.
@@ -35,6 +35,30 @@ dejemos una decision pendiente.
   `Riego - Aviso fin de sector v2`.
 
 ## Actualización 2026-08-13
+
+* Se formaliza la release Rama 2 `homeyAppV2@2.0.10`.
+* Se corrige la UI de Rain Delay en settings: los botones permanecen
+  accionables visualmente aunque existan cambios pendientes y muestran un aviso
+  explicito para guardar antes de aplicar/cancelar Rain Delay, evitando la
+  sensacion de boton inactivo sin feedback.
+* Se elimina del manifest fuente `.homeycompose/app.json` la ruta obsoleta
+  `/diagnostics/logic-write-probe`, para que futuras regeneraciones no
+  recuperen artefactos retirados de Rama 2.
+* Se añade la regla de cierre: toda release liberada debe subirse a GitHub con
+  codigo, herramientas, documentacion y entregables.
+* Artefactos de `dist/releases/v2.0.10`: app v2 SHA256
+  `a2d79bf1bfc589ff4e33d03fdbcbe507e6159d9b9f1fa93e297c0c142a7f5030`;
+  ESP32 SHA256
+  `3c9fb7a6fb671e6f621ceabfe2aa25055c478ccd58845bf5f5fc48f30a054961`.
+* La release incluye el binario ESP32 compatible aunque el firmware no cambia,
+  reutilizando el artefacto validado en `v2.0.9`.
+* Instalacion validada en Homey Pro desde artefacto exacto:
+  `com.dadecal.irrigation.v2` queda en `version=2.0.10`, `enabled=true`,
+  `state=running`; `/release` devuelve `appVersion=2.0.10` y
+  `artifactPattern=homey-irrigation-app-v2-2.0.10.tgz`.
+* Verificacion de servicios tras instalacion: `engine`, `health`, `history`,
+  `recovery`, `system-device`, `manual-device`, `status-sync` y `diagnostics`
+  sin `lastError`; `status-sync` mantiene `retired=true`, `timerActive=false`.
 
 * Se formaliza la release Rama 2 `homeyAppV2@2.0.9`.
 * Decision arquitectonica posterior a la retirada de V1: `homey/app-v2` no debe
@@ -384,6 +408,9 @@ Reglas:
 8. Toda release liberada es de sistema: debe incluir o referenciar tanto el
    artefacto Homey como el binario ESP32 compatible, aunque solo haya cambiado
    uno de los dos.
+9. Toda release liberada debe subirse a GitHub como parte del cierre: codigo,
+   herramientas, documentacion y entregables de `dist/releases/<version>` deben
+   quedar publicados en `origin/main`.
 
 Nombres recomendados de artefactos:
 

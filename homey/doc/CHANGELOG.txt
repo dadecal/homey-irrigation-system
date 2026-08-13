@@ -1,5 +1,34 @@
 ## 2026-08-13
 
+### Release Rama 2 v2.0.10
+- Se corrige la experiencia de Rain Delay en la pagina de configuracion. Los
+  botones 24h, 48h, 72h y Cancelar ya no quedan deshabilitados por cambios
+  pendientes sin explicacion; si existen cambios sin guardar, muestran un aviso
+  explicito pidiendo guardar antes de aplicar o cancelar Rain Delay.
+- Se mantiene la proteccion contra perdida de cambios: Rain Delay no se aplica
+  mientras el formulario este modificado sin guardar.
+- Se elimina de `.homeycompose/app.json` y `app.json` la declaracion obsoleta
+  `/diagnostics/logic-write-probe`, retirada ya del codigo de Rama 2.
+- Se documenta como regla de release que toda version liberada debe quedar
+  subida a GitHub con codigo, herramientas, documentacion y entregables.
+- Verificacion local: `npm run validate`, `npm test` con 141 tests OK,
+  `homey app build` y `homey app validate` correctos.
+- Artefacto generado:
+  `dist/artifacts/homey-app/homey-irrigation-app-v2-2.0.10.tgz`
+  (`SHA256 a2d79bf1bfc589ff4e33d03fdbcbe507e6159d9b9f1fa93e297c0c142a7f5030`).
+- Release formal generada en `dist/releases/v2.0.10`, incluyendo de nuevo
+  `riego-esp32-1.0.0.ota.bin`
+  (`SHA256 3c9fb7a6fb671e6f621ceabfe2aa25055c478ccd58845bf5f5fc48f30a054961`)
+  sin cambios de firmware.
+- Manifest de release: compatibilidad `OK`, `homeyAppV2.version=2.0.10` y
+  contrato `irrigation-app-api@2.0.10`.
+- Instalacion validada en Homey Pro desde el artefacto exacto:
+  `com.dadecal.irrigation.v2` queda `version=2.0.10`, `state=running`,
+  `enabled=true`. `/release` y `/status.release` devuelven `appVersion=2.0.10`.
+  `engine`, `health`, `history`, `recovery`, `system-device`,
+  `manual-device`, `status-sync` y `diagnostics` quedan sin `lastError`;
+  `status-sync` conserva `retired=true`, `timerActive=false`.
+
 ### Release Rama 2 v2.0.9
 - Se completa la separacion tecnica de Rama 2 respecto a Rama 1: `homey/app-v2`
   deja de referenciar codigo, artefactos y Variables Logic `Irrigation.*` de V1

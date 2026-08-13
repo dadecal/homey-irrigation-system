@@ -148,9 +148,9 @@ function updateActionState() {
   fields.saveButton.disabled = busy || !dirty;
   fields.saveButton.classList.toggle('dirty', dirty && !busy);
   if (dirty) fields.saveButton.classList.remove('saved');
-  fields.clearRainDelay.disabled = busy || dirty;
+  fields.clearRainDelay.disabled = busy;
   document.querySelectorAll('[data-rain-delay]').forEach(button => {
-    button.disabled = busy || dirty;
+    button.disabled = busy;
   });
 }
 
@@ -259,6 +259,13 @@ async function save() {
 }
 
 async function setRainDelay(hours) {
+  if (isDirty()) {
+    const message = 'Guarda los cambios pendientes antes de aplicar Rain Delay';
+    showNotice(message, true);
+    HomeyRef.alert(message);
+    return;
+  }
+
   setBusy(true);
   showNotice('');
   try {
@@ -274,6 +281,13 @@ async function setRainDelay(hours) {
 }
 
 async function clearRainDelay() {
+  if (isDirty()) {
+    const message = 'Guarda los cambios pendientes antes de cancelar Rain Delay';
+    showNotice(message, true);
+    HomeyRef.alert(message);
+    return;
+  }
+
   setBusy(true);
   showNotice('');
   try {

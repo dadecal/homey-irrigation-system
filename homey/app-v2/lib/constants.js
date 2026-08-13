@@ -21,12 +21,12 @@ const RELEASE = {
   generation: 'branch2',
   component: 'homey-app-v2',
   appId: 'com.dadecal.irrigation.v2',
-  version: '2.0.9',
+  version: '2.0.10',
   status: 'active',
   provides: {
     appApi: {
       name: 'irrigation-app-api',
-      version: '2.0.9',
+      version: '2.0.10',
     },
   },
   requires: {
