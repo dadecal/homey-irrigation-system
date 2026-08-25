@@ -83,14 +83,13 @@ test('keeps active sector visible in the relay-stop failure plan', () => {
   });
 
   assert.deepEqual(plan.failurePlan.map(step => `${step.adapter}:${step.action}`), [
-    'EngineStateStore:clearQueue',
     'EngineStateStore:setValues',
   ]);
-  assert.deepEqual(plan.failurePlan[1].values, {
-    state: 'ERROR',
-    activeSector: 4,
-    stopReason: STOP_REASON.ERROR,
-  });
+  assert.equal(plan.failurePlan[0].values.state, 'ERROR');
+  assert.equal(plan.failurePlan[0].values.activeSector, 4);
+  assert.equal(plan.failurePlan[0].values.stopReason, STOP_REASON.ERROR);
+  assert.equal(plan.failurePlan[0].values.interruption.status, 'AWAITING_CONTROLLER');
+  assert.equal(plan.failurePlan[0].values.interruption.sector, 4);
 });
 
 test('plans force idle with relay shutdown before clearing queue', () => {

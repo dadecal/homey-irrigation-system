@@ -30,6 +30,7 @@ function createService({
   const writes = [];
   const stateWrites = [];
   const triggerCalls = [];
+  const notificationCalls = [];
   const appStateData = appState || {
     version: 1,
     updatedTs: 0,
@@ -72,6 +73,11 @@ function createService({
       return 1;
     },
     clearInterval() {},
+    notifications: {
+      async createNotification(payload) {
+        notificationCalls.push(payload);
+      },
+    },
     app: {},
   };
 
@@ -120,7 +126,7 @@ function createService({
     },
   });
 
-  return { service, writes, stateWrites, triggerCalls, logs, appStateData };
+  return { service, writes, stateWrites, triggerCalls, notificationCalls, logs, appStateData };
 }
 
 test('reports OK in shadow mode without writing operational variables', async () => {
@@ -445,7 +451,8 @@ test('keeps persisted health when the native health trigger fails', async () => 
 });
 
 test('detects ESPHome offline without writing public health variables', async () => {
-  const { service, writes } = createService({
+  const { service, writes, notificationCalls } = createService({
+    mode: 'ACTIVE_COMPAT',
     raw: rawDevice({}, false),
   });
 
@@ -453,6 +460,9 @@ test('detects ESPHome offline without writing public health variables', async ()
 
   assert.equal(health.status, 'OFFLINE');
   assert.deepEqual(health.issues.map(issue => issue.code), ['ESP_OFFLINE']);
+  assert.deepEqual(notificationCalls, [{
+    excerpt: 'Incidencia en sistema de riego: OFFLINE - Controlador ESP32 desconectado',
+  }]);
   assert.deepEqual(writes, []);
 });
 

@@ -253,6 +253,33 @@ button:focus-visible {
   gap: 14px;
 }
 
+.recovery-panel {
+  border-color: #e0b15f;
+  background: #fff9ec;
+}
+
+.recovery-panel p {
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.recovery-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.recovery-details span {
+  border: 1px solid #e8c985;
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: #ffffff;
+  color: #5d4b20;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .number-field {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

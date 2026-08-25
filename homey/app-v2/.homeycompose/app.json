@@ -1,6 +1,6 @@
 {
   "id": "com.dadecal.irrigation.v2",
-  "version": "2.0.10",
+  "version": "2.0.11",
   "sdk": 3,
   "compatibility": ">=10.0.0",
   "name": {
@@ -133,6 +133,14 @@
     "recoverEngine": {
       "method": "POST",
       "path": "/engine/recover"
+    },
+    "resumeEnginePending": {
+      "method": "POST",
+      "path": "/engine/resume-pending"
+    },
+    "cancelEnginePending": {
+      "method": "POST",
+      "path": "/engine/cancel-pending"
     },
     "getSystemDeviceStatus": {
       "method": "GET",

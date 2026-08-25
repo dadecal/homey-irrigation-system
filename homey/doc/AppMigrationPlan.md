@@ -6,9 +6,15 @@ Este documento es la fuente de seguimiento de la Rama 2 del sistema de riego.
 Debe actualizarse cada vez que avancemos una fase, cambiemos de estrategia o
 dejemos una decision pendiente.
 
-## Estado actual - 2026-08-13
+## Estado actual - 2026-08-25
 
-* Release activa: `homeyAppV2@2.0.10`.
+* Release activa: `homeyAppV2@2.0.11`.
+* El motor V2 conserva la cola si se pierde ESPHome Controller/RAW durante un
+  riego. El programa queda en recuperacion pendiente y la pagina de settings
+  permite reanudar los sectores restantes o cancelar el programa.
+* Las incidencias accionables de salud (`ERROR`/`OFFLINE`) siguen disparando
+  `health_transition` y ademas intentan crear una notificacion Homey con el
+  formato corto `Incidencia en sistema de riego: <detalle>`.
 * La retirada runtime de devices legacy V1 queda completada y Rama 2 ya no debe
   referenciar codigo, artefactos ni Variables Logic V1 ni siquiera como
   fallback. Su fuente de verdad activa es `appStateV2` mas devices/Flow Cards
@@ -23,9 +29,9 @@ dejemos una decision pendiente.
 * `HistoryService` proyecta solo a `Historico de Riego v2` y
   `appStateV2.history`; su idempotencia activa no depende de
   `Irrigation.HistoryLastProjectedId`.
-* Artefactos: `dist/releases/v2.0.10` contiene la app v2.0.10 y el binario ESP32
+* Artefactos: `dist/releases/v2.0.11` contiene la app v2.0.11 y el binario ESP32
   compatible `riego-esp32-1.0.0.ota.bin`.
-* Validacion: `npm run validate`, `npm test` con 141 tests, `homey app build`
+* Validacion: `npm run validate`, `npm test` con 143 tests, `homey app build`
   y `homey app validate` correctos.
 * Limpieza Homey ejecutada: los Flows V1/deshabilitados de riego han sido
   eliminados. En Homey solo quedan los cuatro Flows v2 activos:
@@ -33,6 +39,35 @@ dejemos una decision pendiente.
   `Riego - Aviso de incidencia hardware v2`,
   `Riego - Aviso inicio de sector v2` y
   `Riego - Aviso fin de sector v2`.
+
+## Actualización 2026-08-25
+
+* Se formaliza la release Rama 2 `homeyAppV2@2.0.11`.
+* Se corrige la reaccion del motor nativo ante perdida de ESPHome
+  Controller/RAW durante `RUNNING`: ya no interpreta el snapshot incompleto
+  como “todos los reles apagados” ni limpia la cola pendiente.
+* Se introduce `appStateV2.engine.interruption` como estado interno de
+  recuperacion asistida. Mientras existe, el motor permanece en `ERROR`,
+  conserva `queue`, no auto-reanuda y espera decision del usuario.
+* La recuperacion marca la interrupcion como `READY_TO_RESUME` cuando el RAW
+  vuelve a estar disponible y no hay reles activos. Entonces la UI permite
+  `Reanudar pendientes`; si el usuario no quiere continuar, puede
+  `Cancelar programa`.
+* Se añaden los endpoints nativos `/engine/resume-pending` y
+  `/engine/cancel-pending`.
+* `HealthService` añade notificacion Homey directa para incidencias accionables
+  con formato corto, ademas del Flow Trigger `health_transition` existente.
+* Verificacion local: `npm run validate`, `npm test` con 143 tests OK,
+  `homey app build` y `homey app validate` correctos.
+* Artefactos de `dist/releases/v2.0.11`: app v2 SHA256
+  `619e1407667aad86224d72dd09ed28f8c3cdb8fabd46e089886d2ad5779a4eae`;
+  ESP32 SHA256
+  `3c9fb7a6fb671e6f621ceabfe2aa25055c478ccd58845bf5f5fc48f30a054961`.
+* La release incluye el binario ESP32 compatible aunque el firmware no cambia,
+  reutilizando el artefacto validado en `v2.0.10`.
+* Instalacion validada en Homey Pro desde artefacto exacto:
+  `com.dadecal.irrigation.v2` queda en `version=2.0.11`, `enabled=true`,
+  `state=running`.
 
 ## Actualización 2026-08-13
 

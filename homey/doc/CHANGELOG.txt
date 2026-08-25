@@ -1,3 +1,35 @@
+## 2026-08-25
+
+### Release Rama 2 v2.0.11
+- Se corrige la recuperacion del motor nativo cuando ESPHome Controller/RAW
+  deja de estar disponible durante un riego. La app ya no limpia la cola
+  pendiente ante ese fallo; conserva los sectores restantes en
+  `appStateV2.engine.queue`.
+- Se añade estado interno `appStateV2.engine.interruption` para representar una
+  recuperacion asistida. El motor queda en `ERROR` hasta que el usuario decide
+  reanudar los sectores pendientes o cancelar el programa.
+- La pagina de configuracion muestra una seccion de recuperacion pendiente con
+  sector interrumpido, cola restante y acciones `Reanudar pendientes` /
+  `Cancelar programa`.
+- Se añaden endpoints nativos `/engine/resume-pending` y
+  `/engine/cancel-pending`.
+- Las incidencias accionables de salud (`ERROR`/`OFFLINE`) crean una
+  notificacion Homey con el formato corto
+  `Incidencia en sistema de riego: <detalle>`, ademas del trigger
+  `health_transition` usado por los Flows.
+- Verificacion local: `npm run validate`, `npm test` con 143 tests OK,
+  `homey app build` y `homey app validate` correctos.
+- Artefacto generado:
+  `dist/artifacts/homey-app-v2/homey-irrigation-app-v2-2.0.11.tgz`
+  (`SHA256 619e1407667aad86224d72dd09ed28f8c3cdb8fabd46e089886d2ad5779a4eae`).
+- Release formal generada en `dist/releases/v2.0.11`, incluyendo de nuevo
+  `riego-esp32-1.0.0.ota.bin`
+  (`SHA256 3c9fb7a6fb671e6f621ceabfe2aa25055c478ccd58845bf5f5fc48f30a054961`)
+  sin cambios de firmware.
+- Instalacion validada en Homey Pro desde el artefacto exacto:
+  `com.dadecal.irrigation.v2` queda `version=2.0.11`, `state=running`,
+  `enabled=true`.
+
 ## 2026-08-13
 
 ### Release Rama 2 v2.0.10

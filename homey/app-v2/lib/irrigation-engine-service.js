@@ -394,6 +394,9 @@ class IrrigationEngineService {
       source: String(engine.source || 'none'),
       stopReason: String(engine.stopReason || 'none'),
       queue: Array.isArray(engine.queue) ? engine.queue : [],
+      interruption: engine.interruption && typeof engine.interruption === 'object'
+        ? engine.interruption
+        : null,
       lastTickTs: Number(engine.lastTickTs) || 0,
     };
   }
@@ -432,6 +435,8 @@ class IrrigationEngineService {
         endTs: snapshot.endTs,
         activeSector: snapshot.activeSector,
         anyRelayOn: snapshot.anyRelayOn,
+        rawAvailable,
+        interruption: snapshot.interruption,
         startTs: snapshot.startTs,
         now: nowTs,
       });
@@ -470,6 +475,7 @@ class IrrigationEngineService {
           stopReason: snapshot.stopReason,
           queueLength: snapshot.queue.length,
           queue: snapshot.queue,
+          interruption: snapshot.interruption || null,
           lastTickTs: snapshot.lastTickTs,
           remainingMinutes: remainingMinutes(snapshot.endTs, nowTs),
         },
@@ -752,7 +758,10 @@ class IrrigationEngineService {
         rawError,
       } = await this.createSnapshot();
 
-      if (snapshot.state === STATE.IDLE && !snapshot.anyRelayOn && snapshot.queue.length > 0) {
+      if (snapshot.state === STATE.IDLE
+        && !snapshot.interruption
+        && !snapshot.anyRelayOn
+        && snapshot.queue.length > 0) {
         const tickDecision = {
           decision: TICK_DECISION.START_PENDING_QUEUE,
           reason: 'pendingQueue',
@@ -801,6 +810,8 @@ class IrrigationEngineService {
         endTs: snapshot.endTs,
         activeSector: snapshot.activeSector,
         anyRelayOn: snapshot.anyRelayOn,
+        rawAvailable,
+        interruption: snapshot.interruption,
         startTs: snapshot.startTs,
         now: nowTs,
       });
@@ -808,6 +819,7 @@ class IrrigationEngineService {
         TICK_DECISION.STOP_TIMEOUT,
         TICK_DECISION.STOP_WATCHDOG,
         TICK_DECISION.STALE_RUN_ABORT,
+        TICK_DECISION.RECOVERY_READY,
       ].includes(tickDecision.decision) && snapshot.activeSector >= 1 && snapshot.activeSector <= 6
         ? await this.getActivePlanExecutor().readLiters(snapshot.activeSector).catch(() => 0)
         : 0;
@@ -859,6 +871,126 @@ class IrrigationEngineService {
     } finally {
       this.ticking = false;
     }
+  }
+
+  async resumePending(nowTs = this.now()) {
+    return this.runExclusive('resumePending', () => this.resumePendingLocked(nowTs));
+  }
+
+  async resumePendingLocked(nowTs = this.now()) {
+    const mode = await this.requireActiveMode();
+    const { snapshot, rawAvailable, rawError } = await this.createSnapshot();
+    const interruption = snapshot.interruption || null;
+
+    if (!interruption) {
+      const error = new Error('No hay recuperacion pendiente que reanudar');
+      error.statusCode = 409;
+      throw error;
+    }
+
+    if (!rawAvailable) {
+      const error = new Error('No se puede reanudar: ESPHome Controller no esta disponible');
+      error.statusCode = 409;
+      throw error;
+    }
+
+    if (snapshot.anyRelayOn) {
+      const error = new Error('No se puede reanudar: aun hay electrovalvulas activas');
+      error.statusCode = 409;
+      throw error;
+    }
+
+    if (!snapshot.queue.length) {
+      const error = new Error('No hay sectores pendientes que reanudar');
+      error.statusCode = 409;
+      throw error;
+    }
+
+    await this.appStateStore.setEngineValues({
+      state: STATE.IDLE,
+      activeSector: 0,
+      startTs: 0,
+      endTs: 0,
+      stopReason: STOP_REASON.WATCHDOG,
+      interruption: null,
+    });
+    const nextExecution = await this.startNextQueuedItem(nowTs);
+
+    return {
+      version: 1,
+      mode,
+      shadow: false,
+      action: 'resumePending',
+      controlsHardware: true,
+      writesOperationalVariables: false,
+      writesInternalState: true,
+      updatesDevices: true,
+      rawAvailable,
+      rawError,
+      resumedQueueLength: snapshot.queue.length,
+      nextExecution,
+    };
+  }
+
+  async cancelPending(nowTs = this.now()) {
+    return this.runExclusive('cancelPending', () => this.cancelPendingLocked(nowTs));
+  }
+
+  async cancelPendingLocked(nowTs = this.now()) {
+    const mode = await this.requireActiveMode();
+    const { snapshot, rawAvailable, rawError } = await this.createSnapshot();
+    const interruption = snapshot.interruption || null;
+
+    if (!interruption && snapshot.queue.length === 0) {
+      return {
+        version: 1,
+        mode,
+        shadow: false,
+        action: 'cancelPending',
+        controlsHardware: false,
+        writesOperationalVariables: false,
+        writesInternalState: false,
+        updatesDevices: false,
+        rawAvailable,
+        rawError,
+        message: 'No habia recuperacion pendiente',
+      };
+    }
+
+    await this.appStateStore.updateEngine(engine => ({
+      ...engine,
+      state: STATE.IDLE,
+      activeSector: 0,
+      startTs: 0,
+      endTs: 0,
+      stopReason: STOP_REASON.WATCHDOG,
+      queue: [],
+      interruption: null,
+      actionDiagnostics: [
+        {
+          version: 1,
+          ts: nowTs,
+          action: 'cancelPending',
+          interruption,
+          queueLength: snapshot.queue.length,
+        },
+        ...(engine.actionDiagnostics || []),
+      ].slice(0, 80),
+    }));
+
+    return {
+      version: 1,
+      mode,
+      shadow: false,
+      action: 'cancelPending',
+      controlsHardware: false,
+      writesOperationalVariables: false,
+      writesInternalState: true,
+      updatesDevices: true,
+      rawAvailable,
+      rawError,
+      cancelledQueueLength: snapshot.queue.length,
+    };
   }
 
   async recover(nowTs = this.now()) {
@@ -1000,6 +1132,19 @@ class IrrigationEngineService {
         actionCount: engine?.actionDiagnostics?.length || 0,
         lastActions: engine?.actionDiagnostics || [],
       },
+      engine: engine
+        ? {
+          state: engine.state,
+          activeSector: engine.activeSector,
+          startTs: engine.startTs,
+          endTs: engine.endTs,
+          source: engine.source,
+          stopReason: engine.stopReason,
+          queueLength: Array.isArray(engine.queue) ? engine.queue.length : 0,
+          queue: Array.isArray(engine.queue) ? engine.queue : [],
+          interruption: engine.interruption || null,
+        }
+        : null,
       message: mode === MODE.ACTIVE_COMPAT
         ? 'IrrigationEngineService en ACTIVE_COMPAT: controla reles y persiste estado interno en appStateV2.engine sin escribir Variables Logic operativas.'
         : 'IrrigationEngineService esta en SHADOW: calcula diagnostico con estado interno appStateV2.engine; no controla reles.',

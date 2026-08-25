@@ -22,6 +22,9 @@ const SOURCE = {
 const TICK_DECISION = {
   FORCE_IDLE_NONE: 'FORCE_IDLE_NONE',
   FORCE_IDLE_WATCHDOG: 'FORCE_IDLE_WATCHDOG',
+  RECOVERY_PENDING: 'RECOVERY_PENDING',
+  RECOVERY_READY: 'RECOVERY_READY',
+  RAW_UNAVAILABLE_DURING_RUN: 'RAW_UNAVAILABLE_DURING_RUN',
   STALE_RUN_ABORT: 'STALE_RUN_ABORT',
   WATCHDOG_GRACE: 'WATCHDOG_GRACE',
   STOP_WATCHDOG: 'STOP_WATCHDOG',
@@ -161,12 +164,37 @@ function decideTick({
   endTs,
   activeSector,
   anyRelayOn,
+  rawAvailable = true,
+  interruption = null,
   startTs,
   now = Date.now(),
 }) {
   const normalizedEndTs = Number(endTs) || 0;
   const normalizedStartTs = Number(startTs) || 0;
   const normalizedActiveSector = Number(activeSector) || 0;
+  const hasInterruption = Boolean(interruption && typeof interruption === 'object');
+
+  if (hasInterruption) {
+    return rawAvailable
+      ? {
+        decision: TICK_DECISION.RECOVERY_READY,
+        reason: STOP_REASON.WATCHDOG,
+        activeSector: Number(interruption.sector || normalizedActiveSector) || 0,
+      }
+      : {
+        decision: TICK_DECISION.RECOVERY_PENDING,
+        reason: STOP_REASON.WATCHDOG,
+        activeSector: Number(interruption.sector || normalizedActiveSector) || 0,
+      };
+  }
+
+  if (state === STATE.RUNNING && !rawAvailable) {
+    return {
+      decision: TICK_DECISION.RAW_UNAVAILABLE_DURING_RUN,
+      reason: STOP_REASON.WATCHDOG,
+      activeSector: normalizedActiveSector,
+    };
+  }
 
   if (state === STATE.RUNNING && normalizedEndTs > 0 && now - normalizedEndTs > STALE_RUN_ABORT_MS) {
     return {

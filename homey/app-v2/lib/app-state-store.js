@@ -23,6 +23,7 @@ function createDefaultEngineState() {
     lastTickTs: 0,
     lastHistoryTriggerTs: 0,
     lastSectorEvent: null,
+    interruption: null,
     updatedTs: 0,
   };
 }
@@ -68,6 +69,9 @@ function normalizeEngineState(input) {
     lastSectorEvent: stored.lastSectorEvent && typeof stored.lastSectorEvent === 'object'
       ? stored.lastSectorEvent
       : defaults.lastSectorEvent,
+    interruption: stored.interruption && typeof stored.interruption === 'object'
+      ? stored.interruption
+      : defaults.interruption,
     updatedTs: Number(stored.updatedTs) || 0,
   };
 }

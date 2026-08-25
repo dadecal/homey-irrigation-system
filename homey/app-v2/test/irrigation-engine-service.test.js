@@ -62,6 +62,7 @@ function createService({
     stopReason: String(engine.stopReason || 'none'),
     queue: Array.isArray(engine.queue) ? engine.queue : [],
     history: [],
+    interruption: engine.interruption || null,
     lastTickTs: Number(engine.lastTickTs || 0),
   };
   settings.set('appStateV2', {
@@ -521,6 +522,103 @@ test('active tick resumes a pending queue left in an idle engine state', async (
   assert.deepEqual(engine.queue, []);
   assert.equal(rawDevice.capabilitiesObj[RAW_CAP.relays[2]].value, true);
   assert.equal(engine.tickDiagnostics[0].tickDecision.decision, TICK_DECISION.START_PENDING_QUEUE);
+});
+
+test('active tick preserves queue when RAW becomes unavailable during irrigation', async () => {
+  const { service, appStateStore } = createService({
+    mode: MODE.ACTIVE_COMPAT,
+    rawAvailable: false,
+    engine: {
+      state: 'RUNNING',
+      activeSector: 3,
+      startTs: NOW - 120_000,
+      endTs: NOW + 600_000,
+      source: 'SCHEDULER',
+      stopReason: 'none',
+      queue: [
+        {
+          id: 'pending-4',
+          createdTs: NOW - 120_000,
+          sector: 4,
+          duration: 15,
+          source: 'SCHEDULER',
+          description: 'Programa automatico request-recovery',
+        },
+      ],
+    },
+  });
+
+  const result = await service.tick(NOW);
+  const engine = await appStateStore.getEngineState();
+
+  assert.equal(result.tickDecision.decision, TICK_DECISION.RAW_UNAVAILABLE_DURING_RUN);
+  assert.equal(result.transaction.type, 'interruptForRecovery');
+  assert.equal(engine.state, 'ERROR');
+  assert.equal(engine.activeSector, 3);
+  assert.deepEqual(engine.queue.map(item => item.sector), [4]);
+  assert.equal(engine.interruption.status, 'AWAITING_CONTROLLER');
+  assert.equal(engine.interruption.sector, 3);
+  assert.deepEqual(engine.interruption.pendingQueue.map(item => item.sector), [4]);
+});
+
+test('active tick marks an interrupted run ready without auto-resuming the preserved queue', async () => {
+  const { service, appStateStore, rawDevice } = createService({
+    mode: MODE.ACTIVE_COMPAT,
+    rawAvailable: true,
+    activeRelays: [],
+    engine: {
+      state: 'ERROR',
+      activeSector: 3,
+      startTs: NOW - 120_000,
+      endTs: NOW + 600_000,
+      source: 'SCHEDULER',
+      stopReason: 'watchdog',
+      queue: [
+        {
+          id: 'pending-4',
+          createdTs: NOW - 120_000,
+          sector: 4,
+          duration: 15,
+          source: 'SCHEDULER',
+          description: 'Programa automatico request-recovery',
+        },
+      ],
+      interruption: {
+        version: 1,
+        status: 'AWAITING_CONTROLLER',
+        sector: 3,
+        source: 'SCHEDULER',
+        startTs: NOW - 120_000,
+        plannedEndTs: NOW + 600_000,
+        detectedTs: NOW - 60_000,
+        reason: 'raw_unavailable',
+        message: 'Conexion perdida durante el riego',
+        pendingQueue: [],
+        historyEntryId: null,
+      },
+    },
+  });
+
+  const tick = await service.tick(NOW);
+  const readyEngine = await appStateStore.getEngineState();
+
+  assert.equal(tick.tickDecision.decision, TICK_DECISION.RECOVERY_READY);
+  assert.equal(tick.transaction.type, 'markInterruptionReady');
+  assert.equal(readyEngine.state, 'ERROR');
+  assert.equal(readyEngine.interruption.status, 'READY_TO_RESUME');
+  assert.equal(readyEngine.history.length, 1);
+  assert.deepEqual(readyEngine.queue.map(item => item.sector), [4]);
+  assert.equal(rawDevice.capabilitiesObj[RAW_CAP.relays[4]].value, false);
+
+  const resumed = await service.resumePending(NOW + 1000);
+  const runningEngine = await appStateStore.getEngineState();
+
+  assert.equal(resumed.action, 'resumePending');
+  assert.equal(runningEngine.state, 'RUNNING');
+  assert.equal(runningEngine.activeSector, 4);
+  assert.equal(runningEngine.interruption, null);
+  assert.deepEqual(runningEngine.queue, []);
+  assert.equal(rawDevice.capabilitiesObj[RAW_CAP.relays[4]].value, true);
 });
 
 test('active tick persists compact diagnostics for later incident analysis', async () => {

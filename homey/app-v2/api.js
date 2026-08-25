@@ -115,6 +115,14 @@ module.exports = {
     return homey.app.getIrrigationEngineService().recover();
   },
 
+  async resumeEnginePending({ homey }) {
+    return homey.app.getIrrigationEngineService().resumePending();
+  },
+
+  async cancelEnginePending({ homey }) {
+    return homey.app.getIrrigationEngineService().cancelPending();
+  },
+
   async getSystemDeviceStatus({ homey }) {
     return homey.app.getSystemDeviceProjectionService().status();
   },

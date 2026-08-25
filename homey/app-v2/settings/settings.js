@@ -5,6 +5,7 @@ let savedSnapshot = '';
 let busy = false;
 let leaveWarningShown = false;
 let activeTab = 'schedule';
+let recoveryCanResume = false;
 
 const { calculateEndTime, snapshotConfig } = window.IrrigationSettingsCalculations;
 
@@ -22,6 +23,13 @@ const fields = {
   notice: document.getElementById('notice'),
   saveButton: document.getElementById('saveButton'),
   clearRainDelay: document.getElementById('clearRainDelay'),
+  recoveryPanel: document.getElementById('recoveryPanel'),
+  recoveryStatusText: document.getElementById('recoveryStatusText'),
+  recoveryMessage: document.getElementById('recoveryMessage'),
+  recoverySector: document.getElementById('recoverySector'),
+  recoveryQueue: document.getElementById('recoveryQueue'),
+  resumePendingButton: document.getElementById('resumePendingButton'),
+  cancelPendingButton: document.getElementById('cancelPendingButton'),
   refreshDiagnostics: document.getElementById('refreshDiagnostics'),
   diagnosticHealth: document.getElementById('diagnosticHealth'),
   diagnosticRecovery: document.getElementById('diagnosticRecovery'),
@@ -111,6 +119,38 @@ function renderDiagnostics(diagnostics) {
   });
 }
 
+function formatPendingQueue(queue) {
+  if (!Array.isArray(queue) || queue.length === 0) {
+    return 'Sin sectores pendientes';
+  }
+
+  return queue
+    .map(item => `S${item.sector}:${item.duration} min`)
+    .join(', ');
+}
+
+function renderRecovery(engineStatus) {
+  const engine = engineStatus?.engine || null;
+  const interruption = engine?.interruption || null;
+  fields.recoveryPanel.hidden = !interruption;
+
+  if (!interruption) {
+    recoveryCanResume = false;
+    return;
+  }
+
+  const ready = interruption.status === 'READY_TO_RESUME'
+    && engineStatus.rawAvailable !== false
+    && !(engineStatus.lastCheck?.hardware?.anyRelayOn);
+  recoveryCanResume = ready && Boolean(engine.queueLength);
+  fields.recoveryStatusText.textContent = ready ? 'Lista para reanudar' : 'Esperando confirmacion';
+  fields.recoveryMessage.textContent = interruption.message || 'Hay un programa interrumpido pendiente de revision.';
+  fields.recoverySector.textContent = `Sector interrumpido: S${Number(interruption.sector || engine.activeSector || 0)}`;
+  fields.recoveryQueue.textContent = `Pendientes: ${formatPendingQueue(engine.queue || interruption.pendingQueue)}`;
+  fields.resumePendingButton.disabled = busy || !recoveryCanResume;
+  fields.cancelPendingButton.disabled = busy;
+}
+
 function showNotice(message, isError = false) {
   fields.notice.textContent = message;
   fields.notice.classList.toggle('visible', Boolean(message));
@@ -149,6 +189,10 @@ function updateActionState() {
   fields.saveButton.classList.toggle('dirty', dirty && !busy);
   if (dirty) fields.saveButton.classList.remove('saved');
   fields.clearRainDelay.disabled = busy;
+  if (!fields.recoveryPanel.hidden) {
+    fields.resumePendingButton.disabled = busy || !recoveryCanResume;
+    fields.cancelPendingButton.disabled = busy;
+  }
   document.querySelectorAll('[data-rain-delay]').forEach(button => {
     button.disabled = busy;
   });
@@ -224,12 +268,14 @@ function renderState(state) {
 }
 
 async function load() {
-  const [state, diagnostics] = await Promise.all([
+  const [state, diagnostics, engineStatus] = await Promise.all([
     callApi('GET', '/status'),
     callApi('GET', '/diagnostics/status'),
+    callApi('GET', '/engine/status'),
   ]);
   renderState(state);
   renderDiagnostics(diagnostics);
+  renderRecovery(engineStatus);
 }
 
 async function save() {
@@ -305,11 +351,46 @@ async function clearRainDelay() {
 async function refreshDiagnostics() {
   fields.refreshDiagnostics.disabled = true;
   try {
-    renderDiagnostics(await callApi('GET', '/diagnostics/status'));
+    const [diagnostics, engineStatus] = await Promise.all([
+      callApi('GET', '/diagnostics/status'),
+      callApi('GET', '/engine/status'),
+    ]);
+    renderDiagnostics(diagnostics);
+    renderRecovery(engineStatus);
   } catch (error) {
     showNotice(error.message || 'No se pudo cargar el diagnostico', true);
   } finally {
     fields.refreshDiagnostics.disabled = false;
+  }
+}
+
+async function resumePending() {
+  setBusy(true);
+  showNotice('');
+  try {
+    await callApi('POST', '/engine/resume-pending');
+    showNotice('Sectores pendientes reanudados');
+    await load();
+  } catch (error) {
+    showNotice(error.message || 'No se pudo reanudar el programa', true);
+    HomeyRef.alert(error.message || 'No se pudo reanudar el programa');
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function cancelPending() {
+  setBusy(true);
+  showNotice('');
+  try {
+    await callApi('POST', '/engine/cancel-pending');
+    showNotice('Programa pendiente cancelado');
+    await load();
+  } catch (error) {
+    showNotice(error.message || 'No se pudo cancelar el programa pendiente', true);
+    HomeyRef.alert(error.message || 'No se pudo cancelar el programa pendiente');
+  } finally {
+    setBusy(false);
   }
 }
 
@@ -319,6 +400,8 @@ window.onHomeyReady = async Homey => {
   fields.saveButton.addEventListener('click', save);
   fields.refreshDiagnostics.addEventListener('click', refreshDiagnostics);
   fields.clearRainDelay.addEventListener('click', clearRainDelay);
+  fields.resumePendingButton.addEventListener('click', resumePending);
+  fields.cancelPendingButton.addEventListener('click', cancelPending);
   fields.tabButtons.forEach(button => {
     button.addEventListener('click', () => setActiveTab(button.dataset.tabTarget));
   });
