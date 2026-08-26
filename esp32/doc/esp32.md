@@ -173,13 +173,25 @@ Los litros del ciclo constituyen la fuente de información utilizada posteriorme
 
 Calibración utilizada:
 
-396 pulsos/L
+Sector	Calibración
+S1	990 pulsos/L
+S2	396 pulsos/L
+S3	396 pulsos/L
+S4	396 pulsos/L
+S5	396 pulsos/L
+S6	396 pulsos/L
 
-Equivalente aproximado:
+S1 usa una calibración provisional desde firmware `1.0.1`, tras observar una
+lectura de `72.76 L` en 5 minutos claramente superior al consumo físico
+esperado. El valor `990 pulsos/L` equivale a dividir por 2.5 la lectura previa
+basada en `396 pulsos/L`.
 
-6.6 pulsos por segundo para 1 L/min.
+Fórmula de ajuste:
 
-Toda modificación del modelo de sensor requerirá recalibración.
+factor_nuevo = factor_actual * litros_reportados / litros_reales
+
+Toda modificación del modelo de sensor o de la hidráulica requerirá
+recalibración.
 
 ⸻
 

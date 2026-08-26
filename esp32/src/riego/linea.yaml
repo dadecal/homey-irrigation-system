@@ -5,6 +5,7 @@
 # - line: número funcional de línea (1..6)
 # - flow_pin: GPIO del caudalímetro
 # - relay_pin: GPIO del relé
+# - pulses_per_liter: calibración del caudalímetro de la línea
 # =========================================================
 
 globals:

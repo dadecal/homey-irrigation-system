@@ -8,7 +8,9 @@ dejemos una decision pendiente.
 
 ## Estado actual - 2026-08-26
 
-* Release activa: `homeyAppV2@2.0.14`.
+* Release activa de sistema: `v2.0.15`.
+* App activa: `homeyAppV2@2.0.14`.
+* Firmware ESP32 activo: `esp32Firmware@1.0.1`.
 * El motor V2 conserva la cola si se pierde ESPHome Controller/RAW durante un
   riego. El programa queda en recuperacion pendiente y la pagina de settings
   permite reanudar los sectores restantes o cancelar el programa.
@@ -29,8 +31,8 @@ dejemos una decision pendiente.
 * `HistoryService` proyecta solo a `Historico de Riego v2` y
   `appStateV2.history`; su idempotencia activa no depende de
   `Irrigation.HistoryLastProjectedId`.
-* Artefactos: `dist/releases/v2.0.14` contiene la app v2.0.14 y el binario ESP32
-  compatible `riego-esp32-1.0.0.ota.bin`.
+* Artefactos: `dist/releases/v2.0.15` contiene la app v2.0.14 y el binario ESP32
+  `riego-esp32-1.0.1.ota.bin`.
 * Validacion: `npm run validate`, `npm test` con 150 tests, `homey app build`
   y `homey app validate` correctos.
 * Limpieza Homey ejecutada: los Flows V1/deshabilitados de riego han sido
@@ -41,6 +43,28 @@ dejemos una decision pendiente.
   `Riego - Aviso fin de sector v2`.
 
 ## Actualización 2026-08-26
+
+* Se formaliza la release de sistema Rama 2 `v2.0.15`.
+* La app Homey no cambia y permanece en `homeyAppV2@2.0.14`.
+* Se sube el firmware ESP32 a `1.0.1`, manteniendo contrato hardware
+  `irrigation-hw-api@1.0.0`.
+* El firmware introduce calibración de caudal por sector mediante
+  `pulses_per_liter_1..6` y cada include de línea recibe su factor propio.
+* S1 queda provisionalmente en `990 pulsos/L`, equivalente a dividir por 2.5
+  la lectura anterior basada en `396 pulsos/L`; S2-S6 conservan `396 pulsos/L`.
+* La calibración se marca como provisional: el ajuste definitivo debe calcularse
+  con `factor_nuevo = factor_actual * litros_reportados / litros_reales` tras
+  medir litros reales en una prueba física.
+* Verificacion ESPHome: `esphome config Riego_Homey.yaml` OK y
+  `esphome compile Riego_Homey.yaml` OK. El binario OTA generado se registra
+  como `dist/releases/v2.0.15/riego-esp32-1.0.1.ota.bin`.
+* Artefactos de `dist/releases/v2.0.15`: ESP32 SHA256
+  `3090bc334557d2747c4d7c3320e2925013078e4241de5207110b6fe3262c89c6`;
+  app v2.0.14 SHA256
+  `b1d609d8a48bb69da9e8d2afe2d8355d9f7de49d553b8562736a2f68abe3e2a1`.
+* OTA ejecutada con el binario exacto registrado. Homey confirma RAW `Riego`
+  disponible, `ESP Firmware Version=1.0.1`,
+  `ESP Hardware Contract=irrigation-hw-api@1.0.0` y seis reles apagados.
 
 * Se formaliza la release Rama 2 `homeyAppV2@2.0.14`.
 * Se corrige la captura de litros del motor nativo: en cierre activo el plan

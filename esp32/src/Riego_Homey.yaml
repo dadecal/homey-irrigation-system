@@ -196,10 +196,19 @@ web_server:
 
 #Irrigation specific vars
 substitutions:
-  firmware_version: "1.0.0"
+  firmware_version: "1.0.1"
   hardware_contract_name: "irrigation-hw-api"
   hardware_contract_version: "1.0.0"
-  pulses_per_liter: "396.0"
+  # Calibración de caudal por sector. Los valores representan pulsos por litro:
+  # a mayor valor, menor volumen publicado. S1 se ajusta provisionalmente tras
+  # observar 72.76 L en 5 min, una lectura entre 2 y 3 veces superior al caudal
+  # real esperado. Recalibrar con medición física antes de darlo por definitivo.
+  pulses_per_liter_1: "990.0"
+  pulses_per_liter_2: "396.0"
+  pulses_per_liter_3: "396.0"
+  pulses_per_liter_4: "396.0"
+  pulses_per_liter_5: "396.0"
+  pulses_per_liter_6: "396.0"
   leak_threshold_lpm: "0.1"
   leak_clear_threshold_lpm: "0.05"
   min_expected_flow_lpm: "0.1"
@@ -447,9 +456,9 @@ binary_sensor:
 
 # Include external packages (relays & sensors)
 packages:
-  linea_1: !include { file: riego/linea.yaml, vars: { line: "1", flow_pin: GPIO14, relay_pin: GPIO16 } }
-  linea_2: !include { file: riego/linea.yaml, vars: { line: "2", flow_pin: GPIO25, relay_pin: GPIO17 } }
-  linea_3: !include { file: riego/linea.yaml, vars: { line: "3", flow_pin: GPIO26, relay_pin: GPIO18 } }
-  linea_4: !include { file: riego/linea.yaml, vars: { line: "4", flow_pin: GPIO27, relay_pin: GPIO19 } }
-  linea_5: !include { file: riego/linea.yaml, vars: { line: "5", flow_pin: GPIO32, relay_pin: GPIO23 } }
-  linea_6: !include { file: riego/linea.yaml, vars: { line: "6", flow_pin: GPIO33, relay_pin: GPIO13 } }
+  linea_1: !include { file: riego/linea.yaml, vars: { line: "1", flow_pin: GPIO14, relay_pin: GPIO16, pulses_per_liter: "${pulses_per_liter_1}" } }
+  linea_2: !include { file: riego/linea.yaml, vars: { line: "2", flow_pin: GPIO25, relay_pin: GPIO17, pulses_per_liter: "${pulses_per_liter_2}" } }
+  linea_3: !include { file: riego/linea.yaml, vars: { line: "3", flow_pin: GPIO26, relay_pin: GPIO18, pulses_per_liter: "${pulses_per_liter_3}" } }
+  linea_4: !include { file: riego/linea.yaml, vars: { line: "4", flow_pin: GPIO27, relay_pin: GPIO19, pulses_per_liter: "${pulses_per_liter_4}" } }
+  linea_5: !include { file: riego/linea.yaml, vars: { line: "5", flow_pin: GPIO32, relay_pin: GPIO23, pulses_per_liter: "${pulses_per_liter_5}" } }
+  linea_6: !include { file: riego/linea.yaml, vars: { line: "6", flow_pin: GPIO33, relay_pin: GPIO13, pulses_per_liter: "${pulses_per_liter_6}" } }

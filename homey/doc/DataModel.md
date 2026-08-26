@@ -321,7 +321,7 @@ Estructura conceptual:
 ```json
 {
   "component": "esp32-firmware",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "provides": {
     "hardwareApi": {
       "name": "irrigation-hw-api",

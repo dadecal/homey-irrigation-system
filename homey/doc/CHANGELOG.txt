@@ -1,5 +1,27 @@
 ## 2026-08-26
 
+### Release Rama 2 v2.0.15
+- Release de sistema sin cambios de app: `homeyAppV2@2.0.14` permanece como app
+  activa y el firmware ESP32 sube a `1.0.1`.
+- Se introduce calibración de caudal por sector en ESPHome mediante
+  `pulses_per_liter_1..6`; cada línea recibe su factor propio desde el include
+  parametrizado.
+- S1 queda provisionalmente en `990 pulsos/L`, reduciendo por 2.5 la lectura
+  anterior de `396 pulsos/L` tras observar `72.76 L` en 5 minutos. S2-S6
+  conservan `396 pulsos/L` hasta medición física.
+- Se documenta la fórmula de ajuste:
+  `factor_nuevo = factor_actual * litros_reportados / litros_reales`.
+- Verificación local ESPHome: `esphome config Riego_Homey.yaml` OK y
+  `esphome compile Riego_Homey.yaml` OK.
+- Release formal generada en `dist/releases/v2.0.15`, incluyendo
+  `riego-esp32-1.0.1.ota.bin`
+  (`SHA256 3090bc334557d2747c4d7c3320e2925013078e4241de5207110b6fe3262c89c6`)
+  y la app compatible `homey-irrigation-app-v2-2.0.14.tgz`
+  (`SHA256 b1d609d8a48bb69da9e8d2afe2d8355d9f7de49d553b8562736a2f68abe3e2a1`).
+- OTA instalada en el ESP32 desde el binario exacto registrado. Homey confirma
+  RAW `Riego` disponible, firmware `1.0.1`, contrato
+  `irrigation-hw-api@1.0.0` y seis reles apagados.
+
 ### Release Rama 2 v2.0.14
 - Se corrige la captura de litros al finalizar un sector en el motor nativo.
   ESPHome publica el total final del ciclo en `on_turn_off`; ahora el plan

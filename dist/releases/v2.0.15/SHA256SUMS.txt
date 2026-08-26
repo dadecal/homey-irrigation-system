@@ -1,0 +1,3 @@
+3090bc334557d2747c4d7c3320e2925013078e4241de5207110b6fe3262c89c6  dist/releases/v2.0.15/riego-esp32-1.0.1.ota.bin
+b1d609d8a48bb69da9e8d2afe2d8355d9f7de49d553b8562736a2f68abe3e2a1  dist/releases/v2.0.15/homey-irrigation-app-v2-2.0.14.tgz
+f23528fb1b31246be182a446d4cb82a03a9b5f923732d7d4af902ee79b428796  dist/releases/v2.0.15/release-manifest.json

@@ -22,7 +22,7 @@ Estado general
 
 Módulo	Estado
 Arquitectura	✅ Finalizada
-Firmware ESPHome	✅ Finalizado
+Firmware ESPHome	✅ Finalizado v1.0.1
 Integración ESPHome ↔ Homey	✅ Finalizada
 Motor de riego	✅ Finalizado
 Cola de riego	✅ Finalizada
@@ -53,6 +53,15 @@ ESP32 + ESPHome
 Responsabilidad:
 
 Hardware.
+
+Estado:
+
+✅ Firmware `1.0.1` instalado por OTA desde `dist/releases/v2.0.15`.
+
+La versión `1.0.1` introduce calibración de caudal por sector. S1 queda
+provisionalmente en `990 pulsos/L` tras observar `72.76 L` en 5 minutos con el
+factor anterior `396 pulsos/L`. S2-S6 conservan `396 pulsos/L` hasta medición
+física propia. El contrato hardware sigue siendo `irrigation-hw-api@1.0.0`.
 
 ⸻
 
@@ -141,6 +150,12 @@ guardado con `0 L` por leer antes del cierre efectivo. Tambien reconcilia las
 capacidades acumuladas del historico nativo desde la ultima proyeccion
 persistida en `appStateV2`, evitando que una reparacion parcial deje litros,
 conteo o duracion acumulada desfasados.
+
+`v2.0.15` es una release de sistema sin cambios de app: mantiene
+`homeyAppV2@2.0.14` e instala firmware ESP32 `1.0.1`. La OTA se completa
+correctamente contra `192.168.2.7`; Homey confirma el dispositivo RAW `Riego`
+disponible, firmware `1.0.1`, contrato `irrigation-hw-api@1.0.0` y seis reles
+apagados.
 
 Responsabilidad:
 
