@@ -90,6 +90,7 @@ module.exports = class IrrigationAppV2 extends Homey.App {
       controlStore: this.migrationControlStore,
       irrigationEngineService: this.irrigationEngineService,
       preflightService: this.schedulerPreflightService,
+      recoveryService: this.recoveryService,
       appStateStore: this.appStateStore,
       timeZone: this.homey.clock.getTimezone(),
     });

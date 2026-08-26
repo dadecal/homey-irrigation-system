@@ -266,6 +266,8 @@ function compactExecutionForDiagnostics(execution) {
     accepted: execution.accepted,
     failed: Boolean(execution.failed),
     error: execution.error || null,
+    retryable: Boolean(execution.retryable),
+    errorCode: execution.errorCode || null,
   };
 }
 
@@ -273,6 +275,14 @@ function shouldRecordActionDiagnostic(action, plan, execution) {
   if (execution?.failed) return true;
   if (action !== 'tick') return true;
   return !['forceIdle', 'updateRunning', 'noop'].includes(plan?.type);
+}
+
+function isControllerCommandUnavailableError(errorOrMessage) {
+  const message = String(errorOrMessage?.message || errorOrMessage || '').toLowerCase();
+  return message.includes('cannot send command: client not connected')
+    || message.includes('client not connected')
+    || message.includes('este dispositivo no está disponible actualmente')
+    || message.includes('este dispositivo no esta disponible actualmente');
 }
 
 class IrrigationEngineService {
@@ -585,6 +595,10 @@ class IrrigationEngineService {
         accepted: plan.accepted,
         failed: true,
         error: error.message,
+        retryable: plan.type === 'startQueuedItem' && isControllerCommandUnavailableError(error),
+        errorCode: isControllerCommandUnavailableError(error)
+          ? 'CONTROLLER_COMMAND_UNAVAILABLE'
+          : 'ENGINE_PLAN_FAILED',
         failureExecution,
       };
       if (this.appStateStore) {
@@ -1161,4 +1175,5 @@ module.exports = {
   validateEngineSnapshot,
   engineActiveCompatSupported,
   evaluateCutoverReadiness,
+  isControllerCommandUnavailableError,
 };

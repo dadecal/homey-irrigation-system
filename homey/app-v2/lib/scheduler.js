@@ -6,6 +6,7 @@ const { calculateNextRun } = require('./next-run-calculator');
 const TICK_INTERVAL_MS = 30000;
 const PENDING_REQUEST_TTL_MS = 10 * 60 * 1000;
 const PREFLIGHT_RETRY_WINDOW_MS = 15 * 60 * 1000;
+const START_FAILURE_NOTIFICATION_THROTTLE_MS = 10 * 60 * 1000;
 
 function buildQueue(config) {
   return Object.entries(config.sectorDurations)
@@ -26,6 +27,7 @@ class Scheduler {
     controlStore = null,
     irrigationEngineService = null,
     preflightService = null,
+    recoveryService = null,
     appStateStore = null,
     timeZone,
   }) {
@@ -36,6 +38,7 @@ class Scheduler {
     this.controlStore = controlStore;
     this.irrigationEngineService = irrigationEngineService;
     this.preflightService = preflightService;
+    this.recoveryService = recoveryService;
     this.appStateStore = appStateStore;
     this.timeZone = timeZone;
     this.timer = null;
@@ -43,6 +46,7 @@ class Scheduler {
     this.lastDecision = null;
     this.lastError = null;
     this.lastPreflight = null;
+    this.lastStartFailureNotification = null;
   }
 
   start() {
@@ -221,6 +225,16 @@ class Scheduler {
         const engineResult = await this.irrigationEngineService.startProgram(request);
         if (engineResult.transaction?.accepted === false || engineResult.execution?.failed) {
           await this.configStore.clearPendingRequest();
+          if (engineResult.execution?.retryable) {
+            return this.handleRetryableStartFailure({
+              decision,
+              request,
+              pendingRequest,
+              engineResult,
+              nowTs,
+            });
+          }
+
           this.lastError = {
             ts: Date.now(),
             message: `El motor nativo rechazo la solicitud ${request.requestId}`,
@@ -270,6 +284,97 @@ class Scheduler {
       lastError: this.lastError,
       lastPreflight: this.lastPreflight,
     };
+  }
+
+  async handleRetryableStartFailure({
+    decision,
+    request,
+    pendingRequest,
+    engineResult,
+    nowTs,
+  }) {
+    const code = engineResult.execution?.errorCode || 'CONTROLLER_COMMAND_UNAVAILABLE';
+    const message = 'Arranque aplazado: ESPHome Controller no acepta comandos';
+    this.lastError = {
+      ts: nowTs,
+      message,
+      pendingRequest,
+      engineResult,
+      retryable: true,
+      code,
+    };
+
+    await this.notifyStartFailureOnce({
+      runDate: decision.runDate,
+      code,
+      message,
+      nowTs,
+    });
+    const recoveryResult = await this.requestRecoveryForStartFailure({ code, nowTs });
+    this.homey.app.log(`Scheduler v2 start deferred runDate=${decision.runDate} code=${code}`);
+
+    return {
+      ...decision,
+      request,
+      pendingRequest,
+      engineResult,
+      startDeferred: true,
+      retryable: true,
+      code,
+      message,
+      recoveryResult,
+    };
+  }
+
+  async requestRecoveryForStartFailure({ code, nowTs }) {
+    if (code !== 'CONTROLLER_COMMAND_UNAVAILABLE'
+      || typeof this.recoveryService?.requestControllerRestartAfterCommandFailure !== 'function') {
+      return null;
+    }
+
+    try {
+      const result = await this.recoveryService.requestControllerRestartAfterCommandFailure({
+        confirmNoIrrigationActive: true,
+        nowTs,
+      });
+      this.homey.app.log(`Scheduler v2 recovery requested after start failure status=${result.status}`);
+      return result;
+    } catch (error) {
+      this.homey.app.log(`Scheduler v2 recovery request skipped after start failure: ${error.message}`);
+      return {
+        status: 'SKIPPED',
+        reason: error.message,
+      };
+    }
+  }
+
+  async notifyStartFailureOnce({ runDate, code, message, nowTs }) {
+    const signature = `${runDate}:${code}`;
+    const previous = this.lastStartFailureNotification;
+    if (previous?.signature === signature
+      && nowTs - Number(previous.ts || 0) < START_FAILURE_NOTIFICATION_THROTTLE_MS) {
+      return;
+    }
+
+    this.lastStartFailureNotification = { signature, ts: nowTs };
+    await this.appendSchedulerEvent({
+      ts: nowTs,
+      status: 'START_DEFERRED',
+      message,
+      runDate,
+      code,
+    });
+
+    const manager = this.homey.notifications || this.homey.managerNotifications;
+    if (typeof manager?.createNotification === 'function') {
+      try {
+        await manager.createNotification({
+          excerpt: `Incidencia en sistema de riego: ${message}`,
+        });
+      } catch (error) {
+        this.homey.app.log(`Scheduler start notification skipped: ${error.message}`);
+      }
+    }
   }
 
   async handlePreflightBlock(config, decision, preflight, nowTs) {
@@ -358,4 +463,5 @@ module.exports = {
   Scheduler,
   TICK_INTERVAL_MS,
   PREFLIGHT_RETRY_WINDOW_MS,
+  START_FAILURE_NOTIFICATION_THROTTLE_MS,
 };

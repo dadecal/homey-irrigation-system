@@ -287,6 +287,35 @@ test('runs a guarded ESPHome Controller restart probe from the app API context',
   assert.equal(triggerCalls[0].status, 'RESTART_PROBE_REQUESTED');
 });
 
+test('requests guarded ESPHome Controller restart after scheduler command failure', async () => {
+  const { service, appState, restartCalls, triggerCalls } = createService({
+    available: true,
+    mode: 'ACTIVE_COMPAT',
+    engineMode: 'ACTIVE_COMPAT',
+    engineState: 'IDLE',
+    hasScope: scope => scope === constants.RESTART_REQUIRED_SCOPE,
+  });
+
+  const result = await service.requestControllerRestartAfterCommandFailure({
+    confirmNoIrrigationActive: true,
+    nowTs: NOW,
+  });
+
+  assert.equal(result.status, 'RESTART_REQUESTED');
+  assert.deepEqual(result.restart, { method: 'appOwnerToken' });
+  assert.deepEqual(restartCalls, [{ id: 'com.ugrbnk.esphome' }]);
+  assert.equal(appState.recovery.attemptsInIncident, 1);
+  assert.equal(appState.recovery.awaitingRecovery, true);
+  assert.equal(appState.recovery.consecutiveFailures, constants.FAILURE_THRESHOLD_IDLE);
+  assert.equal(appState.recovery.events[0].type, 'RESTART_REQUESTED');
+  assert.equal(appState.recovery.events[0].reason, 'COMMAND_UNAVAILABLE');
+  assert.deepEqual(triggerCalls[0], {
+    status: 'RESTART_REQUESTED',
+    message: 'Reinicio automatico 1/3 de ESPHome Controller solicitado por fallo de comandos',
+    attempts: 1,
+  });
+});
+
 test('blocks the restart probe when any irrigation relay is still active', async () => {
   const { service, restartCalls } = createService({
     mode: 'ACTIVE_COMPAT',

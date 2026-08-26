@@ -33,7 +33,7 @@ Dispositivo “Riego Manual”	✅ Finalizado
 Histórico de riego	✅ Finalizado
 Sincronización sensores	✅ Finalizada
 Persistencia	✅ Finalizada
-Aplicación Homey nativa Rama 2	✅ Activa v2.0.11
+Aplicación Homey nativa Rama 2	✅ Activa v2.0.11 / v2.0.12 preparada
 Scheduler	✅ Finalizado
 Programador	✅ Finalizado
 Rain Delay	✅ Finalizado
@@ -98,7 +98,7 @@ Aplicación Homey nativa Rama 2
 
 Estado:
 
-✅ Instalada desde artefacto release v2.0.11
+✅ Instalada desde artefacto release v2.0.12
 
 Release activa:
 
@@ -118,6 +118,18 @@ de Homey; los Flows V1/deshabilitados de riego tambien han sido eliminados.
 Permanecen solo los tres devices v2 en la zona `Riego` y los cuatro Flows v2
 activos de notificacion. Homey Pro confirma `com.dadecal.irrigation.v2`
 `version=2.0.11`, `enabled=true`, `state=running`.
+
+`v2.0.12` corrige el caso observado el 25 de agosto de 2026 en el que ESPHome
+Controller estaba disponible para lectura pero rechazaba comandos con
+`Cannot send command: client not connected` justo al iniciar el programa. El
+motor vuelve a `IDLE` sin marcar la fecha como regada, el scheduler aplaza el
+arranque, notifica la incidencia y solicita a `RecoveryService` un reinicio
+seguro de ESPHome Controller con motor en reposo y reles apagados. Release
+generada e instalada desde `dist/releases/v2.0.12`, con artefacto Homey v2.0.12
+y binario ESP32 compatible sin cambios. Homey Pro confirma
+`com.dadecal.irrigation.v2` `version=2.0.12`, `enabled=true`, `state=running`;
+tras la instalacion el motor queda `IDLE`, sector `0`, cola `0`, sin
+interrupcion y sin reles activos.
 
 Responsabilidad:
 

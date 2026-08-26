@@ -10,7 +10,7 @@ const { MigrationControlStore } = require('../lib/migration-control-store');
 
 const NOW = 1784620000000;
 
-function createRawDevice(activeRelays = [], available = true) {
+function createRawDevice(activeRelays = [], available = true, { failWritesWith = null } = {}) {
   const capabilitiesObj = {};
   for (const [sector, capability] of Object.entries(RAW_CAP.relays)) {
     capabilitiesObj[capability] = {
@@ -24,6 +24,9 @@ function createRawDevice(activeRelays = [], available = true) {
     capabilitiesObj,
     writes: [],
     async setCapabilityValue(capability, value) {
+      if (failWritesWith) {
+        throw new Error(failWritesWith);
+      }
       this.writes.push({ capability, value });
       if (!this.capabilitiesObj[capability]) {
         this.capabilitiesObj[capability] = { value: null };
@@ -40,6 +43,7 @@ function createService({
   mode = MODE.SHADOW,
   sectorStartedTrigger = null,
   sectorEndedTrigger = null,
+  failWritesWith = null,
 }) {
   const writes = [];
   const settings = new Map();
@@ -77,7 +81,7 @@ function createService({
     engine: engineFromValues,
     events: [],
   });
-  const rawDevice = createRawDevice(activeRelays, rawAvailable);
+  const rawDevice = createRawDevice(activeRelays, rawAvailable, { failWritesWith });
   const service = new IrrigationEngineService({
     homey: {
       app: {},
@@ -438,6 +442,51 @@ test('active scheduler program continues with the next queued sector after timeo
   assert.equal(engine.history[0].sector, 1);
   assert.equal(rawDevice.capabilitiesObj[RAW_CAP.relays[1]].value, false);
   assert.equal(rawDevice.capabilitiesObj[RAW_CAP.relays[2]].value, true);
+});
+
+test('active scheduler start failure from disconnected controller returns to idle for retry', async () => {
+  const { service, appStateStore, rawDevice } = createService({
+    mode: MODE.ACTIVE_COMPAT,
+    failWritesWith: 'Cannot send command: client not connected',
+    engine: {
+      state: 'IDLE',
+      activeSector: 0,
+      queue: [],
+    },
+  });
+  await appStateStore.setEngineValues({
+    state: 'IDLE',
+    activeSector: 0,
+    startTs: 0,
+    endTs: 0,
+    source: 'none',
+    stopReason: 'none',
+  });
+  await appStateStore.clearEngineQueue();
+
+  const request = {
+    version: 1,
+    requestId: 'request-retryable-start',
+    requestedAt: NOW - 1000,
+    source: 'SCHEDULER',
+    queue: [
+      { sector: 1, duration: 5 },
+      { sector: 3, duration: 15 },
+    ],
+  };
+
+  const result = await service.startProgram(request, NOW);
+  const engine = await appStateStore.getEngineState();
+
+  assert.equal(result.execution.failed, true);
+  assert.equal(result.execution.retryable, true);
+  assert.equal(result.execution.errorCode, 'CONTROLLER_COMMAND_UNAVAILABLE');
+  assert.equal(engine.state, 'IDLE');
+  assert.equal(engine.activeSector, 0);
+  assert.equal(engine.stopReason, 'none');
+  assert.deepEqual(engine.queue, []);
+  assert.equal(engine.interruption, null);
+  assert.deepEqual(rawDevice.writes, []);
 });
 
 test('active tick does not clear a scheduler queue while program start is in progress', async () => {

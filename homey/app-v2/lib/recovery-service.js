@@ -417,6 +417,142 @@ class RecoveryService {
     };
   }
 
+  async requestControllerRestartAfterCommandFailure({
+    confirmNoIrrigationActive = false,
+    nowTs = this.now(),
+  } = {}) {
+    const mode = await this.getMode();
+
+    if (mode !== MODE.ACTIVE_COMPAT) {
+      throw new Error('Recovery debe estar en ACTIVE_COMPAT para reiniciar ESPHome Controller');
+    }
+
+    if (confirmNoIrrigationActive !== true) {
+      throw new Error('Se requiere confirmNoIrrigationActive=true para reiniciar ESPHome Controller');
+    }
+
+    const engine = await readEngineSnapshot({
+      appStateStore: this.appStateStore,
+    });
+    if (engine.state !== 'IDLE' || Number(engine.activeSector || 0) !== 0) {
+      throw new Error(`No se reinicia ESPHome Controller con motor ${engine.state} y sector activo ${engine.activeSector}`);
+    }
+
+    const raw = await this.getRawDevice();
+    const activeRelays = this.getActiveRelays(raw);
+    if (activeRelays.length > 0) {
+      throw new Error(`No se reinicia ESPHome Controller con reles activos: ${activeRelays.join(',')}`);
+    }
+
+    let state = await this.getState();
+    state = {
+      ...state,
+      incidentStartedTs: state.incidentStartedTs || nowTs,
+      consecutiveFailures: Math.max(Number(state.consecutiveFailures || 0), FAILURE_THRESHOLD_IDLE),
+    };
+
+    if (state.attemptsInIncident >= MAX_ATTEMPTS_PER_INCIDENT) {
+      await this.setState(state);
+      return { status: 'EXHAUSTED', mode, state, reason: 'MAX_ATTEMPTS' };
+    }
+
+    const configuredRecoveryToken = await this.hasConfiguredRecoveryToken();
+    if (state.restartBlockedReason === 'MISSING_SCOPES' && !configuredRecoveryToken) {
+      await this.setState(state);
+      return { status: 'RESTART_UNAVAILABLE', mode, state, reason: 'MISSING_SCOPES' };
+    }
+
+    const api = await this.getApi();
+    const apiScopes = this.getApiScopeInfo(api);
+    if (apiScopes.restartScopeAvailable === false && !configuredRecoveryToken) {
+      const message = 'No se puede reiniciar ESPHome Controller automaticamente: el token interno de la app no tiene el scope homey.app';
+      const recorded = await this.recordEvent(
+        {
+          ...state,
+          awaitingRecovery: false,
+          restartBlockedReason: 'MISSING_SCOPES',
+          restartBlockedTs: nowTs,
+        },
+        'RESTART_UNAVAILABLE',
+        message,
+        nowTs,
+      );
+      this.logger.log(message);
+      return {
+        status: 'RESTART_UNAVAILABLE',
+        mode,
+        state: recorded.state,
+        reason: 'MISSING_SCOPES',
+        apiScopes,
+        applied: { triggers: recorded.triggers },
+      };
+    }
+
+    if (state.lastRestartTs > 0 && nowTs - state.lastRestartTs < RESTART_COOLDOWN_MS) {
+      await this.setState(state);
+      this.logger.log('Recovery cooldown activo tras fallo de arranque del programador');
+      return { status: 'COOLDOWN', mode, state };
+    }
+
+    let controller;
+    try {
+      controller = await this.findControllerApp();
+    } catch (error) {
+      const message = `No se puede reiniciar ESPHome Controller: ${error.message}`;
+      const recorded = await this.recordEvent(state, 'CONFIG_ERROR', message, nowTs);
+      this.logger.log(message);
+      return { status: 'CONFIG_ERROR', mode, state: recorded.state, applied: { triggers: recorded.triggers } };
+    }
+
+    const attempt = state.attemptsInIncident + 1;
+    const requestedMessage = `Reinicio automatico ${attempt}/${MAX_ATTEMPTS_PER_INCIDENT} de ESPHome Controller solicitado por fallo de comandos`;
+    state = appendEvent(state, 'RESTART_REQUESTED', requestedMessage, nowTs, {
+      appId: controller.id,
+      appVersion: controller.version || 'unknown',
+      engineState: engine.state,
+      reason: 'COMMAND_UNAVAILABLE',
+      attempt,
+    });
+    state = {
+      ...state,
+      attemptsInIncident: attempt,
+      lastRestartTs: nowTs,
+      awaitingRecovery: true,
+      restartBlockedReason: configuredRecoveryToken ? null : state.restartBlockedReason,
+      restartBlockedTs: configuredRecoveryToken ? 0 : state.restartBlockedTs,
+    };
+
+    await this.setState(state);
+
+    try {
+      const restart = await this.restartControllerApp(controller);
+      const triggers = await this.triggerEvent('RESTART_REQUESTED', requestedMessage, state);
+      this.logger.log(requestedMessage);
+      return { status: 'RESTART_REQUESTED', mode, state, restart, applied: { triggers } };
+    } catch (error) {
+      const failedAt = this.now();
+      const missingScopes = isMissingScopesError(error);
+      const message = missingScopes
+        ? 'No se puede reiniciar ESPHome Controller automaticamente: faltan permisos de Homey (Missing Scopes)'
+        : `Fallo el reinicio automatico de ESPHome Controller: ${error.message}`;
+      const eventType = missingScopes ? 'RESTART_UNAVAILABLE' : 'RESTART_FAILED';
+      const recorded = await this.recordEvent(
+        {
+          ...state,
+          awaitingRecovery: false,
+          restartBlockedReason: missingScopes ? 'MISSING_SCOPES' : state.restartBlockedReason,
+          restartBlockedTs: missingScopes ? failedAt : state.restartBlockedTs,
+        },
+        eventType,
+        message,
+        failedAt,
+        { attempt, reason: 'COMMAND_UNAVAILABLE' },
+      );
+      this.logger.log(message);
+      return { status: eventType, mode, state: recorded.state, applied: { triggers: recorded.triggers } };
+    }
+  }
+
   async check() {
     if (this.checking) {
       return { skipped: true, reason: 'ALREADY_RUNNING' };

@@ -8,7 +8,7 @@ dejemos una decision pendiente.
 
 ## Estado actual - 2026-08-25
 
-* Release activa: `homeyAppV2@2.0.11`.
+* Release activa: `homeyAppV2@2.0.12`.
 * El motor V2 conserva la cola si se pierde ESPHome Controller/RAW durante un
   riego. El programa queda en recuperacion pendiente y la pagina de settings
   permite reanudar los sectores restantes o cancelar el programa.
@@ -29,9 +29,9 @@ dejemos una decision pendiente.
 * `HistoryService` proyecta solo a `Historico de Riego v2` y
   `appStateV2.history`; su idempotencia activa no depende de
   `Irrigation.HistoryLastProjectedId`.
-* Artefactos: `dist/releases/v2.0.11` contiene la app v2.0.11 y el binario ESP32
+* Artefactos: `dist/releases/v2.0.12` contiene la app v2.0.12 y el binario ESP32
   compatible `riego-esp32-1.0.0.ota.bin`.
-* Validacion: `npm run validate`, `npm test` con 143 tests, `homey app build`
+* Validacion: `npm run validate`, `npm test` con 148 tests, `homey app build`
   y `homey app validate` correctos.
 * Limpieza Homey ejecutada: los Flows V1/deshabilitados de riego han sido
   eliminados. En Homey solo quedan los cuatro Flows v2 activos:
@@ -41,6 +41,38 @@ dejemos una decision pendiente.
   `Riego - Aviso fin de sector v2`.
 
 ## Actualización 2026-08-25
+
+* Se prepara la release Rama 2 `homeyAppV2@2.0.12`.
+* Se corrige el fallo de arranque nativo cuando ESPHome Controller aparece
+  disponible para lectura pero rechaza escrituras con
+  `Cannot send command: client not connected`.
+* `IrrigationEngineService` clasifica ese fallo como
+  `CONTROLLER_COMMAND_UNAVAILABLE` y `retryable=true` solo para arranques de
+  programa.
+* El plan de fallo de arranque deja el motor en `IDLE`, sector `0`, sin cola y
+  `stopReason=none`, evitando el falso estado `ERROR sector 0`.
+* `Scheduler` no marca `lastRunDate`, limpia la solicitud pendiente, registra
+  `START_DEFERRED`, crea notificacion Homey y mantiene el programa como
+  reintentable dentro de la ventana activa del dia.
+* `Scheduler` solicita a `RecoveryService` un reinicio seguro por fallo de
+  comandos; Recovery conserva su responsabilidad exclusiva de reiniciar ESPHome
+  Controller y aplica modo `ACTIVE_COMPAT`, confirmacion explicita, motor
+  `IDLE`, sector `0`, reles apagados, scope/token, cooldown y limite de
+  intentos.
+* Verificacion local: `npm run validate`, `npm test` con 148 tests OK,
+  `homey app build` y `homey app validate` correctos.
+* Artefactos de `dist/releases/v2.0.12`: app v2 SHA256
+  `ef9665c02acad581f65dbb7bdc072686c76373b47f7e2cf6f4fb6dd84d9d728b`;
+  ESP32 SHA256
+  `3c9fb7a6fb671e6f621ceabfe2aa25055c478ccd58845bf5f5fc48f30a054961`.
+* La release incluye el binario ESP32 compatible aunque el firmware no cambia,
+  reutilizando el artefacto validado en `v2.0.11`.
+* Instalacion validada en Homey Pro desde artefacto exacto:
+  `com.dadecal.irrigation.v2` queda en `version=2.0.12`, `enabled=true`,
+  `state=running`. La comprobacion posterior confirma motor `IDLE`, sector `0`,
+  cola `0`, sin interrupcion y sin reles activos. La llamada `/release` via
+  `getAppStd` no aplica a esta instalacion local porque Homey responde
+  `App Origin Not App Store`.
 
 * Se formaliza la release Rama 2 `homeyAppV2@2.0.11`.
 * Se corrige la reaccion del motor nativo ante perdida de ESPHome

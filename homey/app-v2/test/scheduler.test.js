@@ -22,10 +22,13 @@ function dueConfig(overrides = {}) {
 
 function createScheduler({
   mode = MODE.SHADOW,
+  engineMode = MODE.SHADOW,
   config = dueConfig(),
   events = [],
   preflightService = null,
+  recoveryService = null,
   appStateStore = null,
+  irrigationEngineService = null,
 } = {}) {
   const scheduler = new Scheduler({
     homey: {
@@ -35,6 +38,11 @@ function createScheduler({
         },
         error(message) {
           events.push(`error:${message}`);
+        },
+      },
+      notifications: {
+        async createNotification(payload) {
+          events.push(`notification:${payload.excerpt}`);
         },
       },
     },
@@ -79,10 +87,12 @@ function createScheduler({
         return {
           services: {
             [SERVICE.SCHEDULER]: mode,
+            [SERVICE.ENGINE]: engineMode,
           },
         };
       },
     },
+    irrigationEngineService,
     programRequestTrigger: {
       createRequest(queue, metadata) {
         events.push(`create:${metadata.runDate}:${JSON.stringify(queue)}`);
@@ -107,6 +117,7 @@ function createScheduler({
       },
     },
     preflightService,
+    recoveryService,
     appStateStore,
     timeZone: 'Europe/Madrid',
   });
@@ -153,6 +164,108 @@ test('stores a pending request after emitting it in ACTIVE_COMPAT mode', async (
     'log:Scheduler v2 request emitted requestId=request-1 runDate=2026-07-02; awaiting engine confirmation',
   ]);
   assert.equal(config.pendingRequest.requestId, 'request-1');
+});
+
+test('defers a native scheduler start when ESPHome Controller rejects commands', async () => {
+  const events = [];
+  const config = dueConfig();
+  const appEvents = [];
+  const scheduler = createScheduler({
+    mode: MODE.ACTIVE_COMPAT,
+    engineMode: MODE.ACTIVE_COMPAT,
+    config,
+    events,
+    appStateStore: {
+      async appendEvent(event) {
+        appEvents.push(event);
+      },
+    },
+    irrigationEngineService: {
+      async startProgram() {
+        return {
+          transaction: { type: 'startQueuedItem', accepted: true },
+          execution: {
+            type: 'startQueuedItem',
+            accepted: true,
+            failed: true,
+            retryable: true,
+            errorCode: 'CONTROLLER_COMMAND_UNAVAILABLE',
+            error: 'Cannot send command: client not connected',
+          },
+        };
+      },
+    },
+  });
+
+  const result = await scheduler.evaluate(Date.parse('2026-07-02T05:31:00Z'));
+
+  assert.equal(result.startDeferred, true);
+  assert.equal(result.retryable, true);
+  assert.equal(result.code, 'CONTROLLER_COMMAND_UNAVAILABLE');
+  assert.equal(config.lastRunDate, null);
+  assert.equal(config.pendingRequest, null);
+  assert.equal(appEvents[0].status, 'START_DEFERRED');
+  assert.equal(appEvents[0].code, 'CONTROLLER_COMMAND_UNAVAILABLE');
+  assert.deepEqual(events, [
+    'create:2026-07-02:[{"sector":1,"duration":5},{"sector":3,"duration":4}]',
+    'pending:2026-07-02:request-1',
+    'clear-pending',
+    'notification:Incidencia en sistema de riego: Arranque aplazado: ESPHome Controller no acepta comandos',
+    'log:Scheduler v2 start deferred runDate=2026-07-02 code=CONTROLLER_COMMAND_UNAVAILABLE',
+  ]);
+});
+
+test('requests recovery when a native scheduler start is deferred by command failure', async () => {
+  const events = [];
+  const config = dueConfig();
+  const recoveryCalls = [];
+  const scheduler = createScheduler({
+    mode: MODE.ACTIVE_COMPAT,
+    engineMode: MODE.ACTIVE_COMPAT,
+    config,
+    events,
+    irrigationEngineService: {
+      async startProgram() {
+        return {
+          transaction: { type: 'startQueuedItem', accepted: true },
+          execution: {
+            type: 'startQueuedItem',
+            accepted: true,
+            failed: true,
+            retryable: true,
+            errorCode: 'CONTROLLER_COMMAND_UNAVAILABLE',
+            error: 'Cannot send command: client not connected',
+          },
+        };
+      },
+    },
+    recoveryService: {
+      async requestControllerRestartAfterCommandFailure(payload) {
+        recoveryCalls.push(payload);
+        return { status: 'RESTART_REQUESTED' };
+      },
+    },
+  });
+
+  const nowTs = Date.parse('2026-07-02T05:31:00Z');
+  const result = await scheduler.evaluate(nowTs);
+
+  assert.equal(result.startDeferred, true);
+  assert.deepEqual(result.recoveryResult, { status: 'RESTART_REQUESTED' });
+  assert.deepEqual(recoveryCalls, [
+    {
+      confirmNoIrrigationActive: true,
+      nowTs,
+    },
+  ]);
+  assert.deepEqual(events, [
+    'create:2026-07-02:[{"sector":1,"duration":5},{"sector":3,"duration":4}]',
+    'pending:2026-07-02:request-1',
+    'clear-pending',
+    'notification:Incidencia en sistema de riego: Arranque aplazado: ESPHome Controller no acepta comandos',
+    'log:Scheduler v2 recovery requested after start failure status=RESTART_REQUESTED',
+    'log:Scheduler v2 start deferred runDate=2026-07-02 code=CONTROLLER_COMMAND_UNAVAILABLE',
+  ]);
 });
 
 test('persists the run date only when a pending request is confirmed', async () => {

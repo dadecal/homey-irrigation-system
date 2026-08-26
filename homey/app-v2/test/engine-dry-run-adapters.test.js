@@ -201,6 +201,31 @@ test('plans a manual start preview without executing hardware writes', () => {
   assert.equal(plan.steps[3].sector, 3);
 });
 
+test('plans start failure as idle retryable state cleanup', () => {
+  const plan = buildManualStartPreview({
+    snapshot: runningSnapshot({
+      state: 'IDLE',
+      activeSector: 0,
+      queue: [],
+      activeRelays: [],
+      anyRelayOn: false,
+    }),
+    input: { sector: 3, duration: 8 },
+    now: NOW,
+  });
+
+  assert.deepEqual(plan.failurePlan.map(step => `${step.adapter}:${step.action}`), [
+    'EngineStateStore:clearQueue',
+    'EngineStateStore:setValues',
+  ]);
+  assert.equal(plan.failurePlan[1].values.state, 'IDLE');
+  assert.equal(plan.failurePlan[1].values.activeSector, 0);
+  assert.equal(plan.failurePlan[1].values.startTs, 0);
+  assert.equal(plan.failurePlan[1].values.endTs, 0);
+  assert.equal(plan.failurePlan[1].values.stopReason, STOP_REASON.NONE);
+  assert.equal(plan.failurePlan[1].values.interruption, null);
+});
+
 test('plans a scheduler start preview with the accepted request queue', () => {
   const plan = buildProgramStartPreview({
     snapshot: runningSnapshot({

@@ -421,10 +421,11 @@ function buildStartQueuedItemPlan({
     failurePlan: [
       stateStore.planClearQueue(),
       stateStore.planSetValues({
-        state: 'ERROR',
+        state: 'IDLE',
         activeSector: 0,
+        startTs: 0,
         endTs: 0,
-        stopReason: STOP_REASON.ERROR,
+        stopReason: STOP_REASON.NONE,
         interruption: null,
       }),
     ],
