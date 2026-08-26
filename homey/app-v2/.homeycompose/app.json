@@ -1,6 +1,6 @@
 {
   "id": "com.dadecal.irrigation.v2",
-  "version": "2.0.12",
+  "version": "2.0.14",
   "sdk": 3,
   "compatibility": ">=10.0.0",
   "name": {

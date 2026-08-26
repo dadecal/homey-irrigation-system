@@ -496,6 +496,12 @@ class HistoryService {
     const reason = String(input.reason ?? 'completed');
     const eventEndTs = Number(input.endTs ?? now);
     const eventId = String(input.id ?? `${eventEndTs}-${sector}`);
+    const storedProjection = appState?.history?.lastProjection?.eventId === eventId
+      ? appState.history.lastProjection
+      : null;
+    const storedExpected = storedProjection?.expected && typeof storedProjection.expected === 'object'
+      ? storedProjection.expected
+      : {};
 
     if (!Number.isInteger(sector) || sector < 1 || sector > 6) {
       return {
@@ -632,17 +638,23 @@ class HistoryService {
       {
         field: 'accumulatedLiters',
         capability: NATIVE_HISTORY_CAP.accumulatedLiters,
-        value: expected[HISTORY_CAP.accumulatedLiters] ?? current[HISTORY_CAP.accumulatedLiters],
+        value: expected[HISTORY_CAP.accumulatedLiters]
+          ?? storedExpected[HISTORY_CAP.accumulatedLiters]
+          ?? current[HISTORY_CAP.accumulatedLiters],
       },
       {
         field: 'wateringCount',
         capability: NATIVE_HISTORY_CAP.wateringCount,
-        value: expected[HISTORY_CAP.wateringCount] ?? current[HISTORY_CAP.wateringCount],
+        value: expected[HISTORY_CAP.wateringCount]
+          ?? storedExpected[HISTORY_CAP.wateringCount]
+          ?? current[HISTORY_CAP.wateringCount],
       },
       {
         field: 'accumulatedDurationMin',
         capability: NATIVE_HISTORY_CAP.accumulatedDurationMin,
-        value: expected[HISTORY_CAP.accumulatedDurationMin] ?? current[HISTORY_CAP.accumulatedDurationMin],
+        value: expected[HISTORY_CAP.accumulatedDurationMin]
+          ?? storedExpected[HISTORY_CAP.accumulatedDurationMin]
+          ?? current[HISTORY_CAP.accumulatedDurationMin],
       },
     ];
 

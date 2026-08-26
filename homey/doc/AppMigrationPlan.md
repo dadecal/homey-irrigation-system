@@ -6,9 +6,9 @@ Este documento es la fuente de seguimiento de la Rama 2 del sistema de riego.
 Debe actualizarse cada vez que avancemos una fase, cambiemos de estrategia o
 dejemos una decision pendiente.
 
-## Estado actual - 2026-08-25
+## Estado actual - 2026-08-26
 
-* Release activa: `homeyAppV2@2.0.12`.
+* Release activa: `homeyAppV2@2.0.14`.
 * El motor V2 conserva la cola si se pierde ESPHome Controller/RAW durante un
   riego. El programa queda en recuperacion pendiente y la pagina de settings
   permite reanudar los sectores restantes o cancelar el programa.
@@ -29,9 +29,9 @@ dejemos una decision pendiente.
 * `HistoryService` proyecta solo a `Historico de Riego v2` y
   `appStateV2.history`; su idempotencia activa no depende de
   `Irrigation.HistoryLastProjectedId`.
-* Artefactos: `dist/releases/v2.0.12` contiene la app v2.0.12 y el binario ESP32
+* Artefactos: `dist/releases/v2.0.14` contiene la app v2.0.14 y el binario ESP32
   compatible `riego-esp32-1.0.0.ota.bin`.
-* Validacion: `npm run validate`, `npm test` con 148 tests, `homey app build`
+* Validacion: `npm run validate`, `npm test` con 150 tests, `homey app build`
   y `homey app validate` correctos.
 * Limpieza Homey ejecutada: los Flows V1/deshabilitados de riego han sido
   eliminados. En Homey solo quedan los cuatro Flows v2 activos:
@@ -39,6 +39,36 @@ dejemos una decision pendiente.
   `Riego - Aviso de incidencia hardware v2`,
   `Riego - Aviso inicio de sector v2` y
   `Riego - Aviso fin de sector v2`.
+
+## Actualización 2026-08-26
+
+* Se formaliza la release Rama 2 `homeyAppV2@2.0.14`.
+* Se corrige la captura de litros del motor nativo: en cierre activo el plan
+  apaga primero los reles, espera la publicacion final de ESPHome y lee
+  `Litros ciclo actual` antes de persistir historico y emitir `sector_ended`.
+* La correccion aplica a parada por `timeout`, parada manual y watchdog/abortos
+  que pasan por `buildStopPlan`.
+* Se añade un valor runtime de litros en `EnginePlanExecutor`, resuelto en
+  ejecucion para `appendHistory` y `emitSectorEvent`, manteniendo los planes
+  dry-run sin escrituras reales.
+* Se añade prueba de regresion que reproduce el caso fisico: el sensor empieza
+  en `0`, ESPHome publica `72.76010131835938` al apagar el rele y el historico
+  persiste ese valor final.
+* `HistoryService` reconcilia las capacidades acumuladas del device nativo
+  desde `appStateV2.history.lastProjection` cuando el evento ya estaba marcado
+  como proyectado, evitando dejar el historico parcial tras una reparacion o
+  una reinstalacion.
+* Verificacion local: `npm run validate`, `npm test` con 150 tests OK,
+  `homey app build` y `homey app validate` correctos.
+* Artefactos de `dist/releases/v2.0.14`: app v2 SHA256
+  `b1d609d8a48bb69da9e8d2afe2d8355d9f7de49d553b8562736a2f68abe3e2a1`;
+  ESP32 SHA256
+  `3c9fb7a6fb671e6f621ceabfe2aa25055c478ccd58845bf5f5fc48f30a054961`.
+* La release incluye el binario ESP32 compatible aunque el firmware no cambia,
+  reutilizando el artefacto validado en `v2.0.12`.
+* Se corrige el evento real del 26 de agosto de 2026 para S1 manual de 5
+  minutos: el RAW habia publicado `72.76010131835938 L`, pero el historico se
+  habia persistido con `0 L` por la carrera de cierre.
 
 ## Actualización 2026-08-25
 

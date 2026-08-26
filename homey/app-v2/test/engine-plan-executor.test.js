@@ -12,7 +12,7 @@ const {
 
 const NOW = 1784620000000;
 
-function createDevice(capabilitiesObj) {
+function createDevice(capabilitiesObj, { onSetCapabilityValue = null } = {}) {
   return {
     capabilitiesObj,
     writes: [],
@@ -22,6 +22,9 @@ function createDevice(capabilitiesObj) {
         this.capabilitiesObj[capability] = { value: null };
       }
       this.capabilitiesObj[capability].value = value;
+      if (onSetCapabilityValue) {
+        await onSetCapabilityValue({ device: this, capability, value });
+      }
     },
   };
 }
@@ -63,7 +66,7 @@ function createExecutor() {
   return { executor, devices, appStateStore };
 }
 
-function createAppStateExecutor() {
+function createAppStateExecutor({ rawDevice = null } = {}) {
   const homeyValues = new Map();
   const sectorTriggers = [];
   const sectorStartedTrigger = {
@@ -87,7 +90,7 @@ function createAppStateExecutor() {
     },
   }, { now: () => NOW });
   const devices = {
-    [DEVICE_ID.raw]: createDevice(Object.fromEntries(
+    [DEVICE_ID.raw]: rawDevice || createDevice(Object.fromEntries(
       Object.values(RAW_CAP.relays).map(capability => [capability, { value: false }]),
     )),
   };
@@ -209,6 +212,8 @@ test('active engine plan persists state and raw relay changes together', async (
 
 test('triggers native sector ended flow after appState sector end persistence', async () => {
   const { executor, appStateStore, sectorTriggers } = createAppStateExecutor();
+  const raw = (await executor.getDevice(DEVICE_ID.raw));
+  raw.capabilitiesObj[RAW_CAP.litersCycle[4]] = { value: 12.5 };
   const plan = buildStopPlan({
     snapshot: {
       state: 'RUNNING',
@@ -238,4 +243,45 @@ test('triggers native sector ended flow after appState sector end persistence', 
   assert.equal(sectorTriggers[0].tokens.liters, 12.5);
   assert.equal(sectorTriggers[0].tokens.reason, 'timeout');
   assert.equal(sectorTriggers[0].tokens.source, 'MANUAL');
+});
+
+test('reads final liters after relays are closed before persisting history', async () => {
+  const rawDevice = createDevice({
+    ...Object.fromEntries(Object.values(RAW_CAP.relays).map(capability => [capability, { value: false }])),
+    [RAW_CAP.relays[1]]: { value: true },
+    [RAW_CAP.litersCycle[1]]: { value: 0 },
+  }, {
+    onSetCapabilityValue({ device, capability, value }) {
+      if (capability === RAW_CAP.relays[1] && value === false) {
+        device.capabilitiesObj[RAW_CAP.litersCycle[1]].value = 72.76010131835938;
+      }
+    },
+  });
+  const { executor, appStateStore, sectorTriggers } = createAppStateExecutor({ rawDevice });
+  const plan = buildStopPlan({
+    snapshot: {
+      state: 'RUNNING',
+      activeSector: 1,
+      startTs: NOW - 5 * 60 * 1000,
+      endTs: NOW,
+      source: 'MANUAL',
+      stopReason: 'none',
+      queue: [],
+      activeRelays: [1],
+      anyRelayOn: true,
+    },
+    reason: 'timeout',
+    now: NOW,
+    liters: 0,
+    adapters: createAdapters({ dryRun: false }),
+  });
+
+  const execution = await executor.execute(plan);
+  const engine = await appStateStore.getEngineState();
+
+  assert.equal(execution.applied[1].step.action, 'readLiters');
+  assert.equal(engine.history[0].liters, 72.76010131835938);
+  assert.equal(engine.lastSectorEvent.message, 'Finalizado sector 1: 72.8 L');
+  assert.equal(sectorTriggers[0].tokens.liters, 72.76010131835938);
+  assert.equal(sectorTriggers[0].tokens.message, 'Finalizado sector 1: 72.8 L');
 });

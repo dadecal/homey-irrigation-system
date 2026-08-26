@@ -74,6 +74,24 @@ class EngineStateStore {
   }
 }
 
+function runtimeLiters(sector, fallback = 0) {
+  return {
+    runtimeValue: 'liters',
+    sector: Number(sector),
+    fallback: Number(fallback) || 0,
+  };
+}
+
+function sectorEndMessageTemplate({ sector, reason, timeout, fallbackLiters = 0 }) {
+  return {
+    runtimeTemplate: 'sectorEndMessage',
+    sector: Number(sector),
+    reason,
+    timeout: Boolean(timeout),
+    fallbackLiters: Number(fallbackLiters) || 0,
+  };
+}
+
 class EspHomeIrrigationHardwareAdapter {
   constructor({ dryRun = true } = {}) {
     this.dryRun = dryRun;
@@ -107,6 +125,16 @@ class EspHomeIrrigationHardwareAdapter {
 
   planStopAllRelays() {
     return this.planSetAllRelays(false);
+  }
+
+  planReadLiters(sector, { settleMs = 1000 } = {}) {
+    return {
+      adapter: 'EspHomeIrrigationHardwareAdapter',
+      action: 'readLiters',
+      dryRun: this.dryRun,
+      sector: Number(sector),
+      settleMs: Number(settleMs) || 0,
+    };
   }
 }
 
@@ -274,9 +302,14 @@ function buildStopPlan({
   reason,
   now,
   liters = 0,
+  readLitersAfterStop,
   adapters = createAdapters(),
 }) {
   const { stateStore, hardware } = adapters;
+  const shouldReadLitersAfterStop = readLitersAfterStop ?? !stateStore.dryRun;
+  const resolvedLiters = shouldReadLitersAfterStop
+    ? runtimeLiters(snapshot.activeSector, liters)
+    : liters;
   const historyEntry = buildHistoryEntry({
     activeSector: snapshot.activeSector,
     source: snapshot.source,
@@ -284,16 +317,23 @@ function buildStopPlan({
     startTs: snapshot.startTs,
     plannedEndTs: snapshot.endTs,
     endTs: now,
-    liters,
+    liters: resolvedLiters,
   });
   const shouldClearQueue = reason !== STOP_REASON.TIMEOUT;
   const pendingQueueLength = reason === STOP_REASON.TIMEOUT
     ? Math.max(snapshot.queue.length, 0)
     : 0;
   const shouldTurnOffManual = reason !== STOP_REASON.TIMEOUT || pendingQueueLength === 0;
-  const sectorEndMessage = reason === STOP_REASON.TIMEOUT
-    ? `Finalizado sector ${snapshot.activeSector}: ${liters.toFixed(1)} L`
-    : `Detenido sector ${snapshot.activeSector}: ${liters.toFixed(1)} L (${reason})`;
+  const sectorEndMessage = shouldReadLitersAfterStop
+    ? sectorEndMessageTemplate({
+      sector: snapshot.activeSector,
+      reason,
+      timeout: reason === STOP_REASON.TIMEOUT,
+      fallbackLiters: liters,
+    })
+    : reason === STOP_REASON.TIMEOUT
+      ? `Finalizado sector ${snapshot.activeSector}: ${liters.toFixed(1)} L`
+      : `Detenido sector ${snapshot.activeSector}: ${liters.toFixed(1)} L (${reason})`;
   const uiMessage = reason === STOP_REASON.TIMEOUT
     ? `Finalizado S${snapshot.activeSector}: ${liters.toFixed(1)} L`
     : `Detenido S${snapshot.activeSector}: ${liters.toFixed(1)} L (${reason})`;
@@ -313,6 +353,7 @@ function buildStopPlan({
     historyEntry,
     steps: [
       hardware.planStopAllRelays(),
+      ...(shouldReadLitersAfterStop ? [hardware.planReadLiters(snapshot.activeSector)] : []),
       ...(shouldClearQueue ? [stateStore.planClearQueue()] : []),
       stateStore.planAppendHistory(historyEntry),
       stateStore.planEmitHistoryTrigger(historyEntry.id),
@@ -326,7 +367,7 @@ function buildStopPlan({
         sector: snapshot.activeSector,
         source: snapshot.source,
         reason,
-        liters,
+        liters: resolvedLiters,
         duration: historyEntry.durationRealMin,
       }),
     ],

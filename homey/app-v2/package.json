@@ -1,6 +1,6 @@
 {
   "name": "homey-irrigation-app-v2",
-  "version": "2.0.12",
+  "version": "2.0.14",
   "private": true,
   "main": "app.js",
   "engines": {

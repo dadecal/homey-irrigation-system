@@ -4,7 +4,7 @@ Sistema de Riego ESP32 + Homey
 
 Estado del proyecto
 
-Última actualización: 25 de agosto de 2026
+Última actualización: 26 de agosto de 2026
 
 ⸻
 
@@ -33,7 +33,7 @@ Dispositivo “Riego Manual”	✅ Finalizado
 Histórico de riego	✅ Finalizado
 Sincronización sensores	✅ Finalizada
 Persistencia	✅ Finalizada
-Aplicación Homey nativa Rama 2	✅ Activa v2.0.11 / v2.0.12 preparada
+Aplicación Homey nativa Rama 2	✅ Activa v2.0.14
 Scheduler	✅ Finalizado
 Programador	✅ Finalizado
 Rain Delay	✅ Finalizado
@@ -98,7 +98,7 @@ Aplicación Homey nativa Rama 2
 
 Estado:
 
-✅ Instalada desde artefacto release v2.0.12
+✅ Instalada desde artefacto release v2.0.14
 
 Release activa:
 
@@ -130,6 +130,17 @@ y binario ESP32 compatible sin cambios. Homey Pro confirma
 `com.dadecal.irrigation.v2` `version=2.0.12`, `enabled=true`, `state=running`;
 tras la instalacion el motor queda `IDLE`, sector `0`, cola `0`, sin
 interrupcion y sin reles activos.
+
+`v2.0.14` corrige la captura de litros al cerrar un sector. ESPHome publica el
+total final de `Litros ciclo actual` en `on_turn_off`; por tanto, el motor
+nativo apaga primero el rele, espera la publicacion final y solo despues lee
+litros, persiste historico y emite el evento de fin de sector. Esta release
+repara el caso observado el 26 de agosto de 2026: S1 manual de 5 minutos habia
+regado correctamente y el RAW mostraba `72.76 L`, pero el historico se habia
+guardado con `0 L` por leer antes del cierre efectivo. Tambien reconcilia las
+capacidades acumuladas del historico nativo desde la ultima proyeccion
+persistida en `appStateV2`, evitando que una reparacion parcial deje litros,
+conteo o duracion acumulada desfasados.
 
 Responsabilidad:
 

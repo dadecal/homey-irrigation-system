@@ -4,14 +4,14 @@ const releaseInfo = Object.freeze({
   generation: 'branch2',
   generationLabel: 'Rama 2',
   appId: 'com.dadecal.irrigation.v2',
-  appVersion: '2.0.12',
+  appVersion: '2.0.14',
   status: 'active',
-  artifactPattern: 'homey-irrigation-app-v2-2.0.12.tgz',
+  artifactPattern: 'homey-irrigation-app-v2-2.0.14.tgz',
   contracts: {
     provides: {
       appApi: {
         name: 'irrigation-app-api',
-        version: '2.0.12',
+        version: '2.0.14',
       },
     },
     requires: {

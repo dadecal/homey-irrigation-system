@@ -713,14 +713,11 @@ class IrrigationEngineService {
       return result;
     }
 
-    const liters = snapshot.activeSector >= 1 && snapshot.activeSector <= 6
-      ? await this.getActivePlanExecutor().readLiters(snapshot.activeSector).catch(() => 0)
-      : 0;
     const plan = buildStopPlan({
       snapshot,
       reason: STOP_REASON.MANUAL,
       now: nowTs,
-      liters,
+      liters: 0,
       adapters: this.createActiveAdapters(),
     });
     const execution = await this.executePlan(plan, 'manualStop');
@@ -829,12 +826,8 @@ class IrrigationEngineService {
         startTs: snapshot.startTs,
         now: nowTs,
       });
-      const liters = [
-        TICK_DECISION.STOP_TIMEOUT,
-        TICK_DECISION.STOP_WATCHDOG,
-        TICK_DECISION.STALE_RUN_ABORT,
-        TICK_DECISION.RECOVERY_READY,
-      ].includes(tickDecision.decision) && snapshot.activeSector >= 1 && snapshot.activeSector <= 6
+      const liters = tickDecision.decision === TICK_DECISION.RECOVERY_READY
+        && snapshot.activeSector >= 1 && snapshot.activeSector <= 6
         ? await this.getActivePlanExecutor().readLiters(snapshot.activeSector).catch(() => 0)
         : 0;
       const plan = buildTickDryRunTransaction({

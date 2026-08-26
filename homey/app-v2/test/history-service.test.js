@@ -109,6 +109,7 @@ function createService({
   historyEntries = [latestEntry()],
   appStateEngineHistoryEntries = historyEntries,
   appStateLastProjectedEventId = null,
+  appStateLastProjection = null,
   historyCapabilities = baseHistoryCapabilities(),
   mode = MODE.SHADOW,
   engineMode = MODE.SHADOW,
@@ -123,7 +124,7 @@ function createService({
     health: null,
     history: {
       lastProjectedEventId: appStateLastProjectedEventId,
-      lastProjection: null,
+      lastProjection: appStateLastProjection,
     },
     engine: {
       state: 'IDLE',
@@ -262,6 +263,36 @@ test('keeps an app-state projected event idempotent in ACTIVE_COMPAT mode', asyn
   assert.deepEqual(writes, []);
   assert.deepEqual(capabilityWrites, []);
   assert.deepEqual(stateWrites, []);
+});
+
+test('reconciles native accumulated liters from stored app-state projection', async () => {
+  const { service, capabilityWrites, stateWrites } = createService({
+    mode: MODE.ACTIVE_COMPAT,
+    appStateLastProjectedEventId: '1784323620295-1',
+    appStateLastProjection: {
+      eventId: '1784323620295-1',
+      expected: {
+        [HISTORY_CAP.accumulatedLiters]: 1579.76,
+        [HISTORY_CAP.wateringCount]: 90,
+        [HISTORY_CAP.accumulatedDurationMin]: 1507,
+      },
+    },
+    historyCapabilities: {
+      ...baseHistoryCapabilities(),
+      [HISTORY_CAP.accumulatedLiters]: capability(1507),
+    },
+  });
+
+  const projection = await service.check();
+
+  assert.equal(projection.alreadyProjected, true);
+  assert.equal(projection.wouldProject, false);
+  assert.deepEqual(stateWrites, []);
+  assert(capabilityWrites.some(write => (
+    write.device === DEVICES.nativeHistory
+    && write.capabilityId === NATIVE_HISTORY_CAP.accumulatedLiters
+    && write.value === 1579.76
+  )));
 });
 
 test('calculates what a pending history event would project', async () => {

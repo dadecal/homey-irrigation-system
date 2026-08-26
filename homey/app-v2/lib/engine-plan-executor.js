@@ -33,6 +33,10 @@ function sameValue(left, right) {
     && Math.abs(leftNumber - rightNumber) < 0.000001;
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 class EnginePlanExecutor {
   constructor({
     apiClient,
@@ -147,7 +151,40 @@ class EnginePlanExecutor {
     return Number(raw?.capabilitiesObj?.[capability]?.value || 0);
   }
 
-  async triggerSectorEvent(step) {
+  resolveRuntimeValue(value, context) {
+    if (!value || typeof value !== 'object') {
+      return value;
+    }
+
+    if (value.runtimeValue === 'liters') {
+      const sector = Number(value.sector || 0);
+      const fallback = Number(value.fallback || 0);
+      return Number(context.litersBySector?.[sector] ?? fallback) || 0;
+    }
+
+    if (Array.isArray(value)) {
+      return value.map(item => this.resolveRuntimeValue(item, context));
+    }
+
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, this.resolveRuntimeValue(item, context)]),
+    );
+  }
+
+  formatRuntimeMessage(message, context) {
+    if (!message || typeof message !== 'object' || message.runtimeTemplate !== 'sectorEndMessage') {
+      return String(message || '');
+    }
+
+    const sector = Number(message.sector || 0);
+    const fallback = Number(message.fallbackLiters || 0);
+    const liters = Number(context.litersBySector?.[sector] ?? fallback) || 0;
+    return message.timeout
+      ? `Finalizado sector ${sector}: ${liters.toFixed(1)} L`
+      : `Detenido sector ${sector}: ${liters.toFixed(1)} L (${message.reason})`;
+  }
+
+  async triggerSectorEvent(step, context) {
     const card = step.type === 'sectorStart'
       ? this.sectorStartedTrigger
       : this.sectorEndedTrigger;
@@ -162,12 +199,12 @@ class EnginePlanExecutor {
     }
 
     const tokens = {
-      message: step.message || '',
-      sector: Number(step.tokens?.sector || 0),
-      duration: Number(step.tokens?.duration || 0),
-      source: String(step.tokens?.source || 'none'),
-      reason: String(step.tokens?.reason || 'none'),
-      liters: Number(step.tokens?.liters || 0),
+      message: this.formatRuntimeMessage(step.message, context),
+      sector: Number(this.resolveRuntimeValue(step.tokens?.sector, context) || 0),
+      duration: Number(this.resolveRuntimeValue(step.tokens?.duration, context) || 0),
+      source: String(this.resolveRuntimeValue(step.tokens?.source, context) || 'none'),
+      reason: String(this.resolveRuntimeValue(step.tokens?.reason, context) || 'none'),
+      liters: Number(this.resolveRuntimeValue(step.tokens?.liters, context) || 0),
     };
 
     try {
@@ -184,7 +221,7 @@ class EnginePlanExecutor {
     }
   }
 
-  async applyStep(step) {
+  async applyStep(step, context) {
     switch (`${step.adapter}:${step.action}`) {
       case 'EspHomeIrrigationHardwareAdapter:setAllRelays': {
         const values = Object.values(RAW_CAP.relays).reduce((acc, capability) => {
@@ -201,6 +238,25 @@ class EnginePlanExecutor {
             [RAW_CAP.relays[step.sector]]: Boolean(step.value),
           }),
         };
+
+      case 'EspHomeIrrigationHardwareAdapter:readLiters': {
+        if (Number(step.settleMs || 0) > 0) {
+          await sleep(Number(step.settleMs));
+        }
+
+        const sector = Number(step.sector || 0);
+        const liters = await this.readLiters(sector);
+        context.litersBySector[sector] = liters;
+        return {
+          step,
+          applied: [{
+            deviceId: DEVICE_ID.raw,
+            capability: RAW_CAP.litersCycle[sector] || null,
+            sector,
+            liters,
+          }],
+        };
+      }
 
       case 'EngineStateStore:setQueue':
         return {
@@ -226,13 +282,14 @@ class EnginePlanExecutor {
         return { step, applied: await this.setStateValues(step.values) };
 
       case 'EngineStateStore:appendHistory': {
-        const nextEngine = await this.requireAppStateStore().appendEngineHistory(step.entry);
+        const entry = this.resolveRuntimeValue(step.entry, context);
+        const nextEngine = await this.requireAppStateStore().appendEngineHistory(entry);
         return {
-          step,
+          step: { ...step, entry },
           applied: [{
             store: 'appStateV2.engine',
             field: 'history',
-            entryId: step.entry?.id,
+            entryId: entry?.id,
             count: nextEngine.history.length,
           }],
         };
@@ -251,11 +308,21 @@ class EnginePlanExecutor {
         };
 
       case 'EngineStateStore:emitSectorEvent': {
+        const message = this.formatRuntimeMessage(step.message || '', context);
+        const tokens = this.resolveRuntimeValue(step.tokens || {}, context);
         const nextEngine = await this.requireAppStateStore()
-          .emitEngineSectorEvent(step.type, step.message || '', this.now());
-        const trigger = await this.triggerSectorEvent(step);
+          .emitEngineSectorEvent(step.type, message, this.now());
+        const trigger = await this.triggerSectorEvent({
+          ...step,
+          message,
+          tokens,
+        }, context);
         return {
-          step,
+          step: {
+            ...step,
+            message,
+            tokens,
+          },
           applied: [
             {
               store: 'appStateV2.engine',
@@ -276,9 +343,12 @@ class EnginePlanExecutor {
 
   async execute(plan) {
     const applied = [];
+    const context = {
+      litersBySector: {},
+    };
 
     for (const step of plan.steps || []) {
-      applied.push(await this.applyStep(step));
+      applied.push(await this.applyStep(step, context));
     }
 
     return {
