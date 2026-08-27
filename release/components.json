@@ -28,7 +28,7 @@
     "homeyAppV2": {
       "id": "homey-app-v2",
       "generation": "branch2",
-      "version": "2.0.14",
+      "version": "2.0.15",
       "sourcePaths": [
         "homey/app-v2"
       ],
@@ -36,7 +36,7 @@
       "provides": {
         "appApi": {
           "name": "irrigation-app-api",
-          "version": "2.0.14"
+          "version": "2.0.15"
         }
       },
       "requires": {
@@ -48,7 +48,7 @@
     },
     "esp32Firmware": {
       "id": "esp32-firmware",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "sourcePaths": [
         "esp32/src/Riego_Homey.yaml",
         "esp32/src/riego/linea.yaml",

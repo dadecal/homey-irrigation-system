@@ -127,7 +127,7 @@ class EspHomeIrrigationHardwareAdapter {
     return this.planSetAllRelays(false);
   }
 
-  planReadLiters(sector, { settleMs = 1000 } = {}) {
+  planReadLiters(sector, { settleMs = 2000 } = {}) {
     return {
       adapter: 'EspHomeIrrigationHardwareAdapter',
       action: 'readLiters',

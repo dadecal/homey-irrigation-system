@@ -9,6 +9,7 @@ const {
   buildProgramStartPreview,
   buildStopPlan,
   buildTickDryRunTransaction,
+  createAdapters,
 } = require('../lib/engine-dry-run-adapters');
 
 const NOW = 1784620000000;
@@ -70,6 +71,18 @@ test('plans a manual stop by clearing queue', () => {
     'setValues',
     'emitSectorEvent',
   ]);
+});
+
+test('active stop waits two seconds before reading final liters', () => {
+  const plan = buildStopPlan({
+    snapshot: runningSnapshot(),
+    reason: STOP_REASON.MANUAL,
+    now: NOW,
+    adapters: createAdapters({ dryRun: false }),
+  });
+
+  const readStep = plan.steps.find(step => step.action === 'readLiters');
+  assert.equal(readStep.settleMs, 2000);
 });
 
 test('keeps active sector visible in the relay-stop failure plan', () => {

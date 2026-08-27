@@ -32,7 +32,7 @@ sensor:
     id: l${line}_flow_lpm
     internal: true
     unit_of_measurement: "L/min"
-    update_interval: 10s
+    update_interval: 1s
     filters:
       - multiply: !lambda 'return 1.0f / ${pulses_per_liter};'
     total:
@@ -94,6 +94,7 @@ switch:
         - logger.log:
             level: INFO
             format: "L${line}: on_turn_off disparado"
+        - delay: 1200ms
         - lambda: |-
             // ALWAYS_OFF puede disparar on_turn_off durante el arranque.
             if (!id(l${line}_cycle_active)) {

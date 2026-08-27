@@ -57,6 +57,7 @@ module.exports = class IrrigationAppV2 extends Homey.App {
       apiClient: this.apiClient,
       appStateStore: this.appStateStore,
       controlStore: this.migrationControlStore,
+      recoveryService: this.recoveryService,
       sectorStartedTrigger: this.sectorStartedTrigger,
       sectorEndedTrigger: this.sectorEndedTrigger,
       logger: this,

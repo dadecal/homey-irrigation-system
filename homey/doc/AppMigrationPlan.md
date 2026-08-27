@@ -6,11 +6,20 @@ Este documento es la fuente de seguimiento de la Rama 2 del sistema de riego.
 Debe actualizarse cada vez que avancemos una fase, cambiemos de estrategia o
 dejemos una decision pendiente.
 
-## Estado actual - 2026-08-26
+## Estado actual - 2026-08-27
 
-* Release activa de sistema: `v2.0.15`.
-* App activa: `homeyAppV2@2.0.14`.
-* Firmware ESP32 activo: `esp32Firmware@1.0.1`.
+* Release activa de sistema: `v2.0.16`.
+* App activa: `homeyAppV2@2.0.15`, instalada desde artefacto exacto de release.
+* Firmware ESP32 activo: `esp32Firmware@1.0.2`, instalado por OTA desde
+  artefacto exacto de release. Los logs ESPHome confirman build
+  `2026-08-27 20:23:46 +0200`; Homey puede mostrar temporalmente el text sensor
+  de version cacheado `1.0.1` hasta refresco de la integracion.
+* `esp32Firmware@1.0.2` reduce `pulse_counter.update_interval` a `1s` y espera
+  `1200ms` al cierre de linea para registrar mejor calibraciones manuales
+  cortas.
+* `homeyAppV2@2.0.15` espera `2000ms` antes de leer litros finales tras apagar
+  el rele y solicita `RecoveryService` si un arranque manual falla porque
+  ESPHome Controller no acepta comandos (`CONTROLLER_COMMAND_UNAVAILABLE`).
 * El motor V2 conserva la cola si se pierde ESPHome Controller/RAW durante un
   riego. El programa queda en recuperacion pendiente y la pagina de settings
   permite reanudar los sectores restantes o cancelar el programa.
@@ -31,10 +40,10 @@ dejemos una decision pendiente.
 * `HistoryService` proyecta solo a `Historico de Riego v2` y
   `appStateV2.history`; su idempotencia activa no depende de
   `Irrigation.HistoryLastProjectedId`.
-* Artefactos: `dist/releases/v2.0.15` contiene la app v2.0.14 y el binario ESP32
-  `riego-esp32-1.0.1.ota.bin`.
-* Validacion: `npm run validate`, `npm test` con 150 tests, `homey app build`
-  y `homey app validate` correctos.
+* Artefactos: `dist/releases/v2.0.16` contiene la app v2.0.15 y el binario
+  ESP32 `riego-esp32-1.0.2.ota.bin`.
+* Validacion: `npm run validate`, `npm test` con 153 tests,
+  `esphome config`, `esphome compile` y build/install desde artefacto correctos.
 * Limpieza Homey ejecutada: los Flows V1/deshabilitados de riego han sido
   eliminados. En Homey solo quedan los cuatro Flows v2 activos:
   `Riego - Aviso autorrecuperacion ESPHome v2`,

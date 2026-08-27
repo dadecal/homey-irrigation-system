@@ -196,7 +196,7 @@ web_server:
 
 #Irrigation specific vars
 substitutions:
-  firmware_version: "1.0.1"
+  firmware_version: "1.0.2"
   hardware_contract_name: "irrigation-hw-api"
   hardware_contract_version: "1.0.0"
   # Calibración de caudal por sector. Los valores representan pulsos por litro:

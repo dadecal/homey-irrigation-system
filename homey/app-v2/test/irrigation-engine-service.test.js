@@ -44,6 +44,7 @@ function createService({
   sectorStartedTrigger = null,
   sectorEndedTrigger = null,
   failWritesWith = null,
+  recoveryService = null,
 }) {
   const writes = [];
   const settings = new Map();
@@ -114,6 +115,7 @@ function createService({
         };
       },
     },
+    recoveryService,
     sectorStartedTrigger,
     sectorEndedTrigger,
     now: () => NOW,
@@ -487,6 +489,78 @@ test('active scheduler start failure from disconnected controller returns to idl
   assert.deepEqual(engine.queue, []);
   assert.equal(engine.interruption, null);
   assert.deepEqual(rawDevice.writes, []);
+});
+
+test('active manual start failure from disconnected controller requests controller recovery', async () => {
+  const recoveryCalls = [];
+  const { service, appStateStore, rawDevice } = createService({
+    mode: MODE.ACTIVE_COMPAT,
+    failWritesWith: 'Cannot send command: client not connected',
+    recoveryService: {
+      async requestControllerRestartAfterCommandFailure(payload) {
+        recoveryCalls.push(payload);
+        return { status: 'RESTART_REQUESTED' };
+      },
+    },
+    engine: {
+      state: 'IDLE',
+      activeSector: 0,
+      queue: [],
+    },
+  });
+  await appStateStore.setEngineValues({
+    state: 'IDLE',
+    activeSector: 0,
+    startTs: 0,
+    endTs: 0,
+    source: 'none',
+    stopReason: 'none',
+  });
+  await appStateStore.clearEngineQueue();
+
+  const result = await service.startManual({ sector: 1, duration: 5 }, NOW);
+  const engine = await appStateStore.getEngineState();
+
+  assert.equal(result.execution.failed, true);
+  assert.equal(result.execution.retryable, true);
+  assert.equal(result.execution.errorCode, 'CONTROLLER_COMMAND_UNAVAILABLE');
+  assert.deepEqual(result.recoveryResult, { status: 'RESTART_REQUESTED' });
+  assert.equal(recoveryCalls.length, 1);
+  assert.equal(recoveryCalls[0].confirmNoIrrigationActive, true);
+  assert.equal(recoveryCalls[0].nowTs, NOW);
+  assert.equal(engine.state, 'IDLE');
+  assert.equal(engine.activeSector, 0);
+  assert.equal(engine.stopReason, 'none');
+  assert.deepEqual(engine.queue, []);
+  assert.equal(engine.interruption, null);
+  assert.deepEqual(rawDevice.writes, []);
+});
+
+test('active manual start failure from a generic write error does not request recovery', async () => {
+  let recoveryCalls = 0;
+  const { service } = createService({
+    mode: MODE.ACTIVE_COMPAT,
+    failWritesWith: 'unexpected write failure',
+    recoveryService: {
+      async requestControllerRestartAfterCommandFailure() {
+        recoveryCalls += 1;
+        return { status: 'RESTART_REQUESTED' };
+      },
+    },
+    engine: {
+      state: 'IDLE',
+      activeSector: 0,
+      queue: [],
+    },
+  });
+
+  const result = await service.startManual({ sector: 1, duration: 5 }, NOW);
+
+  assert.equal(result.execution.failed, true);
+  assert.equal(result.execution.retryable, false);
+  assert.equal(result.execution.errorCode, 'ENGINE_PLAN_FAILED');
+  assert.equal(result.recoveryResult, null);
+  assert.equal(recoveryCalls, 0);
 });
 
 test('active tick does not clear a scheduler queue while program start is in progress', async () => {

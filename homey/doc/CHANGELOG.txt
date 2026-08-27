@@ -1,3 +1,36 @@
+## 2026-08-27
+
+### Release Rama 2 v2.0.16
+- Release de sistema con `homeyAppV2@2.0.15` y `esp32Firmware@1.0.2`.
+- El motor espera `2000ms` despues de apagar
+  el rele antes de leer litros finales del ciclo, alineado con la publicacion
+  mas rapida del ESP32.
+- Los caudalimetros pasan de
+  `pulse_counter.update_interval=10s` a `1s` y `on_turn_off` espera `1200ms`
+  antes de calcular `Litros ciclo actual`, para que las pruebas cortas de
+  calibracion no queden sin pulsos publicados.
+- El motor nativo solicita `RecoveryService` tambien cuando falla un arranque
+  manual por `CONTROLLER_COMMAND_UNAVAILABLE`, usando la misma compuerta segura
+  que el programador: `confirmNoIrrigationActive=true`, motor `IDLE` y reles
+  apagados antes de reiniciar ESPHome Controller.
+- La recuperacion no se solicita ante errores genericos de escritura ni durante
+  paradas manuales.
+- Verificacion local: `npm run validate`, `npm test` con 153 tests OK,
+  `esphome config Riego_Homey.yaml` OK y `esphome compile Riego_Homey.yaml`
+  OK.
+- Release formal generada en `dist/releases/v2.0.16`, incluyendo
+  `homey-irrigation-app-v2-2.0.15.tgz`
+  (`SHA256 6adaa78ce4f5832574f0892a4b59617b163671082c4dc944e9921227dc3d21cd`)
+  y `riego-esp32-1.0.2.ota.bin`
+  (`SHA256 c2538bb8d912b8e42b2b149271d30068fd3f32482f15a45b85d32cff628aa841`).
+- App instalada en Homey Pro desde el artefacto exacto de release.
+- OTA instalada en el ESP32 desde el binario exacto registrado. Los logs
+  ESPHome confirman build `2026-08-27 20:23:46 +0200` y reinicio por
+  `esphome.ota`. Homey confirma RAW `Riego` disponible, contrato
+  `irrigation-hw-api@1.0.0` y seis reles apagados; el text sensor de version
+  puede mostrar temporalmente el valor cacheado `1.0.1` hasta refresco de la
+  integracion.
+
 ## 2026-08-26
 
 ### Release Rama 2 v2.0.15

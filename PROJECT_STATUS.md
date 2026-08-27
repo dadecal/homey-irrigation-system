@@ -4,7 +4,7 @@ Sistema de Riego ESP32 + Homey
 
 Estado del proyecto
 
-Última actualización: 26 de agosto de 2026
+Última actualización: 27 de agosto de 2026
 
 ⸻
 
@@ -22,7 +22,7 @@ Estado general
 
 Módulo	Estado
 Arquitectura	✅ Finalizada
-Firmware ESPHome	✅ Finalizado v1.0.1
+Firmware ESPHome	✅ Finalizado v1.0.2
 Integración ESPHome ↔ Homey	✅ Finalizada
 Motor de riego	✅ Finalizado
 Cola de riego	✅ Finalizada
@@ -33,7 +33,7 @@ Dispositivo “Riego Manual”	✅ Finalizado
 Histórico de riego	✅ Finalizado
 Sincronización sensores	✅ Finalizada
 Persistencia	✅ Finalizada
-Aplicación Homey nativa Rama 2	✅ Activa v2.0.14
+Aplicación Homey nativa Rama 2	✅ Activa v2.0.15
 Scheduler	✅ Finalizado
 Programador	✅ Finalizado
 Rain Delay	✅ Finalizado
@@ -56,12 +56,17 @@ Hardware.
 
 Estado:
 
-✅ Firmware `1.0.1` instalado por OTA desde `dist/releases/v2.0.15`.
+✅ Firmware `1.0.2` instalado por OTA desde `dist/releases/v2.0.16`.
 
 La versión `1.0.1` introduce calibración de caudal por sector. S1 queda
 provisionalmente en `990 pulsos/L` tras observar `72.76 L` en 5 minutos con el
 factor anterior `396 pulsos/L`. S2-S6 conservan `396 pulsos/L` hasta medición
 física propia. El contrato hardware sigue siendo `irrigation-hw-api@1.0.0`.
+
+La versión `1.0.2` reduce la ventana de `pulse_counter` de `10s` a `1s` y
+espera `1200ms` al cerrar una linea antes de calcular litros de ciclo. Esto
+permite pruebas de calibracion cortas con recipientes pequenos sin perder
+pulsos por quedar dentro de una ventana de publicacion demasiado larga.
 
 ⸻
 
@@ -107,7 +112,7 @@ Aplicación Homey nativa Rama 2
 
 Estado:
 
-✅ Instalada desde artefacto release v2.0.14
+✅ Instalada desde artefacto release v2.0.16
 
 Release activa:
 
@@ -156,6 +161,16 @@ conteo o duracion acumulada desfasados.
 correctamente contra `192.168.2.7`; Homey confirma el dispositivo RAW `Riego`
 disponible, firmware `1.0.1`, contrato `irrigation-hw-api@1.0.0` y seis reles
 apagados.
+
+`v2.0.16` instala `homeyAppV2@2.0.15` y firmware ESP32 `1.0.2`. La app solicita
+`RecoveryService` tambien ante fallos de arranque manual por
+`CONTROLLER_COMMAND_UNAVAILABLE`, siempre con motor en reposo y reles apagados,
+y espera `2000ms` tras apagar el rele antes de leer litros finales. El firmware
+publica pulsos cada `1s` y espera `1200ms` antes de calcular litros en
+`on_turn_off`. Release generada en `dist/releases/v2.0.16`; app instalada desde
+artefacto exacto y OTA aplicada desde el binario registrado. ESPHome logs
+confirman build `2026-08-27 20:23:46 +0200` y reinicio por `esphome.ota`;
+Homey confirma RAW disponible, contrato hardware correcto y seis reles apagados.
 
 Responsabilidad:
 

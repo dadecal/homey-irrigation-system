@@ -291,6 +291,7 @@ class IrrigationEngineService {
     apiClient,
     appStateStore = null,
     controlStore,
+    recoveryService = null,
     sectorStartedTrigger = null,
     sectorEndedTrigger = null,
     now = () => Date.now(),
@@ -300,6 +301,7 @@ class IrrigationEngineService {
     this.apiClient = apiClient;
     this.appStateStore = appStateStore;
     this.controlStore = controlStore;
+    this.recoveryService = recoveryService;
     this.now = now;
     this.logger = logger || homey.app;
     this.planExecutor = new EnginePlanExecutor({
@@ -614,6 +616,28 @@ class IrrigationEngineService {
     }
   }
 
+  async requestRecoveryForManualStartFailure({ execution, nowTs }) {
+    if (execution?.errorCode !== 'CONTROLLER_COMMAND_UNAVAILABLE'
+      || typeof this.recoveryService?.requestControllerRestartAfterCommandFailure !== 'function') {
+      return null;
+    }
+
+    try {
+      const result = await this.recoveryService.requestControllerRestartAfterCommandFailure({
+        confirmNoIrrigationActive: true,
+        nowTs,
+      });
+      this.logger.log?.(`Native engine recovery requested after manual start failure status=${result.status}`);
+      return result;
+    } catch (error) {
+      this.logger.log?.(`Native engine recovery request skipped after manual start failure: ${error.message}`);
+      return {
+        status: 'SKIPPED',
+        reason: error.message,
+      };
+    }
+  }
+
   async startManual(input = {}, nowTs = this.now()) {
     return this.runExclusive('manualStart', () => this.startManualLocked(input, nowTs));
   }
@@ -630,6 +654,7 @@ class IrrigationEngineService {
       adapters: this.createActiveAdapters(),
     });
     const execution = await this.executePlan(plan, 'manualStart');
+    const recoveryResult = await this.requestRecoveryForManualStartFailure({ execution, nowTs });
 
     return {
       version: 1,
@@ -645,6 +670,7 @@ class IrrigationEngineService {
       input: { sector, duration },
       transaction: plan,
       execution,
+      recoveryResult,
     };
   }
 

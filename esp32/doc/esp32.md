@@ -167,6 +167,12 @@ Cada sensor publica:
 
 Los litros del ciclo constituyen la fuente de información utilizada posteriormente por IrrigationHistory.js.
 
+Desde firmware `1.0.2`, `pulse_counter` publica cada `1s` para que los ciclos
+manuales cortos usados en calibracion no pierdan pulsos por quedar dentro de
+una ventana de actualizacion de 10 segundos. Al cerrar una linea, el firmware
+espera `1200ms` antes de calcular el volumen final del ciclo, dejando margen
+para que el contador publique el ultimo tramo.
+
 ⸻
 
 7. Calibración
