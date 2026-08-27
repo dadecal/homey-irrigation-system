@@ -1,5 +1,30 @@
 ## 2026-08-27
 
+### Release Rama 2 v2.0.17
+- Release de sistema con `homeyAppV2@2.0.16` y `esp32Firmware@1.0.2`.
+- Se corrige la carrera de lectura de litros finales detectada en pruebas
+  cortas de calibracion de S3: ESP32 publicaba correctamente `Litros ciclo
+  actual` despues del cierre, pero la app podia leer `0 L` antes de que Homey
+  expusiera la actualizacion recibida desde ESPHome Controller.
+- `EnginePlanExecutor` reintenta la lectura final de litros durante una ventana
+  corta cuando la primera lectura tras el cierre sigue siendo `0`.
+- Los intentos quedan reflejados en el diagnostico de ejecucion del plan.
+- Se añade prueba de regresion: S3 se cierra, Homey recibe `7.952020168304443 L`
+  con retraso y el historico/tokens de fin de sector persisten ese valor.
+- Verificacion local: `npm run validate`, `npm test` con 154 tests OK.
+- La release reutiliza el binario ESP32 `1.0.2` validado en `v2.0.16`; no hay
+  cambios de firmware ni OTA nueva prevista.
+- Release formal generada en `dist/releases/v2.0.17`, incluyendo
+  `homey-irrigation-app-v2-2.0.16.tgz`
+  (`SHA256 dfdf0301d061d0aaa0802b20f8bd4cca23147a8266d08bc0d7f31d27f43ac238`)
+  y `riego-esp32-1.0.2.ota.bin`
+  (`SHA256 c2538bb8d912b8e42b2b149271d30068fd3f32482f15a45b85d32cff628aa841`).
+- App instalada en Homey Pro desde el artefacto exacto de release. Homey
+  confirma `com.dadecal.irrigation.v2` `version=2.0.16`, `enabled=true`,
+  `state=running`; el RAW `Riego` confirma firmware `1.0.2`, contrato
+  `irrigation-hw-api@1.0.0`, S3 con `7.952020168304443 L` publicados y seis
+  reles apagados.
+
 ### Release Rama 2 v2.0.16
 - Release de sistema con `homeyAppV2@2.0.15` y `esp32Firmware@1.0.2`.
 - El motor espera `2000ms` despues de apagar

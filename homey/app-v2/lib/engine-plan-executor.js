@@ -151,6 +151,23 @@ class EnginePlanExecutor {
     return Number(raw?.capabilitiesObj?.[capability]?.value || 0);
   }
 
+  async readLitersWithRetry(sector, { retryMs = 0, retryIntervalMs = 500 } = {}) {
+    const attempts = [];
+    let liters = await this.readLiters(sector);
+    attempts.push({ liters });
+
+    const retryDeadline = Date.now() + Math.max(Number(retryMs) || 0, 0);
+    const interval = Math.max(Number(retryIntervalMs) || 500, 100);
+
+    while (liters <= 0 && Date.now() < retryDeadline) {
+      await sleep(Math.min(interval, retryDeadline - Date.now()));
+      liters = await this.readLiters(sector);
+      attempts.push({ liters });
+    }
+
+    return { liters, attempts };
+  }
+
   resolveRuntimeValue(value, context) {
     if (!value || typeof value !== 'object') {
       return value;
@@ -245,7 +262,10 @@ class EnginePlanExecutor {
         }
 
         const sector = Number(step.sector || 0);
-        const liters = await this.readLiters(sector);
+        const { liters, attempts } = await this.readLitersWithRetry(sector, {
+          retryMs: step.retryMs,
+          retryIntervalMs: step.retryIntervalMs,
+        });
         context.litersBySector[sector] = liters;
         return {
           step,
@@ -254,6 +274,7 @@ class EnginePlanExecutor {
             capability: RAW_CAP.litersCycle[sector] || null,
             sector,
             liters,
+            attempts,
           }],
         };
       }

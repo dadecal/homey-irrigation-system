@@ -127,13 +127,15 @@ class EspHomeIrrigationHardwareAdapter {
     return this.planSetAllRelays(false);
   }
 
-  planReadLiters(sector, { settleMs = 2000 } = {}) {
+  planReadLiters(sector, { settleMs = 2000, retryMs = 3000, retryIntervalMs = 500 } = {}) {
     return {
       adapter: 'EspHomeIrrigationHardwareAdapter',
       action: 'readLiters',
       dryRun: this.dryRun,
       sector: Number(sector),
       settleMs: Number(settleMs) || 0,
+      retryMs: Number(retryMs) || 0,
+      retryIntervalMs: Number(retryIntervalMs) || 0,
     };
   }
 }

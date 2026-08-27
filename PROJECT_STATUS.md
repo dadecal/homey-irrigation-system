@@ -33,7 +33,7 @@ Dispositivo “Riego Manual”	✅ Finalizado
 Histórico de riego	✅ Finalizado
 Sincronización sensores	✅ Finalizada
 Persistencia	✅ Finalizada
-Aplicación Homey nativa Rama 2	✅ Activa v2.0.15
+Aplicación Homey nativa Rama 2	✅ Activa v2.0.16
 Scheduler	✅ Finalizado
 Programador	✅ Finalizado
 Rain Delay	✅ Finalizado
@@ -112,7 +112,7 @@ Aplicación Homey nativa Rama 2
 
 Estado:
 
-✅ Instalada desde artefacto release v2.0.16
+✅ Instalada desde artefacto release v2.0.17
 
 Release activa:
 
@@ -171,6 +171,14 @@ publica pulsos cada `1s` y espera `1200ms` antes de calcular litros en
 artefacto exacto y OTA aplicada desde el binario registrado. ESPHome logs
 confirman build `2026-08-27 20:23:46 +0200` y reinicio por `esphome.ota`;
 Homey confirma RAW disponible, contrato hardware correcto y seis reles apagados.
+
+`v2.0.17` instala `homeyAppV2@2.0.16` y mantiene firmware ESP32 `1.0.2`. Corrige
+la carrera observada en pruebas cortas de calibracion: despues de apagar el
+rele, si la primera lectura de litros finales sigue siendo `0`, el motor
+reintenta durante una ventana corta antes de persistir historico y emitir el
+evento de fin de sector. El firmware ya publicaba correctamente el consumo; la
+app podia leer antes de que Homey expusiera la actualizacion recibida desde
+ESPHome Controller.
 
 Responsabilidad:
 

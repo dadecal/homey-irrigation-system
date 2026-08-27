@@ -285,3 +285,46 @@ test('reads final liters after relays are closed before persisting history', asy
   assert.equal(sectorTriggers[0].tokens.liters, 72.76010131835938);
   assert.equal(sectorTriggers[0].tokens.message, 'Finalizado sector 1: 72.8 L');
 });
+
+test('retries final liters when Homey receives the ESPHome publication late', async () => {
+  const rawDevice = createDevice({
+    ...Object.fromEntries(Object.values(RAW_CAP.relays).map(capability => [capability, { value: false }])),
+    [RAW_CAP.relays[3]]: { value: true },
+    [RAW_CAP.litersCycle[3]]: { value: 0 },
+  }, {
+    onSetCapabilityValue({ device, capability, value }) {
+      if (capability === RAW_CAP.relays[3] && value === false) {
+        setTimeout(() => {
+          device.capabilitiesObj[RAW_CAP.litersCycle[3]].value = 7.952020168304443;
+        }, 2300);
+      }
+    },
+  });
+  const { executor, appStateStore, sectorTriggers } = createAppStateExecutor({ rawDevice });
+  const plan = buildStopPlan({
+    snapshot: {
+      state: 'RUNNING',
+      activeSector: 3,
+      startTs: NOW - 18 * 1000,
+      endTs: NOW + 25 * 60 * 1000,
+      source: 'MANUAL',
+      stopReason: 'none',
+      queue: [],
+      activeRelays: [3],
+      anyRelayOn: true,
+    },
+    reason: 'manual',
+    now: NOW,
+    liters: 0,
+    adapters: createAdapters({ dryRun: false }),
+  });
+
+  const execution = await executor.execute(plan);
+  const engine = await appStateStore.getEngineState();
+
+  assert.equal(execution.applied[1].step.action, 'readLiters');
+  assert.equal(execution.applied[1].applied[0].attempts[0].liters, 0);
+  assert.equal(engine.history[0].liters, 7.952020168304443);
+  assert.equal(engine.lastSectorEvent.message, 'Detenido sector 3: 8.0 L (manual)');
+  assert.equal(sectorTriggers[0].tokens.liters, 7.952020168304443);
+});
