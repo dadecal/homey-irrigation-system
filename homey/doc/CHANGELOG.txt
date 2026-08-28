@@ -1,5 +1,26 @@
 ## 2026-08-27
 
+### Release Rama 2 v2.0.18
+- Release de sistema con `homeyAppV2@2.0.16` y `esp32Firmware@1.0.3`.
+- La app no cambia respecto a `v2.0.17`; se reutiliza el artefacto validado
+  `homey-irrigation-app-v2-2.0.16.tgz`.
+- Se calibra S3 a `286 pulsos/L`, calculado con la prueba fisica de calibracion
+  `11 L` reales frente a `7.952 L` reportados con el factor anterior
+  `396 pulsos/L`.
+- El contrato hardware permanece en `irrigation-hw-api@1.0.0`.
+- Verificacion local ESPHome: `esphome config Riego_Homey.yaml` OK y
+  `esphome compile Riego_Homey.yaml` OK; build
+  `2026-08-27 21:04:25 +0200`.
+- Release formal generada en `dist/releases/v2.0.18`, incluyendo
+  `homey-irrigation-app-v2-2.0.16.tgz`
+  (`SHA256 dfdf0301d061d0aaa0802b20f8bd4cca23147a8266d08bc0d7f31d27f43ac238`)
+  y `riego-esp32-1.0.3.ota.bin`
+  (`SHA256 00b11341e3cb97a723068974d2ba7045e0a57c86a4b63c4ae7e869b302011138`).
+- OTA instalada correctamente contra `192.168.2.7` desde el binario de release.
+  Homey confirma RAW `Riego` con firmware `1.0.3`, contrato
+  `irrigation-hw-api@1.0.0`, seis reles apagados y `Sistema de Riego v2` en
+  `IDLE/OK`.
+
 ### Release Rama 2 v2.0.17
 - Release de sistema con `homeyAppV2@2.0.16` y `esp32Firmware@1.0.2`.
 - Se corrige la carrera de lectura de litros finales detectada en pruebas

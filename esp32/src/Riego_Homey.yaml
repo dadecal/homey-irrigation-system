@@ -196,16 +196,17 @@ web_server:
 
 #Irrigation specific vars
 substitutions:
-  firmware_version: "1.0.2"
+  firmware_version: "1.0.3"
   hardware_contract_name: "irrigation-hw-api"
   hardware_contract_version: "1.0.0"
   # Calibración de caudal por sector. Los valores representan pulsos por litro:
   # a mayor valor, menor volumen publicado. S1 se ajusta provisionalmente tras
   # observar 72.76 L en 5 min, una lectura entre 2 y 3 veces superior al caudal
-  # real esperado. Recalibrar con medición física antes de darlo por definitivo.
+  # real esperado. S3 se ajusta tras medir 11 L reales frente a 7.952 L
+  # reportados con el valor anterior 396 pulsos/L.
   pulses_per_liter_1: "990.0"
   pulses_per_liter_2: "396.0"
-  pulses_per_liter_3: "396.0"
+  pulses_per_liter_3: "286.0"
   pulses_per_liter_4: "396.0"
   pulses_per_liter_5: "396.0"
   pulses_per_liter_6: "396.0"

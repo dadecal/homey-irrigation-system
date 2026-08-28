@@ -22,7 +22,7 @@ Estado general
 
 Módulo	Estado
 Arquitectura	✅ Finalizada
-Firmware ESPHome	✅ Finalizado v1.0.2
+Firmware ESPHome	✅ Finalizado v1.0.3
 Integración ESPHome ↔ Homey	✅ Finalizada
 Motor de riego	✅ Finalizado
 Cola de riego	✅ Finalizada
@@ -56,7 +56,7 @@ Hardware.
 
 Estado:
 
-✅ Firmware `1.0.2` instalado por OTA desde `dist/releases/v2.0.16`.
+✅ Firmware `1.0.3` instalado por OTA desde `dist/releases/v2.0.18`.
 
 La versión `1.0.1` introduce calibración de caudal por sector. S1 queda
 provisionalmente en `990 pulsos/L` tras observar `72.76 L` en 5 minutos con el
@@ -67,6 +67,9 @@ La versión `1.0.2` reduce la ventana de `pulse_counter` de `10s` a `1s` y
 espera `1200ms` al cerrar una linea antes de calcular litros de ciclo. Esto
 permite pruebas de calibracion cortas con recipientes pequenos sin perder
 pulsos por quedar dentro de una ventana de publicacion demasiado larga.
+
+La versión `1.0.3` calibra S3 a `286 pulsos/L` tras una prueba fisica con
+`11 L` reales y `7.952 L` reportados con el factor anterior `396 pulsos/L`.
 
 ⸻
 
@@ -179,6 +182,10 @@ reintenta durante una ventana corta antes de persistir historico y emitir el
 evento de fin de sector. El firmware ya publicaba correctamente el consumo; la
 app podia leer antes de que Homey expusiera la actualizacion recibida desde
 ESPHome Controller.
+
+`v2.0.18` mantiene `homeyAppV2@2.0.16` e instala firmware ESP32 `1.0.3`. El
+unico cambio funcional es la calibracion de S3 a `286 pulsos/L`, calculada con
+la medida fisica `11 L reales / 7.952 L reportados`.
 
 Responsabilidad:
 
