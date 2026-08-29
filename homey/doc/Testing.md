@@ -725,6 +725,9 @@ Antes de publicar una release de sistema:
   exigir estado `OK`;
 * publicar la version como GitHub Release con tag `vX.Y.Z`, adjuntando todos
   los artefactos generados en `dist/releases/<release>` y `SHA256SUMS.txt`;
+* comprobar que la GitHub Release incluye notas legibles para humanos con
+  resumen de cambios, componentes afectados, validacion ejecutada y
+  observaciones operativas relevantes;
 * verificar con `gh release list --limit 30` que la version aparece publicada y
   con `git fetch --tags` / `git tag --sort=version:refname` que el tag queda
   sincronizado localmente;

@@ -8,6 +8,9 @@
 - Se endurece el procedimiento de cierre: una release liberada no se considera
   cerrada hasta que exista como GitHub Release publicada, con tag sincronizado y
   assets adjuntos.
+- Se añade para releases futuras la obligación de publicar notas de cambio
+  legibles en GitHub Release. No se modifica retroactivamente el texto de las
+  releases V2 ya publicadas.
 
 ### Release Rama 2 v2.0.22
 - Release de sistema con `homeyAppV2@2.0.17` y `esp32Firmware@1.0.6`.

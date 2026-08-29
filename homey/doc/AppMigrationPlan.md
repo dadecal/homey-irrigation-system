@@ -574,6 +574,9 @@ Reglas:
 10. Toda release liberada debe existir tambien como GitHub Release publicada:
     tag `vX.Y.Z`, assets adjuntos desde `dist/releases/<version>` y verificacion
     posterior con `gh release list` y `git fetch --tags`.
+11. Toda GitHub Release nueva debe incluir notas de cambio legibles: resumen,
+    componentes afectados, validacion ejecutada y observaciones operativas si
+    aplican. No basta con adjuntar assets.
 
 Nombres recomendados de artefactos:
 

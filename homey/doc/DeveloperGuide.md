@@ -975,7 +975,10 @@ ESP32 compatible.
 Ademas, la version debe existir como GitHub Release publicada, no solo como
 carpeta commiteada. El cierre debe crear o verificar el tag `vX.Y.Z` y la
 release GitHub asociada, adjuntando todos los assets de `dist/releases/<version>`
-incluido `SHA256SUMS.txt`. Tras publicarla, ejecutar:
+incluido `SHA256SUMS.txt`. La release GitHub debe incluir notas legibles para
+humanos, no solo assets: resumen de cambios, componentes afectados, validacion
+ejecutada y cualquier observacion operativa relevante. Tras publicarla,
+ejecutar:
 
 ```bash
 gh release list --limit 30

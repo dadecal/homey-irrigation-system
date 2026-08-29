@@ -136,7 +136,9 @@ subirse a GitHub Releases.
 Una release no queda cerrada solo por subir la carpeta al repositorio. Tambien
 debe publicarse como GitHub Release con tag `vX.Y.Z`, adjuntando los assets de
 `dist/releases/<release>` y verificando despues que aparece en
-`gh release list`.
+`gh release list`. Las releases nuevas deben incluir notas de cambio legibles,
+con resumen, componentes afectados, validacion realizada y observaciones
+operativas relevantes.
 
 Para que la app instalada en Homey coincida con el artefacto, instalar el `.tgz`
 con:
