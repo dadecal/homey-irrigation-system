@@ -48,7 +48,7 @@
     },
     "esp32Firmware": {
       "id": "esp32-firmware",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "sourcePaths": [
         "esp32/src/Riego_Homey.yaml",
         "esp32/src/riego/linea.yaml",

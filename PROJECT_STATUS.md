@@ -4,7 +4,7 @@ Sistema de Riego ESP32 + Homey
 
 Estado del proyecto
 
-Última actualización: 27 de agosto de 2026
+Última actualización: 29 de agosto de 2026
 
 ⸻
 
@@ -22,7 +22,7 @@ Estado general
 
 Módulo	Estado
 Arquitectura	✅ Finalizada
-Firmware ESPHome	✅ Finalizado v1.0.3
+Firmware ESPHome	✅ Finalizado v1.0.4
 Integración ESPHome ↔ Homey	✅ Finalizada
 Motor de riego	✅ Finalizado
 Cola de riego	✅ Finalizada
@@ -56,7 +56,7 @@ Hardware.
 
 Estado:
 
-✅ Firmware `1.0.3` instalado por OTA desde `dist/releases/v2.0.18`.
+✅ Firmware `1.0.4` instalado por OTA desde `dist/releases/v2.0.19`.
 
 La versión `1.0.1` introduce calibración de caudal por sector. S1 queda
 provisionalmente en `990 pulsos/L` tras observar `72.76 L` en 5 minutos con el
@@ -70,6 +70,11 @@ pulsos por quedar dentro de una ventana de publicacion demasiado larga.
 
 La versión `1.0.3` calibra S3 a `286 pulsos/L` tras una prueba fisica con
 `11 L` reales y `7.952 L` reportados con el factor anterior `396 pulsos/L`.
+
+La versión `1.0.4` corrige la barrera local de tiempo maximo de rele activo:
+el temporizador de seguridad pasa a ser un script cancelable/reiniciable por
+linea. Asi una prueba manual corta no puede ser interrumpida por un temporizador
+antiguo heredado de una activacion previa.
 
 ⸻
 
@@ -186,6 +191,11 @@ ESPHome Controller.
 `v2.0.18` mantiene `homeyAppV2@2.0.16` e instala firmware ESP32 `1.0.3`. El
 unico cambio funcional es la calibracion de S3 a `286 pulsos/L`, calculada con
 la medida fisica `11 L reales / 7.952 L reportados`.
+
+`v2.0.19` mantiene `homeyAppV2@2.0.16` e instala firmware ESP32 `1.0.4`.
+Corrige falsos disparos `irrigation.safety` durante pruebas manuales cortas:
+la proteccion local de `35 min` se cancela al apagar el rele y se reinicia en
+cada nuevo encendido.
 
 Responsabilidad:
 

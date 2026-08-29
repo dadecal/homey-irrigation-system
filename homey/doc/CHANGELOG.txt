@@ -1,3 +1,30 @@
+## 2026-08-29
+
+### Release Rama 2 v2.0.19
+- Release de sistema con `homeyAppV2@2.0.16` y `esp32Firmware@1.0.4`.
+- La app no cambia respecto a `v2.0.17`; se reutiliza el artefacto validado
+  `homey-irrigation-app-v2-2.0.16.tgz`.
+- Se corrigen falsos disparos de `irrigation.safety` observados durante pruebas
+  manuales cortas de S4. La causa probable era un `delay` de seguridad antiguo
+  heredado de una activacion previa: si vencía durante una activacion posterior,
+  veia el rele encendido y forzaba el apagado aunque llevara solo segundos.
+- La barrera local de `35 min` pasa a un script ESPHome
+  cancelable/reiniciable por linea: arranca en `on_turn_on`, se cancela en
+  `on_turn_off` y conserva la proteccion fisica ante pérdida de control desde
+  Homey.
+- El contrato hardware permanece en `irrigation-hw-api@1.0.0`.
+- Verificacion local ESPHome: `esphome config Riego_Homey.yaml` OK y
+  `esphome compile Riego_Homey.yaml` OK; build
+  `2026-08-29 18:59:51 +0200`.
+- Release formal generada en `dist/releases/v2.0.19`, incluyendo
+  `homey-irrigation-app-v2-2.0.16.tgz`
+  (`SHA256 dfdf0301d061d0aaa0802b20f8bd4cca23147a8266d08bc0d7f31d27f43ac238`)
+  y `riego-esp32-1.0.4.ota.bin`
+  (`SHA256 56ac324bbe1475ec671ef86efd863e58761b79652c3f1d97b8bb255a95e838ed`).
+- OTA instalada correctamente contra `192.168.2.7` desde el binario de release.
+  Homey confirma RAW `Riego` con firmware `1.0.4`, contrato
+  `irrigation-hw-api@1.0.0` y seis reles apagados.
+
 ## 2026-08-27
 
 ### Release Rama 2 v2.0.18

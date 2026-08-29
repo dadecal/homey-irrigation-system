@@ -814,7 +814,11 @@ detiene tanto el proceso web del dashboard como posibles hijos
 Cada relé incorpora una barrera local de 35 minutos. Si Homey pierde la
 comunicación o deja de ejecutar el tick, ESPHome fuerza el apagado y registra
 un error `irrigation.safety`. Es protección de hardware, no programación de
-riego.
+riego. Desde firmware `1.0.4`, esta barrera se ejecuta mediante un script
+cancelable/reiniciable por línea: se inicia al encender el relé y se cancela al
+apagarlo. No debe volver a implementarse como un `delay` directo dentro de
+`on_turn_on`, porque las pruebas manuales cortas pueden dejar temporizadores
+antiguos vivos y provocar falsos cortes en activaciones posteriores.
 
 Durante la fase de instalación hidráulica, la sustitución ESPHome
 `flow_fault_detection_enabled` puede mantenerse en `false` para evitar falsos

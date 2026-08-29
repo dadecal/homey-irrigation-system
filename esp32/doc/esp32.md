@@ -173,6 +173,12 @@ una ventana de actualizacion de 10 segundos. Al cerrar una linea, el firmware
 espera `1200ms` antes de calcular el volumen final del ciclo, dejando margen
 para que el contador publique el ultimo tramo.
 
+Desde firmware `1.0.4`, la barrera local de tiempo máximo de relé activo se
+ejecuta mediante un script cancelable/reiniciable por línea. El script se
+arranca al encender el relé y se cancela al apagarlo, evitando que una prueba
+manual corta deje un temporizador antiguo capaz de cortar una activación
+posterior pocos segundos después.
+
 ⸻
 
 7. Calibración
