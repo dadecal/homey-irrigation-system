@@ -458,6 +458,12 @@ sostenidas. El watchdog se proyecta desde la disponibilidad del dispositivo, el
 sobrecalentamiento y el tiempo de loop; un loop superior a 200 ms se considera
 alerta.
 
+Desde firmware ESP32 `1.0.6`, el hardware tambien aplica una barrera local de
+volumen maximo por sector: `300 L` en un mismo ciclo. Si se supera, el ESP32
+cierra el rele de la linea y publica un error `irrigation.safety`. Homey solo
+supervisa y notifica la incidencia; la decision de cierre vive en el firmware
+por ser una proteccion fisica.
+
 Las capacidades ESPHome se localizan por su significado funcional para evitar
 depender de identificadores internos generados por la integración.
 

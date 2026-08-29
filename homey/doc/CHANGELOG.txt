@@ -1,5 +1,27 @@
 ## 2026-08-29
 
+### Release Rama 2 v2.0.21
+- Release de sistema con `homeyAppV2@2.0.16` y `esp32Firmware@1.0.6`.
+- La app no cambia respecto a `v2.0.17`; se reutiliza el artefacto validado
+  `homey-irrigation-app-v2-2.0.16.tgz`.
+- Se añade una barrera local de volumen máximo por sector: si una línea supera
+  `300 L` en un único riego, el ESP32 registra `irrigation.safety` y fuerza el
+  cierre del relé como fuga probable.
+- La protección se ejecuta en el firmware, en paralelo al watchdog de tiempo,
+  y se cancela al cerrar el relé.
+- El contrato hardware permanece en `irrigation-hw-api@1.0.0`.
+- Verificacion local ESPHome: `esphome config Riego_Homey.yaml` OK y
+  `esphome compile Riego_Homey.yaml` OK; build
+  `2026-08-29 19:54:41 +0200`.
+- Release formal generada en `dist/releases/v2.0.21`, incluyendo
+  `homey-irrigation-app-v2-2.0.16.tgz`
+  (`SHA256 dfdf0301d061d0aaa0802b20f8bd4cca23147a8266d08bc0d7f31d27f43ac238`)
+  y `riego-esp32-1.0.6.ota.bin`
+  (`SHA256 ed615a2af27564313049163d4b4b610bda330e591b72143be105faf242133358`).
+- OTA instalada correctamente contra `192.168.2.7` desde el binario de release.
+  Homey confirma RAW `Riego` con firmware `1.0.6`, contrato
+  `irrigation-hw-api@1.0.0`, seis reles apagados y sensores de fuga en `false`.
+
 ### Release Rama 2 v2.0.20
 - Release de sistema con `homeyAppV2@2.0.16` y `esp32Firmware@1.0.5`.
 - La app no cambia respecto a `v2.0.17`; se reutiliza el artefacto validado

@@ -196,7 +196,7 @@ web_server:
 
 #Irrigation specific vars
 substitutions:
-  firmware_version: "1.0.5"
+  firmware_version: "1.0.6"
   hardware_contract_name: "irrigation-hw-api"
   hardware_contract_version: "1.0.0"
   # Calibración de caudal por sector. Los valores representan pulsos por litro:
@@ -219,6 +219,9 @@ substitutions:
   # Barrera física independiente de Homey. La duración funcional máxima es
   # 30 min; cinco minutos adicionales absorben latencia y cierre normal.
   max_relay_on_minutes: "35"
+  # Barrera física independiente de Homey. Ningún sector debería consumir
+  # más de 300 L en un único riego; si se supera, se fuerza el cierre.
+  max_cycle_liters: "300.0"
   # Protección térmica
   # temp_protection_c: umbral operativo sobre la temperatura estimada del chip.
   # Con DHT20 válido se calcula como Temperatura Riego + temp_box_offset_c.

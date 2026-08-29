@@ -34,6 +34,43 @@ script:
                 format: "Line ${line} exceeded maximum relay-on time; forcing OFF"
             - switch.turn_off: relay_l${line}
 
+  - id: l${line}_max_cycle_volume_watchdog
+    mode: restart
+    then:
+      - while:
+          condition:
+            switch.is_on: relay_l${line}
+          then:
+            - delay: 1s
+            - lambda: |-
+                if (!id(l${line}_cycle_active)) {
+                  return;
+                }
+                if (!id(l${line}_total_pulses).has_state()) {
+                  return;
+                }
+
+                const uint32_t current =
+                  (uint32_t) id(l${line}_total_pulses).state;
+                const uint32_t base = id(l${line}_cycle_start_pulses);
+
+                uint32_t delta;
+                if (current >= base) {
+                  delta = current - base;
+                } else {
+                  delta = (uint32_t)(0xFFFFFFFFu - base + 1u + current);
+                }
+
+                const float liters = (float) delta / ${pulses_per_liter};
+                if (liters > ${max_cycle_liters}) {
+                  ESP_LOGE(
+                    "irrigation.safety",
+                    "Line ${line} exceeded maximum cycle volume %.2f L; possible leak; forcing OFF",
+                    liters
+                  );
+                  id(relay_l${line}).turn_off();
+                }
+
 sensor:
   # Caudal instantáneo local. No se expone a Homey, pero alimenta
   # el cálculo de litros y la detección de fugas.
@@ -94,6 +131,7 @@ switch:
             id(l${line}_cycle_l_sensor).publish_state(0.0f);
             id(l${line}_cycle_active) = true;
         - script.execute: l${line}_max_relay_on_watchdog
+        - script.execute: l${line}_max_cycle_volume_watchdog
 
     on_turn_off:
       then:
@@ -101,6 +139,7 @@ switch:
             level: INFO
             format: "L${line}: on_turn_off disparado"
         - script.stop: l${line}_max_relay_on_watchdog
+        - script.stop: l${line}_max_cycle_volume_watchdog
         - lambda: |-
             id(irrigation_last_relay_off_ms) = millis();
         - delay: 1200ms

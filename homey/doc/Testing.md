@@ -194,6 +194,30 @@ Resultado esperado
 * Volumen registrado.
 * Estado = IDLE.
 
+1.3.1 Límite físico de volumen
+
+Objetivo
+
+Verificar que el ESP32 cierra una línea si un único riego supera el volumen
+máximo de seguridad.
+
+Pasos
+
+1. Usar firmware ESP32 `1.0.6` o superior.
+2. En prueba controlada, reducir temporalmente `max_cycle_liters` a un valor
+   bajo y compilar firmware de laboratorio, o simular pulsos suficientes en un
+   banco de pruebas.
+3. Activar un sector.
+4. Superar el volumen configurado.
+
+Resultado esperado
+
+* El ESP32 registra `irrigation.safety`.
+* El relé del sector se apaga localmente.
+* Ningún otro relé se activa.
+* Homey refleja la incidencia como error de hardware.
+* El sistema queda en estado seguro hasta intervención o recuperación.
+
 ⸻
 
 1.4 Cola de riego

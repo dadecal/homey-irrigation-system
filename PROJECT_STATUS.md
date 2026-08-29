@@ -22,7 +22,7 @@ Estado general
 
 Módulo	Estado
 Arquitectura	✅ Finalizada
-Firmware ESPHome	✅ Finalizado v1.0.5
+Firmware ESPHome	✅ Finalizado v1.0.6
 Integración ESPHome ↔ Homey	✅ Finalizada
 Motor de riego	✅ Finalizado
 Cola de riego	✅ Finalizada
@@ -56,7 +56,7 @@ Hardware.
 
 Estado:
 
-✅ Firmware `1.0.5` instalado por OTA desde `dist/releases/v2.0.20`.
+✅ Firmware `1.0.6` instalado por OTA desde `dist/releases/v2.0.21`.
 
 La versión `1.0.1` introduce calibración de caudal por sector. S1 queda
 provisionalmente en `990 pulsos/L` tras observar `72.76 L` en 5 minutos con el
@@ -79,6 +79,10 @@ antiguo heredado de una activacion previa.
 La versión `1.0.5` aplica provisionalmente la calibracion de S1
 (`990 pulsos/L`) a los seis sectores y reduce falsos positivos de fuga
 ignorando la deteccion durante `60s` despues del cierre de cualquier rele.
+
+La versión `1.0.6` anade una barrera local de volumen maximo por sector: si un
+riego supera `300 L` en una misma linea, el ESP32 registra
+`irrigation.safety` y fuerza el cierre del rele como fuga probable.
 
 ⸻
 
@@ -205,6 +209,11 @@ cada nuevo encendido.
 Aplica `990 pulsos/L` a S1-S6 y anade una ventana de gracia global de `60s`
 tras cerrar cualquier rele antes de considerar fuga por caudal residual. Release
 generada en `dist/releases/v2.0.20`; OTA instalada y validada en Homey.
+
+`v2.0.21` mantiene `homeyAppV2@2.0.16` e instala firmware ESP32 `1.0.6`.
+Anade un watchdog local de volumen por linea: mientras el rele esta activo,
+el ESP32 calcula los litros del ciclo desde pulsos acumulados y fuerza el cierre
+si se superan `300 L`, registrando una incidencia `irrigation.safety`.
 
 Responsabilidad:
 

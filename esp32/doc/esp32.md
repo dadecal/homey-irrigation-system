@@ -184,6 +184,12 @@ después del cierre de cualquier relé. Esta ventana absorbe caudal residual,
 presión remanente o pequeñas transferencias entre líneas durante pruebas
 hidráulicas sin desactivar la detección sostenida de fugas.
 
+Desde firmware `1.0.6`, cada línea ejecuta además un watchdog local de volumen
+máximo por ciclo. Mientras el relé está activo, el firmware calcula los litros
+desde los pulsos acumulados del caudalímetro y fuerza el cierre si supera
+`300 L`. El evento se registra como `irrigation.safety` porque se considera
+fuga probable o fallo hidráulico grave.
+
 ⸻
 
 7. Calibración
@@ -291,7 +297,22 @@ En versiones futuras podrá:
 
 ⸻
 
-12. Integración con Homey
+12. Límite máximo de volumen por sector
+
+ESPHome aplica una barrera física local independiente de Homey:
+
+* máximo por sector y ciclo: `300 L`;
+* comprobación mientras el relé permanece activo;
+* cálculo basado en `total_pulses - cycle_start_pulses`;
+* cierre forzado del relé si se supera el umbral;
+* registro `ERROR` con tag `irrigation.safety`.
+
+Esta protección no decide cuándo regar ni sustituye al motor. Su única función
+es cerrar la electroválvula ante una condición física anómala.
+
+⸻
+
+13. Integración con Homey
 
 La comunicación utiliza la integración oficial de ESPHome.
 
@@ -305,7 +326,7 @@ Este dispositivo representa exclusivamente el hardware.
 
 ⸻
 
-13. Entidades publicadas
+14. Entidades publicadas
 
 El dispositivo ESPHome publica:
 
