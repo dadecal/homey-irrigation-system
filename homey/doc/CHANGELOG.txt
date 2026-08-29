@@ -1,5 +1,14 @@
 ## 2026-08-29
 
+### Mantenimiento de releases GitHub V2
+- Se publican retrospectivamente en GitHub Releases todas las releases Rama 2
+  existentes entre `v2.0.1` y `v2.0.22`, con sus assets de
+  `dist/releases/<version>`.
+- `v2.0.22` queda marcada por GitHub como `Latest`.
+- Se endurece el procedimiento de cierre: una release liberada no se considera
+  cerrada hasta que exista como GitHub Release publicada, con tag sincronizado y
+  assets adjuntos.
+
 ### Release Rama 2 v2.0.22
 - Release de sistema con `homeyAppV2@2.0.17` y `esp32Firmware@1.0.6`.
 - Se corrige la duplicidad de incidencias en la cronologia de Homey: antes

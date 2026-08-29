@@ -133,6 +133,11 @@ El resultado se escribe en `dist/releases/<release>/`, excluido de Git para
 evitar commitear binarios por accidente. Esos artefactos son los que deben
 subirse a GitHub Releases.
 
+Una release no queda cerrada solo por subir la carpeta al repositorio. Tambien
+debe publicarse como GitHub Release con tag `vX.Y.Z`, adjuntando los assets de
+`dist/releases/<release>` y verificando despues que aparece en
+`gh release list`.
+
 Para que la app instalada en Homey coincida con el artefacto, instalar el `.tgz`
 con:
 

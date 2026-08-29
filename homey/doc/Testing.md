@@ -723,6 +723,10 @@ Antes de publicar una release de sistema:
 * cuando exista exportación remota de scripts, ejecutar
   `node tools/release/check-homey-scripts.mjs verify --remote-file <file>` y
   exigir estado `OK`;
-* subir a GitHub Releases los artefactos generados y `SHA256SUMS.txt`;
+* publicar la version como GitHub Release con tag `vX.Y.Z`, adjuntando todos
+  los artefactos generados en `dist/releases/<release>` y `SHA256SUMS.txt`;
+* verificar con `gh release list --limit 30` que la version aparece publicada y
+  con `git fetch --tags` / `git tag --sort=version:refname` que el tag queda
+  sincronizado localmente;
 * validar que las discrepancias se evalúan por contratos compatibles y no por
   igualdad de versiones entre componentes.

@@ -571,6 +571,9 @@ Reglas:
 9. Toda release liberada debe subirse a GitHub como parte del cierre: codigo,
    herramientas, documentacion y entregables de `dist/releases/<version>` deben
    quedar publicados en `origin/main`.
+10. Toda release liberada debe existir tambien como GitHub Release publicada:
+    tag `vX.Y.Z`, assets adjuntos desde `dist/releases/<version>` y verificacion
+    posterior con `gh release list` y `git fetch --tags`.
 
 Nombres recomendados de artefactos:
 

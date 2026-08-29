@@ -972,6 +972,20 @@ no este publicado en `origin/main` y contenga el directorio
 `dist/releases/<version>` con su manifest, checksums, artefacto Homey y binario
 ESP32 compatible.
 
+Ademas, la version debe existir como GitHub Release publicada, no solo como
+carpeta commiteada. El cierre debe crear o verificar el tag `vX.Y.Z` y la
+release GitHub asociada, adjuntando todos los assets de `dist/releases/<version>`
+incluido `SHA256SUMS.txt`. Tras publicarla, ejecutar:
+
+```bash
+gh release list --limit 30
+git fetch --tags
+git tag --sort=version:refname
+```
+
+La version recien liberada debe aparecer en GitHub Releases y el tag debe estar
+sincronizado localmente. Si este paso falla, la release sigue abierta.
+
 De forma simetrica, si solo cambia ESP32, debe generarse la release con el
 nuevo `--esp32-bin` y el artefacto Homey compatible mediante
 `--homey-app-v2-artifact`. No liberar binarios ESP32 sueltos fuera de un
