@@ -154,9 +154,13 @@ Estado actual: `HealthService` esta en `ACTIVE_COMPAT`. Persiste salud en
 watchdog/conexion ESPHome sin escribir Variables Logic. La Flow Card nativa
 `health_transition` se emite solo para estados accionables `ERROR` u
 `OFFLINE`; las recuperaciones `OK` y los estados `WARNING` no generan
-notificacion de incidencia. Los warnings genericos de ESPHome originados en
-`api`, `web_server` o `httpd` con errores de conexion/HTTP se consideran ruido
-operativo y no se convierten en incidencia de usuario. El Flow
+notificacion de incidencia. Desde `homeyAppV2@2.0.17`, `HealthService` no crea
+notificaciones push directas: emite el trigger `health_transition` y el Flow
+`Riego - Aviso de incidencia hardware v2` es el unico propietario de la
+notificacion visible, evitando duplicados en la cronologia. Los warnings
+genericos de ESPHome originados en `api`, `web_server` o `httpd` con errores de
+conexion/HTTP se consideran ruido operativo y no se convierten en incidencia de
+usuario. El Flow
 `Riego - Supervision hardware cada minuto` esta deshabilitado.
 
 Estado actual: `RecoveryService` de Rama 2 esta en `ACTIVE_COMPAT`. La app

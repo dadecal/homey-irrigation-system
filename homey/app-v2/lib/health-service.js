@@ -94,10 +94,6 @@ function shouldNotifyHealth(health) {
     && ['ERROR', 'OFFLINE'].includes(health.status);
 }
 
-function notificationMessageFor(health) {
-  return `Incidencia en sistema de riego: ${health.summary}`;
-}
-
 function isNoisyEspHomeWarning({ level, component, message }) {
   if (level !== 'WARNING') return false;
 
@@ -592,29 +588,11 @@ class HealthService {
     }
 
     if (notifyHealth) {
-      const manager = this.homey.notifications || this.homey.managerNotifications;
-      if (typeof manager?.createNotification === 'function') {
-        try {
-          await manager.createNotification({
-            excerpt: notificationMessageFor(health),
-          });
-          notifications.push({ id: 'homey_notification', skipped: false });
-        } catch (error) {
-          notifications.push({
-            id: 'homey_notification',
-            skipped: true,
-            reason: 'NOTIFICATION_FAILED',
-            message: error.message,
-          });
-          this.logger.log(`Homey notification skipped: ${error.message}`);
-        }
-      } else {
-        notifications.push({
-          id: 'homey_notification',
-          skipped: true,
-          reason: 'NOTIFICATION_MANAGER_NOT_AVAILABLE',
-        });
-      }
+      notifications.push({
+        id: 'homey_notification',
+        skipped: true,
+        reason: 'FLOW_OWNS_NOTIFICATION',
+      });
     } else if (health.changed) {
       notifications.push({ id: 'homey_notification', skipped: true, reason: 'NOT_ACTIONABLE' });
     } else {
@@ -635,4 +613,3 @@ class HealthService {
 module.exports = HealthService;
 module.exports.shouldNotifyHealth = shouldNotifyHealth;
 module.exports.isNoisyEspHomeWarning = isNoisyEspHomeWarning;
-module.exports.notificationMessageFor = notificationMessageFor;

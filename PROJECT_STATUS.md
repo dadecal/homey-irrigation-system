@@ -33,7 +33,7 @@ Dispositivo “Riego Manual”	✅ Finalizado
 Histórico de riego	✅ Finalizado
 Sincronización sensores	✅ Finalizada
 Persistencia	✅ Finalizada
-Aplicación Homey nativa Rama 2	✅ Activa v2.0.16
+Aplicación Homey nativa Rama 2	✅ Activa v2.0.17
 Scheduler	✅ Finalizado
 Programador	✅ Finalizado
 Rain Delay	✅ Finalizado
@@ -214,6 +214,12 @@ generada en `dist/releases/v2.0.20`; OTA instalada y validada en Homey.
 Anade un watchdog local de volumen por linea: mientras el rele esta activo,
 el ESP32 calcula los litros del ciclo desde pulsos acumulados y fuerza el cierre
 si se superan `300 L`, registrando una incidencia `irrigation.safety`.
+
+`v2.0.22` instala `homeyAppV2@2.0.17` y mantiene firmware ESP32 `1.0.6`.
+Corrige la duplicidad de incidencias en la cronologia de Homey: `HealthService`
+ya no crea una notificacion directa si tambien emite `health_transition`; el
+Flow `Riego - Aviso de incidencia hardware v2` queda como unico propietario de
+la notificacion visible.
 
 Responsabilidad:
 

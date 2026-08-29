@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.dadecal.irrigation.v2",
-  "version": "2.0.16",
+  "version": "2.0.17",
   "sdk": 3,
   "compatibility": ">=10.0.0",
   "name": {

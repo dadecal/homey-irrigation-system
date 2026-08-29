@@ -1,5 +1,26 @@
 ## 2026-08-29
 
+### Release Rama 2 v2.0.22
+- Release de sistema con `homeyAppV2@2.0.17` y `esp32Firmware@1.0.6`.
+- Se corrige la duplicidad de incidencias en la cronologia de Homey: antes
+  `HealthService` creaba una notificacion directa y ademas emitia
+  `health_transition`, que era recogido por el Flow v2 de aviso.
+- Desde esta version, `HealthService` solo dispara `health_transition`; el Flow
+  `Riego - Aviso de incidencia hardware v2` queda como unico propietario de la
+  notificacion push visible.
+- Se actualiza `release-info.js` para reportar `homeyAppV2@2.0.17`.
+- Firmware ESP32 sin cambios respecto a `v2.0.21`; se conserva
+  `esp32Firmware@1.0.6`.
+- Verificacion local: `npm run validate` OK, `npm test` con 154 tests OK,
+  `homey app build` OK y `homey app validate --level publish` OK.
+- Release formal generada en `dist/releases/v2.0.22`, incluyendo
+  `homey-irrigation-app-v2-2.0.17.tgz`
+  (`SHA256 fd8228b1312a2350412e9daccb6ce5252fc1d7b3af25c09c245c9ac48543415e`)
+  y `riego-esp32-1.0.6.ota.bin`
+  (`SHA256 ed615a2af27564313049163d4b4b610bda330e591b72143be105faf242133358`).
+- App instalada correctamente en Homey Pro desde el artefacto exacto
+  `homey-irrigation-app-v2-2.0.17.tgz`.
+
 ### Release Rama 2 v2.0.21
 - Release de sistema con `homeyAppV2@2.0.16` y `esp32Firmware@1.0.6`.
 - La app no cambia respecto a `v2.0.17`; se reutiliza el artefacto validado

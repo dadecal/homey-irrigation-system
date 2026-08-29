@@ -460,8 +460,11 @@ test('detects ESPHome offline without writing public health variables', async ()
 
   assert.equal(health.status, 'OFFLINE');
   assert.deepEqual(health.issues.map(issue => issue.code), ['ESP_OFFLINE']);
-  assert.deepEqual(notificationCalls, [{
-    excerpt: 'Incidencia en sistema de riego: OFFLINE - Controlador ESP32 desconectado',
+  assert.deepEqual(notificationCalls, []);
+  assert.deepEqual(health.applied.notifications, [{
+    id: 'homey_notification',
+    skipped: true,
+    reason: 'FLOW_OWNS_NOTIFICATION',
   }]);
   assert.deepEqual(writes, []);
 });
