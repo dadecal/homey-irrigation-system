@@ -162,6 +162,11 @@ genericos de ESPHome originados en `api`, `web_server` o `httpd` con errores de
 conexion/HTTP se consideran ruido operativo y no se convierten en incidencia de
 usuario. El Flow
 `Riego - Supervision hardware cada minuto` esta deshabilitado.
+Desde `homeyAppV2@2.0.18`, si hay una unica fuga activa y el ultimo evento crudo
+reciente de ESPHome contiene `Flow detected on line X while relay is off`,
+Health usa esa linea explicita para construir la incidencia y guarda el cruce
+con la capability en `telemetry.hardwareDiagnostics`. Asi la app no oculta una
+posible discrepancia entre linea fisica/firmware y descriptor de Homey.
 
 Estado actual: `RecoveryService` de Rama 2 esta en `ACTIVE_COMPAT`. La app
 Rama 1 `com.dadecal.irrigation` esta desactivada para evitar doble

@@ -8,8 +8,8 @@ dejemos una decision pendiente.
 
 ## Estado actual - 2026-08-29
 
-* Release activa de sistema: `v2.0.22`.
-* App activa: `homeyAppV2@2.0.17`, instalada desde artefacto exacto de release.
+* Release activa de sistema: `v2.0.23`.
+* App activa: `homeyAppV2@2.0.18`, instalada desde artefacto exacto de release.
 * Firmware ESP32 activo: `esp32Firmware@1.0.6`, instalado por OTA desde
   artefacto exacto de release. La version anterior `1.0.5` fue instalada por
   OTA desde artefacto exacto de release.
@@ -40,6 +40,11 @@ dejemos una decision pendiente.
   `health_transition`, y el Flow `Riego - Aviso de incidencia hardware v2`
   queda como unico propietario de la notificacion visible para evitar duplicados
   app+Flow en la cronologia.
+* `homeyAppV2@2.0.18` mejora el diagnostico de fugas: cuando hay una unica
+  capability de fuga activa y el ultimo evento crudo reciente de ESPHome indica
+  `Flow detected on line X while relay is off`, Health usa esa linea explicita
+  para nombrar la incidencia y guarda en telemetria la linea cruda, el sector
+  deducido de la capability y si existe discrepancia.
 * El motor V2 conserva la cola si se pierde ESPHome Controller/RAW durante un
   riego. El programa queda en recuperacion pendiente y la pagina de settings
   permite reanudar los sectores restantes o cancelar el programa.
@@ -60,15 +65,15 @@ dejemos una decision pendiente.
 * `HistoryService` proyecta solo a `Historico de Riego v2` y
   `appStateV2.history`; su idempotencia activa no depende de
   `Irrigation.HistoryLastProjectedId`.
-* Artefactos: `dist/releases/v2.0.22` contiene la app v2.0.17 y el binario
+* Artefactos: `dist/releases/v2.0.23` contiene la app v2.0.18 y el binario
   ESP32 `riego-esp32-1.0.6.ota.bin`. SHA256 app:
-  `fd8228b1312a2350412e9daccb6ce5252fc1d7b3af25c09c245c9ac48543415e`;
+  `74ff1b3645969d71024607a7aea8849e445a6fa38d8c9ab78533363ea4ec767f`;
   SHA256 ESP32:
   `ed615a2af27564313049163d4b4b610bda330e591b72143be105faf242133358`.
-* Validacion: `npm run validate`, `npm test` con 154 tests,
+* Validacion: `npm run validate`, `npm test` con 156 tests,
   `homey app build` y `homey app validate --level publish` OK. Firmware
   heredado de `v2.0.21` ya validado con `esphome config` y `esphome compile`.
-* Instalacion validada: app instalada desde artefacto exacto v2.0.17. Homey
+* Instalacion validada: app instalada desde artefacto exacto v2.0.18. Homey
   confirma RAW `Riego` disponible, firmware
   `1.0.6`, contrato `irrigation-hw-api@1.0.0`, seis reles apagados y sensores
   de fuga en `false`. Tras el reinicio OTA puede aparecer un warning

@@ -8,6 +8,7 @@ const CHECK_INTERVAL_MS = 60 * 1000;
 
 const GENERIC_WARN_TTL_MS = 15 * 60 * 1000;
 const GENERIC_ERROR_TTL_MS = 30 * 60 * 1000;
+const FLOW_LEAK_EVENT_MATCH_WINDOW_MS = (2 * CHECK_INTERVAL_MS) + (30 * 1000);
 const LOOP_WARNING_MS = 200;
 const HEAP_WARNING_BYTES = 30000;
 const ENGINE_TICK_STALE_MS = 3 * 60 * 1000;
@@ -62,6 +63,33 @@ function finiteNumber(entry) {
 
 function sectorFrom(entry) {
   return entry?.descriptor.match(/(?:linea|l)[ _-]*(\d)/)?.[1] || null;
+}
+
+function flowLeakLineFromMessage(message) {
+  const match = stripAnsi(message).match(/flow detected on line\s+([1-6])\s+while relay is off/i);
+  return match ? match[1] : null;
+}
+
+function flowLeakEventFrom(lastEvent) {
+  if (!lastEvent) return null;
+  if (!normalize(lastEvent.component).includes('irrigation.hardware')) return null;
+
+  const line = flowLeakLineFromMessage(lastEvent.message);
+  if (!line) return null;
+
+  return {
+    line,
+    sequence: lastEvent.sequence,
+    message: lastEvent.message,
+    detectedTs: lastEvent.detectedTs,
+    expiresTs: lastEvent.expiresTs,
+  };
+}
+
+function isRecentFlowLeakEvent(event, now) {
+  return Number.isFinite(event?.detectedTs)
+    && event.detectedTs <= now
+    && now - event.detectedTs <= FLOW_LEAK_EVENT_MATCH_WINDOW_MS;
 }
 
 function issue(code, severity, component, message, previousByCode, now, extra = {}) {
@@ -333,6 +361,10 @@ class HealthService {
     let sequence = Number(previousHealth.telemetry?.lastEspSequence || 0);
     let uptime = null;
     let lastEvent = previousHealth.lastEvent || null;
+    let hardwareDiagnostics = {
+      flowLeakEvent: null,
+      activeLeakCapabilities: [],
+    };
 
     if (!available) {
       issues.push(issue(
@@ -387,8 +419,36 @@ class HealthService {
         ));
       }
 
-      for (const entry of findAll(entries, 'fuga').filter(item => isActive(item.value))) {
-        const sector = sectorFrom(entry);
+      const flowLeakEvent = flowLeakEventFrom(lastEvent);
+      const recentFlowLeakEvent = isRecentFlowLeakEvent(flowLeakEvent, now) ? flowLeakEvent : null;
+      const activeLeakEntries = findAll(entries, 'fuga').filter(item => isActive(item.value));
+      hardwareDiagnostics = {
+        flowLeakEvent: flowLeakEvent ? {
+          ...flowLeakEvent,
+          recent: Boolean(recentFlowLeakEvent),
+          matchWindowMs: FLOW_LEAK_EVENT_MATCH_WINDOW_MS,
+        } : null,
+        activeLeakCapabilities: activeLeakEntries.map(entry => ({
+          id: entry.id,
+          descriptorSector: sectorFrom(entry),
+          descriptor: entry.descriptor,
+        })),
+      };
+
+      for (const entry of activeLeakEntries) {
+        const descriptorSector = sectorFrom(entry);
+        const sector = activeLeakEntries.length === 1 && recentFlowLeakEvent?.line
+          ? recentFlowLeakEvent.line
+          : descriptorSector;
+        const extra = {
+          descriptorSector,
+          rawEventSector: recentFlowLeakEvent?.line || null,
+          rawEventSequence: recentFlowLeakEvent?.sequence || null,
+          capabilityId: entry.id,
+        };
+        if (descriptorSector && recentFlowLeakEvent?.line && descriptorSector !== recentFlowLeakEvent.line) {
+          extra.sectorMismatch = true;
+        }
         issues.push(issue(
           `LEAK_${sector || entry.id}`,
           'ERROR',
@@ -396,6 +456,7 @@ class HealthService {
           sector ? `Caudal detectado con la línea ${sector} cerrada` : 'Caudal detectado con relés cerrados',
           previousByCode,
           now,
+          extra,
         ));
       }
 
@@ -515,6 +576,7 @@ class HealthService {
         activeSector,
         stopReason,
         engineStateSource: engine.sourceStore,
+        hardwareDiagnostics,
       },
       comparison: {
         previousStatus: previousHealth.status || null,

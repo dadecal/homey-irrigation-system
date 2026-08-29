@@ -143,7 +143,11 @@ Estructura principal
   "lastEvent": null,
   "telemetry": {
     "lastEspSequence": 0,
-    "uptimeSeconds": 0
+    "uptimeSeconds": 0,
+    "hardwareDiagnostics": {
+      "flowLeakEvent": null,
+      "activeLeakCapabilities": []
+    }
   }
 }
 ```
@@ -154,6 +158,14 @@ Las incidencias `ENGINE_STOP_UNCONFIRMED` y `ENGINE_CONTROLLER_OFFLINE`
 indican respectivamente que el motor quedó en `ERROR` sin confirmar el cierre,
 o que se perdió el controlador durante un riego. Incluyen `sector` cuando está
 disponible y deben priorizarse en el mensaje de evento por su impacto físico.
+
+Cuando ESPHome informa `Flow detected on line X while relay is off`, Rama 2
+guarda el evento crudo en `telemetry.hardwareDiagnostics.flowLeakEvent`. Si hay
+una unica capability de fuga activa y el evento crudo es reciente, la incidencia
+`LEAK_X` usa la linea explicita de ESPHome y puede incluir
+`descriptorSector`, `rawEventSector`, `rawEventSequence`, `capabilityId` y
+`sectorMismatch` para diagnosticar discrepancias entre firmware, capability y
+conexion fisica.
 
 ⸻
 

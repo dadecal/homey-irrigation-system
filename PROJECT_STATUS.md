@@ -33,7 +33,7 @@ Dispositivo “Riego Manual”	✅ Finalizado
 Histórico de riego	✅ Finalizado
 Sincronización sensores	✅ Finalizada
 Persistencia	✅ Finalizada
-Aplicación Homey nativa Rama 2	✅ Activa v2.0.17
+Aplicación Homey nativa Rama 2	✅ Activa v2.0.18
 Scheduler	✅ Finalizado
 Programador	✅ Finalizado
 Rain Delay	✅ Finalizado
@@ -128,7 +128,7 @@ Aplicación Homey nativa Rama 2
 
 Estado:
 
-✅ Instalada desde artefacto release v2.0.17
+✅ Instalada desde artefacto release v2.0.18
 
 Release activa:
 
@@ -220,6 +220,14 @@ Corrige la duplicidad de incidencias en la cronologia de Homey: `HealthService`
 ya no crea una notificacion directa si tambien emite `health_transition`; el
 Flow `Riego - Aviso de incidencia hardware v2` queda como unico propietario de
 la notificacion visible.
+
+`v2.0.23` instala `homeyAppV2@2.0.18` y mantiene firmware ESP32 `1.0.6`.
+Mejora el diagnostico de fugas/caudal con reles cerrados: si ESPHome publica
+un evento reciente `Flow detected on line X while relay is off`,
+`HealthService` usa esa linea explicita para la incidencia y registra tambien
+la capability Homey activa, permitiendo detectar cruces entre linea ESPHome,
+descriptor Homey y posible cableado/sensor. No resuelve por si solo los
+sectores con `0 L`; deja trazabilidad para aislar el origen si se repite.
 
 Responsabilidad:
 

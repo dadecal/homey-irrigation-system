@@ -620,6 +620,122 @@ test('detects ESPHome telemetry and hydraulic warnings', async () => {
   assert.equal(health.lastEvent.message, 'Aviso');
 });
 
+test('prefers explicit ESPHome leak line over ambiguous leak capability descriptor', async () => {
+  const { service } = createService({
+    appState: {
+      version: 1,
+      updatedTs: 0,
+      health: {
+        status: 'OK',
+        telemetry: {
+          lastEspSequence: 5,
+          uptimeSeconds: 1000,
+        },
+      },
+      history: { lastProjectedEventId: null, lastProjection: null },
+      engine: {
+        state: 'IDLE',
+        activeSector: 0,
+        startTs: 0,
+        endTs: 0,
+        source: 'none',
+        stopReason: 'none',
+        queue: [],
+        history: [],
+        lastTickTs: 0,
+      },
+      events: [],
+    },
+    raw: rawDevice({
+      seq: capability('ESP secuencia error', 6),
+      level: capability('ESP nivel error', 'warning'),
+      component: capability('ESP componente error', 'irrigation.hardware'),
+      message: capability('ESP ultimo error', '[W][irrigation.hardware:249]: Flow detected on line 6 while relay is off'),
+      leak: capability('Fuga linea 3', true),
+    }),
+  });
+
+  const health = await service.check();
+  const leakIssue = health.issues.find(issue => issue.code.startsWith('LEAK_'));
+
+  assert.equal(health.status, 'ERROR');
+  assert.equal(leakIssue.code, 'LEAK_6');
+  assert.equal(leakIssue.message, 'Caudal detectado con la línea 6 cerrada');
+  assert.equal(leakIssue.descriptorSector, '3');
+  assert.equal(leakIssue.rawEventSector, '6');
+  assert.equal(leakIssue.sectorMismatch, true);
+  assert.deepEqual(health.telemetry.hardwareDiagnostics.flowLeakEvent, {
+    line: '6',
+    sequence: 6,
+    message: '[W][irrigation.hardware:249]: Flow detected on line 6 while relay is off',
+    detectedTs: NOW,
+    expiresTs: NOW + (15 * 60 * 1000),
+    recent: true,
+    matchWindowMs: 150000,
+  });
+  assert.deepEqual(health.telemetry.hardwareDiagnostics.activeLeakCapabilities, [{
+    id: 'leak',
+    descriptorSector: '3',
+    descriptor: 'leak fuga linea 3',
+  }]);
+});
+
+test('does not use stale ESPHome leak line to relabel an active leak capability', async () => {
+  const { service } = createService({
+    appState: {
+      version: 1,
+      updatedTs: 0,
+      health: {
+        status: 'WARNING',
+        lastEvent: {
+          sequence: 6,
+          level: 'WARNING',
+          component: 'irrigation.hardware',
+          message: '[W][irrigation.hardware:249]: Flow detected on line 6 while relay is off',
+          detectedTs: NOW - (10 * 60 * 1000),
+          expiresTs: NOW + (5 * 60 * 1000),
+        },
+        telemetry: {
+          lastEspSequence: 6,
+          uptimeSeconds: 1000,
+        },
+      },
+      history: { lastProjectedEventId: null, lastProjection: null },
+      engine: {
+        state: 'IDLE',
+        activeSector: 0,
+        startTs: 0,
+        endTs: 0,
+        source: 'none',
+        stopReason: 'none',
+        queue: [],
+        history: [],
+        lastTickTs: 0,
+      },
+      events: [],
+    },
+    raw: rawDevice({
+      seq: capability('ESP secuencia error', 6),
+      level: capability('ESP nivel error', 'warning'),
+      component: capability('ESP componente error', 'irrigation.hardware'),
+      message: capability('ESP ultimo error', '[W][irrigation.hardware:249]: Flow detected on line 6 while relay is off'),
+      leak: capability('Fuga linea 3', true),
+    }),
+  });
+
+  const health = await service.check();
+  const leakIssue = health.issues.find(issue => issue.code.startsWith('LEAK_'));
+
+  assert.equal(health.status, 'ERROR');
+  assert.equal(leakIssue.code, 'LEAK_3');
+  assert.equal(leakIssue.message, 'Caudal detectado con la línea 3 cerrada');
+  assert.equal(leakIssue.descriptorSector, '3');
+  assert.equal(leakIssue.rawEventSector, null);
+  assert.equal(leakIssue.sectorMismatch, undefined);
+  assert.equal(health.telemetry.hardwareDiagnostics.flowLeakEvent.line, '6');
+  assert.equal(health.telemetry.hardwareDiagnostics.flowLeakEvent.recent, false);
+});
+
 test('compares health result with previous appState health', async () => {
   const { service } = createService({
     appState: {

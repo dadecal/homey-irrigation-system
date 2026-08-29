@@ -1,5 +1,32 @@
 ## 2026-08-29
 
+### Release Rama 2 v2.0.23
+- Release de sistema con `homeyAppV2@2.0.18` y `esp32Firmware@1.0.6`.
+- Se mejora el diagnostico de fugas/caudal con rele cerrado. Cuando ESPHome
+  emite un evento reciente `Flow detected on line X while relay is off` y hay
+  una unica capability de fuga activa, `HealthService` usa la linea explicita
+  del evento crudo para nombrar la incidencia.
+- La telemetria de Health incorpora `hardwareDiagnostics`, con evento crudo,
+  capabilities de fuga activas, sector deducido de descriptor y marca
+  `sectorMismatch` cuando la linea ESPHome no coincide con la capability Homey.
+- Se evita usar eventos crudos antiguos para renombrar incidencias nuevas de
+  fuga, reduciendo falsos cruces durante incidencias intermitentes.
+- Firmware ESP32 sin cambios respecto a `v2.0.22`; se conserva
+  `esp32Firmware@1.0.6`.
+- Verificacion local: `npm run validate` OK, `npm test` con 156 tests OK,
+  `homey app validate --level publish` OK y `homey app build` OK.
+- Release formal generada en `dist/releases/v2.0.23`, incluyendo
+  `homey-irrigation-app-v2-2.0.18.tgz`
+  (`SHA256 74ff1b3645969d71024607a7aea8849e445a6fa38d8c9ab78533363ea4ec767f`)
+  y `riego-esp32-1.0.6.ota.bin`
+  (`SHA256 ed615a2af27564313049163d4b4b610bda330e591b72143be105faf242133358`).
+- App instalada correctamente en Homey Pro desde el artefacto exacto
+  `homey-irrigation-app-v2-2.0.18.tgz`; tras la instalacion Homey confirma
+  motor `IDLE`, Health `OK`, reles apagados y RAW disponible.
+- Esta release no corrige directamente los sectores con `0 L`; deja
+  trazabilidad para aislar si el origen esta en ESPHome Controller,
+  capabilities Homey, firmware o conexion fisica.
+
 ### Mantenimiento de releases GitHub V2
 - Se publican retrospectivamente en GitHub Releases todas las releases Rama 2
   existentes entre `v2.0.1` y `v2.0.22`, con sus assets de

@@ -505,6 +505,12 @@ Flows de supervisión en Rama 2:
 * warnings genericos de ESPHome procedentes de `api`, `web_server` o `httpd`
   con mensajes `Reading failed CONNECTION_CLOSED` o
   `Unsupported content type` no deben generar incidencia;
+* si una fuga activa coincide con un evento crudo reciente
+  `Flow detected on line X while relay is off`, la incidencia debe usar la
+  linea explicita de ESPHome y registrar en telemetria la capability activa,
+  incluyendo discrepancias `sectorMismatch`;
+* un evento crudo antiguo de fuga no debe renombrar una capability de fuga
+  activa posterior;
 * `Riego - Aviso de incidencia hardware` legacy permanece deshabilitado tras el
   cutover a Health v2;
 * una incidencia nueva genera una notificación y las ejecuciones posteriores
