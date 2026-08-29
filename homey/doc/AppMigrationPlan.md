@@ -8,10 +8,10 @@ dejemos una decision pendiente.
 
 ## Estado actual - 2026-08-29
 
-* Release activa de sistema: `v2.0.19`.
+* Release activa de sistema: `v2.0.20`.
 * App activa: `homeyAppV2@2.0.16`, instalada desde artefacto exacto de release.
-* Firmware ESP32 activo: `esp32Firmware@1.0.4`, instalado por OTA desde
-  artefacto exacto de release. La version anterior `1.0.3` fue instalada por
+* Firmware ESP32 activo: `esp32Firmware@1.0.5`, instalado por OTA desde
+  artefacto exacto de release. La version anterior `1.0.4` fue instalada por
   OTA desde artefacto exacto de release.
 * `esp32Firmware@1.0.2` reduce `pulse_counter.update_interval` a `1s` y espera
   `1200ms` al cierre de linea para registrar mejor calibraciones manuales
@@ -29,6 +29,9 @@ dejemos una decision pendiente.
   pruebas manuales cortas: el watchdog local de `35 min` deja de vivir como
   `delay` directo en `on_turn_on` y pasa a un script cancelable/reiniciable por
   linea.
+* `esp32Firmware@1.0.5` aplica `990 pulsos/L` a S1-S6 y anade una
+  ventana de gracia global de `60s` tras cerrar cualquier rele antes de
+  considerar fuga por caudal residual.
 * El motor V2 conserva la cola si se pierde ESPHome Controller/RAW durante un
   riego. El programa queda en recuperacion pendiente y la pagina de settings
   permite reanudar los sectores restantes o cancelar el programa.
@@ -49,15 +52,17 @@ dejemos una decision pendiente.
 * `HistoryService` proyecta solo a `Historico de Riego v2` y
   `appStateV2.history`; su idempotencia activa no depende de
   `Irrigation.HistoryLastProjectedId`.
-* Artefactos: `dist/releases/v2.0.19` contiene la app v2.0.16 y el binario
-  ESP32 `riego-esp32-1.0.4.ota.bin`. SHA256 app:
+* Artefactos: `dist/releases/v2.0.20` contiene la app v2.0.16 y el binario
+  ESP32 `riego-esp32-1.0.5.ota.bin`. SHA256 app:
   `dfdf0301d061d0aaa0802b20f8bd4cca23147a8266d08bc0d7f31d27f43ac238`;
   SHA256 ESP32:
-  `56ac324bbe1475ec671ef86efd863e58761b79652c3f1d97b8bb255a95e838ed`.
+  `6c1e70439002ee41b5c92da51a52b9676b0621595508558a8831954bfdaff56c`.
 * Validacion: app heredada de `v2.0.17` (`npm run validate`, `npm test` con 154
   tests); firmware validado con `esphome config` y `esphome compile`.
 * Instalacion OTA validada: Homey confirma RAW `Riego` disponible, firmware
-  `1.0.4`, contrato `irrigation-hw-api@1.0.0` y seis reles apagados.
+  `1.0.5`, contrato `irrigation-hw-api@1.0.0`, seis reles apagados y sensores
+  de fuga en `false`. Tras el reinicio OTA queda un warning informativo de
+  ESPHome sobre `sram1_as_iram`, sin relacion con fuga ni relés.
 * Limpieza Homey ejecutada: los Flows V1/deshabilitados de riego han sido
   eliminados. En Homey solo quedan los cuatro Flows v2 activos:
   `Riego - Aviso autorrecuperacion ESPHome v2`,

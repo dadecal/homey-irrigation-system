@@ -451,9 +451,12 @@ Responsabilidad:
 
 Actualizar el dispositivo virtual “Sistema de Riego” utilizando información procedente de ESPHome.
 
-La fuga se obtiene agregando los seis sensores “Fuga Línea”. El watchdog se
-proyecta desde la disponibilidad del dispositivo, el sobrecalentamiento y el
-tiempo de loop; un loop superior a 200 ms se considera alerta.
+La fuga se obtiene agregando los seis sensores “Fuga Línea”. Desde firmware
+ESP32 `1.0.5`, esos sensores ignoran caudal durante `60s` despues del cierre de
+cualquier rele para absorber caudal residual hidraulico sin ocultar fugas
+sostenidas. El watchdog se proyecta desde la disponibilidad del dispositivo, el
+sobrecalentamiento y el tiempo de loop; un loop superior a 200 ms se considera
+alerta.
 
 Las capacidades ESPHome se localizan por su significado funcional para evitar
 depender de identificadores internos generados por la integración.

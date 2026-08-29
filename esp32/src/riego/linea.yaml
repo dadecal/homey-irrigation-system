@@ -101,6 +101,8 @@ switch:
             level: INFO
             format: "L${line}: on_turn_off disparado"
         - script.stop: l${line}_max_relay_on_watchdog
+        - lambda: |-
+            id(irrigation_last_relay_off_ms) = millis();
         - delay: 1200ms
         - lambda: |-
             // ALWAYS_OFF puede disparar on_turn_off durante el arranque.
@@ -165,6 +167,11 @@ binary_sensor:
       const float flow = id(l${line}_flow_lpm).state;
       if (isnan(flow) || isinf(flow)) return false;
       if (id(relay_l${line}).state) return false;
+      const uint32_t leak_ignore_ms =
+        static_cast<uint32_t>(${leak_ignore_after_relay_off_seconds}) * 1000u;
+      if ((uint32_t)(millis() - id(irrigation_last_relay_off_ms)) < leak_ignore_ms) {
+        return false;
+      }
 
       if (id(leak_l${line}).state) {
         return flow > ${leak_clear_threshold_lpm};

@@ -179,6 +179,11 @@ arranca al encender el relé y se cancela al apagarlo, evitando que una prueba
 manual corta deje un temporizador antiguo capaz de cortar una activación
 posterior pocos segundos después.
 
+Desde firmware `1.0.5`, la detección de fuga ignora caudal durante `60s`
+después del cierre de cualquier relé. Esta ventana absorbe caudal residual,
+presión remanente o pequeñas transferencias entre líneas durante pruebas
+hidráulicas sin desactivar la detección sostenida de fugas.
+
 ⸻
 
 7. Calibración
@@ -187,22 +192,17 @@ Calibración utilizada:
 
 Sector	Calibración
 S1	990 pulsos/L
-S2	396 pulsos/L
-S3	286 pulsos/L
-S4	396 pulsos/L
-S5	396 pulsos/L
-S6	396 pulsos/L
+S2	990 pulsos/L
+S3	990 pulsos/L
+S4	990 pulsos/L
+S5	990 pulsos/L
+S6	990 pulsos/L
 
-S1 usa una calibración provisional desde firmware `1.0.1`, tras observar una
-lectura de `72.76 L` en 5 minutos claramente superior al consumo físico
-esperado. El valor `990 pulsos/L` equivale a dividir por 2.5 la lectura previa
-basada en `396 pulsos/L`.
-
-S3 usa una calibración provisional desde firmware `1.0.3`, calculada con una
-prueba física de `11 L` reales frente a `7.952 L` reportados con el factor
-anterior `396 pulsos/L`:
-
-`396 * 7.952 / 11 = 286 pulsos/L`.
+Desde firmware `1.0.5`, todos los sectores usan provisionalmente la calibración
+medida en S1. La decisión se toma durante la puesta en agua porque las pruebas
+de S2 y S4 también apuntan a lecturas excesivas con el factor base
+`396 pulsos/L`. El valor `990 pulsos/L` equivale a dividir por 2.5 la lectura
+previa basada en `396 pulsos/L`.
 
 Fórmula de ajuste:
 
@@ -276,7 +276,12 @@ Publica:
 
 Fuga detectada
 
-Actualmente Homey únicamente informa del evento.
+Desde firmware `1.0.5`, el detector ignora caudal durante `60s` después de
+cerrar cualquier relé para evitar falsos positivos por caudal residual o
+presión remanente. Pasada esa ventana, una fuga sostenida vuelve a publicarse
+como incidencia.
+
+Actualmente Homey informa del evento.
 
 En versiones futuras podrá:
 

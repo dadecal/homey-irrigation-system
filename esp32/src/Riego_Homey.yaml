@@ -196,22 +196,21 @@ web_server:
 
 #Irrigation specific vars
 substitutions:
-  firmware_version: "1.0.4"
+  firmware_version: "1.0.5"
   hardware_contract_name: "irrigation-hw-api"
   hardware_contract_version: "1.0.0"
   # Calibración de caudal por sector. Los valores representan pulsos por litro:
-  # a mayor valor, menor volumen publicado. S1 se ajusta provisionalmente tras
-  # observar 72.76 L en 5 min, una lectura entre 2 y 3 veces superior al caudal
-  # real esperado. S3 se ajusta tras medir 11 L reales frente a 7.952 L
-  # reportados con el valor anterior 396 pulsos/L.
+  # a mayor valor, menor volumen publicado. Se aplica provisionalmente el factor
+  # medido en S1 a todos los sectores durante la puesta en agua.
   pulses_per_liter_1: "990.0"
-  pulses_per_liter_2: "396.0"
-  pulses_per_liter_3: "286.0"
-  pulses_per_liter_4: "396.0"
-  pulses_per_liter_5: "396.0"
-  pulses_per_liter_6: "396.0"
+  pulses_per_liter_2: "990.0"
+  pulses_per_liter_3: "990.0"
+  pulses_per_liter_4: "990.0"
+  pulses_per_liter_5: "990.0"
+  pulses_per_liter_6: "990.0"
   leak_threshold_lpm: "0.1"
   leak_clear_threshold_lpm: "0.05"
+  leak_ignore_after_relay_off_seconds: "60"
   min_expected_flow_lpm: "0.1"
   # Durante la fase de instalación hidráulica no hay caudal real conectado.
   # Mantener en false para no generar falsos fallos "relé activo sin caudal".
@@ -259,6 +258,11 @@ globals:
     type: std::string
     restore_value: no
     initial_value: '""'
+
+  - id: irrigation_last_relay_off_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: "0"
 
 # Temp & Hum sensors. Intenal & pluged
 sensor:
